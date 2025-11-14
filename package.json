@@ -1,0 +1,13 @@
+{
+  "name": "obsidian-habit-notes",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild main.ts --bundle --target=es2020 --outfile=main.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "esbuild": "^0.23.0",
+    "obsidian": "^1.5.0"
+  }
+}
