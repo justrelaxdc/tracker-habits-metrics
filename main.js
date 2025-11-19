@@ -18,13 +18,15 @@ var __copyProps = (to2, from2, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-// main.ts
+// src/main.ts
 var main_exports = {};
 __export(main_exports, {
-  default: () => TrackerPlugin
+  default: () => main_default
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian = require("obsidian");
+
+// src/core/tracker-plugin.ts
+var import_obsidian9 = require("obsidian");
 
 // node_modules/@kurkle/color/dist/color.esm.js
 function round(v) {
@@ -14497,17 +14499,64 @@ var registerables = [
   scales
 ];
 
-// main.ts
-Chart.register(...registerables);
-var DEFAULT_SETTINGS = {
-  trackersFolder: "0. Files/Trackers",
-  dateFormat: "YYYY-MM-DD",
-  daysToShow: 30,
-  showChartByDefault: true,
-  showStatsByDefault: false,
-  hideChartOnMobile: false,
-  hideStatsOnMobile: false
-};
+// src/ui/tracker-block-render-child.ts
+var import_obsidian = require("obsidian");
+
+// src/utils/options.ts
+function parseOptions(src) {
+  const options = {};
+  src.split(/\r?\n/).forEach((line) => {
+    const match = line.match(/^\s*([a-zA-Z_]+)\s*:\s*(.+)\s*$/);
+    if (match) {
+      options[match[1].trim()] = match[2].trim();
+    }
+  });
+  return options;
+}
+
+// src/utils/date.ts
+function resolveDateIso(input, fmt) {
+  const m = window.moment;
+  if (!m) {
+    const today = /* @__PURE__ */ new Date();
+    if (!input || input.toLowerCase() === "today") {
+      return formatDate(today, fmt);
+    }
+    const parsed = new Date(input);
+    return isNaN(parsed.getTime()) ? formatDate(today, fmt) : formatDate(parsed, fmt);
+  }
+  if (!input || input.toLowerCase() === "today") return m().format(fmt);
+  const tryParse = m(input, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"], true);
+  return tryParse.isValid() ? tryParse.format(fmt) : m().format(fmt);
+}
+function formatDate(date, fmt) {
+  if (fmt === "YYYY-MM-DD") {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  return date.toISOString().split("T")[0];
+}
+function parseDate(dateStr, fmt) {
+  if (fmt === "YYYY-MM-DD") {
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+  }
+  return new Date(dateStr);
+}
+function addDays(date, days) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+// src/ui/tracker-block-render-child.ts
 var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild {
   constructor(plugin, source, containerEl, ctx) {
     super(containerEl);
@@ -14520,7 +14569,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
   async render() {
     this.containerEl.empty();
     try {
-      const folderTree = this.getFilesFromFolder(this.folderPath);
+      const folderTree = this.plugin.getFolderTree(this.folderPath);
       if (!folderTree || folderTree.files.length === 0 && folderTree.children.length === 0) {
         this.containerEl.createEl("div", {
           text: `tracker: \u0432 \u043F\u0430\u043F\u043A\u0435 ${this.folderPath} \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432`,
@@ -14538,7 +14587,13 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
             if (fileName) {
               const m = window.moment;
               if (m) {
-                const dateFormats = ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY", "YYYY-MM-DD HH:mm", "YYYY/MM/DD HH:mm"];
+                const dateFormats = [
+                  "YYYY-MM-DD",
+                  "YYYY/MM/DD",
+                  "DD.MM.YYYY",
+                  "YYYY-MM-DD HH:mm",
+                  "YYYY/MM/DD HH:mm"
+                ];
                 for (const fmt of dateFormats) {
                   const parsedDate = m(fileName, fmt, true);
                   if (parsedDate.isValid()) {
@@ -14560,16 +14615,15 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
               } else {
                 const datePatterns = [
                   /(\d{4})-(\d{2})-(\d{2})/,
-                  // YYYY-MM-DD
                   /(\d{4})\/(\d{2})\/(\d{2})/,
-                  // YYYY/MM/DD
                   /(\d{2})\.(\d{2})\.(\d{4})/
-                  // DD.MM.YYYY
                 ];
                 for (const pattern of datePatterns) {
                   const match = fileName.match(pattern);
                   if (match) {
-                    let year, month, day;
+                    let year;
+                    let month;
+                    let day;
                     if (pattern === datePatterns[2]) {
                       day = parseInt(match[1]);
                       month = parseInt(match[2]) - 1;
@@ -14601,7 +14655,9 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
         const headerTitle = blockHeader.createDiv({ cls: "tracker-notes__header-title" });
         const folderName = this.folderPath.split("/").pop() || this.folderPath;
         headerTitle.createEl("span", { text: folderName, cls: "tracker-notes__header-label" });
-        const datePickerContainer = blockHeader.createDiv({ cls: "tracker-notes__date-picker-container" });
+        const datePickerContainer = blockHeader.createDiv({
+          cls: "tracker-notes__date-picker-container"
+        });
         const datePicker = datePickerContainer.createDiv({ cls: "tracker-notes__date-picker" });
         const updateDate = async (newDate) => {
           const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
@@ -14625,7 +14681,10 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           const newDateStr = m ? newDate.format(this.plugin.settings.dateFormat) : formatDate(newDate, this.plugin.settings.dateFormat);
           await updateDate(newDateStr);
         };
-        const dayBackBtn = datePicker.createEl("button", { text: "\u25C0", cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left" });
+        const dayBackBtn = datePicker.createEl("button", {
+          text: "\u25C0",
+          cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left"
+        });
         dayBackBtn.onclick = () => navigateDate(-1);
         dayBackBtn.title = "\u0412\u0447\u0435\u0440\u0430";
         const dateInput = datePicker.createEl("input", {
@@ -14634,7 +14693,10 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           value: dateIso
         });
         dateInput.onchange = () => updateDate(dateInput.value);
-        const dayForwardBtn = datePicker.createEl("button", { text: "\u25B6", cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right" });
+        const dayForwardBtn = datePicker.createEl("button", {
+          text: "\u25B6",
+          cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right"
+        });
         dayForwardBtn.onclick = () => navigateDate(1);
         dayForwardBtn.title = "\u0417\u0430\u0432\u0442\u0440\u0430";
       }
@@ -14648,56 +14710,6 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       });
       console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0431\u043B\u043E\u043A\u0430", error);
     }
-  }
-  getFilesFromFolder(folderPath) {
-    const folder = this.plugin.app.vault.getAbstractFileByPath(folderPath);
-    if (!folder) {
-      this.containerEl.createEl("div", {
-        text: `tracker: \u043F\u0430\u043F\u043A\u0430 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u0430: ${folderPath}`,
-        cls: "tracker-notes__error"
-      });
-      return null;
-    }
-    if (folder instanceof import_obsidian.TFile) {
-      return {
-        name: folder.basename,
-        path: folder.path,
-        level: 0,
-        files: [folder],
-        children: []
-      };
-    }
-    if (folder instanceof import_obsidian.TFolder) {
-      return this.buildFolderTree(folder, 3, 0);
-    }
-    return null;
-  }
-  buildFolderTree(folder, maxDepth, currentLevel) {
-    const node = {
-      name: folder.name,
-      path: folder.path,
-      level: currentLevel,
-      files: [],
-      children: []
-    };
-    for (const child of folder.children) {
-      if (child instanceof import_obsidian.TFile && child.extension === "md") {
-        node.files.push(child);
-      }
-    }
-    node.files.sort((a, b) => a.basename.localeCompare(b.basename, void 0, { sensitivity: "base" }));
-    if (currentLevel < maxDepth) {
-      for (const child of folder.children) {
-        if (child instanceof import_obsidian.TFolder) {
-          const childNode = this.buildFolderTree(child, maxDepth, currentLevel + 1);
-          if (childNode.files.length > 0 || childNode.children.length > 0) {
-            node.children.push(childNode);
-          }
-        }
-      }
-      node.children.sort((a, b) => a.name.localeCompare(b.name, void 0, { sensitivity: "base" }));
-    }
-    return node;
   }
   async renderFolderNode(node, parentEl, dateIso, view, opts) {
     const nodeContainer = parentEl.createDiv({
@@ -14729,7 +14741,995 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
     this.plugin.removeActiveBlock(this);
   }
 };
-var TrackerPlugin = class extends import_obsidian.Plugin {
+
+// src/domain/types.ts
+var DEFAULT_SETTINGS = {
+  trackersFolder: "0. Files/Trackers",
+  dateFormat: "YYYY-MM-DD",
+  daysToShow: 30,
+  showChartByDefault: true,
+  showStatsByDefault: false,
+  hideChartOnMobile: false,
+  hideStatsOnMobile: false
+};
+
+// src/services/folder-tree-service.ts
+var import_obsidian2 = require("obsidian");
+var FolderTreeService = class {
+  constructor(app) {
+    this.app = app;
+  }
+  getFolderTree(folderPath, maxDepth = 3) {
+    const folder = this.app.vault.getAbstractFileByPath(folderPath);
+    if (!folder) {
+      return null;
+    }
+    if (folder instanceof import_obsidian2.TFile) {
+      return {
+        name: folder.basename,
+        path: folder.path,
+        level: 0,
+        files: [folder],
+        children: []
+      };
+    }
+    if (folder instanceof import_obsidian2.TFolder) {
+      return this.buildFolderTree(folder, maxDepth, 0);
+    }
+    return null;
+  }
+  buildFolderTree(folder, maxDepth, currentLevel) {
+    const node = {
+      name: folder.name,
+      path: folder.path,
+      level: currentLevel,
+      files: [],
+      children: []
+    };
+    for (const child of folder.children) {
+      if (child instanceof import_obsidian2.TFile && child.extension === "md") {
+        node.files.push(child);
+      }
+    }
+    node.files.sort((a, b) => a.basename.localeCompare(b.basename, void 0, { sensitivity: "base" }));
+    if (currentLevel < maxDepth) {
+      for (const child of folder.children) {
+        if (child instanceof import_obsidian2.TFolder) {
+          const childNode = this.buildFolderTree(child, maxDepth, currentLevel + 1);
+          if (childNode.files.length > 0 || childNode.children.length > 0) {
+            node.children.push(childNode);
+          }
+        }
+      }
+      node.children.sort((a, b) => a.name.localeCompare(b.name, void 0, { sensitivity: "base" }));
+    }
+    return node;
+  }
+};
+
+// src/services/tracker-file-service.ts
+var import_obsidian3 = require("obsidian");
+
+// src/utils/misc.ts
+function parseMaybeNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : value;
+}
+function countWords(text) {
+  const trimmed = text.trim();
+  if (trimmed === "") return 0;
+  return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+// src/services/tracker-file-service.ts
+var TrackerFileService = class {
+  constructor(app) {
+    this.app = app;
+  }
+  async ensureFileWithHeading(filePath, type = "good-habit") {
+    const existing = this.app.vault.getAbstractFileByPath(filePath);
+    if (existing instanceof import_obsidian3.TFile) return existing;
+    const dir = filePath.split("/").slice(0, -1).join("/");
+    if (dir && !this.app.vault.getAbstractFileByPath(dir)) {
+      await this.app.vault.createFolder(dir);
+    }
+    const name = filePath.split("/").pop()?.replace(".md", "") || "Untitled";
+    const content = `---
+name: "${name.replace(/"/g, '\\"')}"
+type: "${type}"
+data: {}
+---
+`;
+    return this.app.vault.create(filePath, content);
+  }
+  parseFrontmatterData(frontmatter) {
+    const data = {};
+    const dataMatch = frontmatter.match(/data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/);
+    if (dataMatch) {
+      if (frontmatter.match(/data:\s*\{\}/)) {
+        return data;
+      }
+      const dataContent = dataMatch[1];
+      if (dataContent) {
+        const dataLines = dataContent.split(/\n/);
+        dataLines.forEach((line) => {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith("#") || trimmed === "{}") return;
+          const match = trimmed.match(/^["']([^"']+)["']\s*:\s*(.+)$/);
+          if (match) {
+            const key = match[1].trim();
+            let value = match[2].trim();
+            if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+              value = value.slice(1, -1);
+              value = value.replace(/\\"/g, '"').replace(/\\'/g, "'");
+            }
+            data[key] = parseMaybeNumber(value);
+          } else {
+            const matchNoQuotes = trimmed.match(/^([^:]+?)\s*:\s*(.+)$/);
+            if (matchNoQuotes) {
+              const key = matchNoQuotes[1].trim();
+              let value = matchNoQuotes[2].trim();
+              if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+                value = value.slice(1, -1);
+                value = value.replace(/\\"/g, '"').replace(/\\'/g, "'");
+              }
+              data[key] = parseMaybeNumber(value);
+            }
+          }
+        });
+      }
+    }
+    return data;
+  }
+  formatDataToYaml(data) {
+    if (Object.keys(data).length === 0) {
+      return "data: {}\n";
+    }
+    let yaml = "data:\n";
+    const sortedDates = Object.keys(data).sort();
+    sortedDates.forEach((date) => {
+      const value = data[date];
+      if (typeof value === "string") {
+        const escapedValue = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+        yaml += `  "${date}": "${escapedValue}"
+`;
+      } else {
+        yaml += `  "${date}": ${value}
+`;
+      }
+    });
+    return yaml;
+  }
+  async readAllEntries(file) {
+    const entries = /* @__PURE__ */ new Map();
+    try {
+      const raw = await this.app.vault.read(file);
+      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatterMatch) return entries;
+      const frontmatter = frontmatterMatch[1];
+      const data = this.parseFrontmatterData(frontmatter);
+      Object.entries(data).forEach(([date, value]) => {
+        entries.set(date, value);
+      });
+    } catch (error) {
+      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439", error);
+    }
+    return entries;
+  }
+  async readValueForDate(file, dateIso) {
+    try {
+      const raw = await this.app.vault.read(file);
+      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatterMatch) return null;
+      const frontmatter = frontmatterMatch[1];
+      const data = this.parseFrontmatterData(frontmatter);
+      return data[dateIso] ?? null;
+    } catch (error) {
+      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F", error);
+      return null;
+    }
+  }
+  async writeLogLine(file, dateIso, value) {
+    try {
+      const content = await this.app.vault.read(file);
+      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!frontmatterMatch) {
+        throw new Error("Frontmatter \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D");
+      }
+      const frontmatter = frontmatterMatch[1];
+      const body = content.slice(frontmatterMatch[0].length);
+      const data = this.parseFrontmatterData(frontmatter);
+      data[dateIso] = parseMaybeNumber(value);
+      const dataYaml = this.formatDataToYaml(data);
+      let newFrontmatter = frontmatter.trim();
+      const dataMatch = newFrontmatter.match(/data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/);
+      if (dataMatch) {
+        const dataYamlTrimmed = dataYaml.endsWith("\n") ? dataYaml.slice(0, -1) : dataYaml;
+        newFrontmatter = newFrontmatter.replace(
+          /data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/,
+          dataYamlTrimmed
+        );
+      } else {
+        newFrontmatter = newFrontmatter + "\n" + dataYaml.trimEnd();
+      }
+      if (!newFrontmatter.endsWith("\n")) {
+        newFrontmatter += "\n";
+      }
+      const newContent = `---
+${newFrontmatter}---${body}`;
+      await this.app.vault.modify(file, newContent);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", error);
+      throw new Error(errorMsg);
+    }
+  }
+  async getFileTypeFromFrontmatter(file) {
+    const fileOpts = {};
+    try {
+      const fileContent = await this.app.vault.read(file);
+      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+      if (frontmatterMatch) {
+        const frontmatter = frontmatterMatch[1];
+        const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
+        fileOpts.mode = typeMatch && typeMatch[1] ? typeMatch[1].trim() : "good-habit";
+        const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
+        if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
+        const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
+        if (minValueMatch) fileOpts.minValue = minValueMatch[1];
+        const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
+        if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
+        const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
+        if (stepMatch) fileOpts.step = stepMatch[1];
+        const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
+        if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
+        const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
+        if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
+        const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
+        if (unitMatch && unitMatch[1]) {
+          fileOpts.unit = unitMatch[1].trim();
+        }
+      } else {
+        fileOpts.mode = "good-habit";
+      }
+    } catch (error) {
+      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F frontmatter", error);
+      fileOpts.mode = "good-habit";
+    }
+    return fileOpts;
+  }
+  getStartTrackingDate(entries, settings, file) {
+    const m = window.moment;
+    let startTrackingDate = null;
+    if (file?.stat?.ctime) {
+      startTrackingDate = m ? m(file.stat.ctime).startOf("day") : new Date(file.stat.ctime);
+      if (!m && startTrackingDate) {
+        startTrackingDate.setHours(0, 0, 0, 0);
+      }
+    }
+    if (entries.size > 0) {
+      const sortedDates = Array.from(entries.keys()).sort();
+      const firstDateStr = sortedDates[0];
+      const firstDate = m ? m(firstDateStr, settings.dateFormat) : parseDate(firstDateStr, settings.dateFormat);
+      if (!startTrackingDate || (m ? firstDate.isBefore(startTrackingDate) : firstDate < startTrackingDate)) {
+        startTrackingDate = firstDate;
+      }
+    }
+    if (!startTrackingDate) {
+      return null;
+    }
+    return m ? startTrackingDate.format(settings.dateFormat) : formatDate(startTrackingDate, settings.dateFormat);
+  }
+  calculateStreak(entries, settings, endDate, trackerType, file) {
+    let streak = 0;
+    const m = window.moment;
+    let currentDate = m ? m(endDate) : new Date(endDate);
+    const metricType = (trackerType || "good-habit").toLowerCase();
+    const isBadHabit = metricType === "bad-habit";
+    let startTrackingDate = null;
+    if (file?.stat?.ctime) {
+      startTrackingDate = m ? m(file.stat.ctime).startOf("day") : new Date(file.stat.ctime);
+      if (!m && startTrackingDate) {
+        startTrackingDate.setHours(0, 0, 0, 0);
+      }
+    }
+    if (entries.size > 0) {
+      const sortedDates = Array.from(entries.keys()).sort();
+      const firstDateStr = sortedDates[0];
+      const firstDate = m ? m(firstDateStr, settings.dateFormat) : parseDate(firstDateStr, settings.dateFormat);
+      if (!startTrackingDate || (m ? firstDate.isBefore(startTrackingDate) : firstDate < startTrackingDate)) {
+        startTrackingDate = firstDate;
+      }
+    }
+    if (!startTrackingDate) {
+      startTrackingDate = m ? m(endDate).subtract(365, "days") : addDays(endDate, -365);
+    }
+    const maxDaysBack = 3650;
+    let daysChecked = 0;
+    while (daysChecked < maxDaysBack) {
+      if (m) {
+        if (currentDate.isBefore(startTrackingDate)) break;
+      } else if (currentDate < startTrackingDate) {
+        break;
+      }
+      const dateStr = m ? currentDate.format(settings.dateFormat) : formatDate(currentDate, settings.dateFormat);
+      const val = entries.get(dateStr);
+      let isSuccess = false;
+      if (isBadHabit) {
+        if (val == null) {
+          isSuccess = true;
+        } else {
+          const valStr = String(val);
+          const hasValue = typeof val === "number" ? val !== 0 : valStr === "1" || valStr === "true" || valStr.trim() !== "";
+          isSuccess = !hasValue;
+        }
+      } else if (val != null) {
+        const valStr = String(val);
+        isSuccess = typeof val === "number" ? val !== 0 : valStr === "1" || valStr === "true" || valStr.trim() !== "";
+      }
+      if (isSuccess) {
+        streak++;
+      } else {
+        break;
+      }
+      if (m) {
+        currentDate = currentDate.subtract(1, "day");
+      } else {
+        currentDate = addDays(currentDate, -1);
+      }
+      daysChecked++;
+    }
+    return streak;
+  }
+};
+
+// src/ui/tracker-settings-tab.ts
+var import_obsidian4 = require("obsidian");
+var TrackerSettingsTab = class extends import_obsidian4.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    new import_obsidian4.Setting(containerEl).setName("\u041F\u0430\u043F\u043A\u0430 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C folder: `path`").addText(
+      (t) => t.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v) => {
+        this.plugin.settings.trackersFolder = v.trim();
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showChart: `true/false`").addToggle(
+      (t) => t.setValue(this.plugin.settings.showChartByDefault).onChange(async (v) => {
+        this.plugin.settings.showChartByDefault = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showStats: `true/false`").addToggle(
+      (t) => t.setValue(this.plugin.settings.showStatsByDefault).onChange(async (v) => {
+        this.plugin.settings.showStatsByDefault = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle(
+      (t) => t.setValue(this.plugin.settings.hideChartOnMobile).onChange(async (v) => {
+        this.plugin.settings.hideChartOnMobile = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle(
+      (t) => t.setValue(this.plugin.settings.hideStatsOnMobile).onChange(async (v) => {
+        this.plugin.settings.hideStatsOnMobile = v;
+        await this.plugin.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0434\u043D\u0435\u0439").setDesc("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043F\u0440\u043E\u0448\u0435\u0434\u0448\u0438\u0445 \u0434\u043D\u0435\u0439, \u043A\u043E\u0442\u043E\u0440\u043E\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u043E\u0432 \u0438 \u043F\u0440\u0438\u0432\u044B\u0447\u0435\u043A").addText(
+      (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
+        const num = parseInt(v.trim());
+        if (!isNaN(num) && num > 0) {
+          this.plugin.settings.daysToShow = num;
+          await this.plugin.saveSettings();
+        }
+      })
+    );
+  }
+};
+
+// src/ui/modals/create-tracker-modal.ts
+var import_obsidian6 = require("obsidian");
+
+// src/ui/suggest/folder-suggest.ts
+var import_obsidian5 = require("obsidian");
+var FolderSuggest = class extends import_obsidian5.AbstractInputSuggest {
+  constructor(app, inputEl, folders) {
+    super(app, inputEl);
+    this.folders = folders;
+  }
+  getSuggestions(query) {
+    const normalizedQuery = query.toLowerCase().trim();
+    if (!normalizedQuery) {
+      return this.folders.slice(0, 100);
+    }
+    return this.folders.filter((folder) => {
+      const path = folder.path || "";
+      return path.toLowerCase().includes(normalizedQuery);
+    }).slice(0, 100);
+  }
+  renderSuggestion(folder, el) {
+    const path = folder.path || "";
+    el.textContent = path || "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)";
+  }
+  selectSuggestion(folder) {
+    const path = folder.path || "";
+    this.setValue(path);
+    this.close();
+  }
+};
+
+// src/ui/modals/create-tracker-modal.ts
+var CreateTrackerModal = class extends import_obsidian6.Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.plugin = plugin;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u044B\u0439 \u0442\u0440\u0435\u043A\u0435\u0440" });
+    const nameSetting = new import_obsidian6.Setting(contentEl).setName("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435").addText((text) => {
+      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430");
+      text.inputEl.style.width = "100%";
+    });
+    const folders = this.app.vault.getAllFolders();
+    const folderSetting = new import_obsidian6.Setting(contentEl).setName("\u041F\u0443\u0442\u044C").addText((text) => {
+      const defaultPath = this.plugin.settings.trackersFolder || DEFAULT_SETTINGS.trackersFolder;
+      text.setPlaceholder(defaultPath);
+      text.setValue("");
+      text.inputEl.style.width = "100%";
+      new FolderSuggest(this.app, text.inputEl, folders);
+    });
+    const typeSetting = new import_obsidian6.Setting(contentEl).setName("\u0422\u0438\u043F").addDropdown((dropdown) => {
+      dropdown.addOption("good-habit", "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
+      dropdown.addOption("bad-habit", "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
+      dropdown.addOption("number", "\u0427\u0438\u0441\u043B\u043E");
+      dropdown.addOption("scale", "\u0428\u043A\u0430\u043B\u0430");
+      dropdown.addOption("plusminus", "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)");
+      dropdown.addOption("text", "\u0422\u0435\u043A\u0441\u0442");
+      dropdown.setValue("good-habit");
+    });
+    const typeDropdown = typeSetting.controlEl.querySelector("select");
+    if (typeDropdown) {
+      typeDropdown.innerHTML = "";
+      const habitsGroup = document.createElement("optgroup");
+      habitsGroup.label = "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438";
+      const goodHabitOption = document.createElement("option");
+      goodHabitOption.value = "good-habit";
+      goodHabitOption.textContent = "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      habitsGroup.appendChild(goodHabitOption);
+      const badHabitOption = document.createElement("option");
+      badHabitOption.value = "bad-habit";
+      badHabitOption.textContent = "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      habitsGroup.appendChild(badHabitOption);
+      typeDropdown.appendChild(habitsGroup);
+      const metricsGroup = document.createElement("optgroup");
+      metricsGroup.label = "\u041C\u0435\u0442\u0440\u0438\u043A\u0438";
+      const numberOption = document.createElement("option");
+      numberOption.value = "number";
+      numberOption.textContent = "\u0427\u0438\u0441\u043B\u043E";
+      metricsGroup.appendChild(numberOption);
+      const scaleOption = document.createElement("option");
+      scaleOption.value = "scale";
+      scaleOption.textContent = "\u0428\u043A\u0430\u043B\u0430";
+      metricsGroup.appendChild(scaleOption);
+      const plusminusOption = document.createElement("option");
+      plusminusOption.value = "plusminus";
+      plusminusOption.textContent = "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)";
+      metricsGroup.appendChild(plusminusOption);
+      const textOption = document.createElement("option");
+      textOption.value = "text";
+      textOption.textContent = "\u0422\u0435\u043A\u0441\u0442";
+      metricsGroup.appendChild(textOption);
+      typeDropdown.appendChild(metricsGroup);
+      typeDropdown.value = "good-habit";
+    }
+    const parametersHeader = contentEl.createEl("h3", { text: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" });
+    const parametersDescription = contentEl.createEl("p", {
+      text: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F - \u043D\u0435 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u043F\u043E\u043B\u0435. \u041C\u043E\u0436\u043D\u043E \u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C.",
+      cls: "tracker-notes__limits-description"
+    });
+    parametersDescription.style.fontSize = "0.9em";
+    parametersDescription.style.color = "var(--text-muted, #999999)";
+    parametersDescription.style.marginTop = "0.5em";
+    parametersDescription.style.marginBottom = "1em";
+    const unitSetting = new import_obsidian6.Setting(contentEl).setName("\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F").addText((text) => {
+      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u043C\u0435\u0442\u0440\u044B, \u043C\u0438\u043D\u0443\u0442\u044B, \u043A\u0433");
+      text.inputEl.style.width = "100%";
+    });
+    const unitInput = unitSetting.controlEl.querySelector("input");
+    const plusminusStepSetting = new import_obsidian6.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
+      text.setPlaceholder("1").setValue("1").inputEl.type = "number";
+      text.inputEl.step = "any";
+      text.inputEl.style.width = "100%";
+    });
+    const minValueSetting = new import_obsidian6.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"').addText((text) => {
+      text.setPlaceholder("0").setValue("0").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const maxValueSetting = new import_obsidian6.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"').addText((text) => {
+      text.setPlaceholder("10").setValue("10").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const stepSetting = new import_obsidian6.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
+      text.setPlaceholder("1").setValue("1").inputEl.type = "number";
+      text.inputEl.step = "any";
+      text.inputEl.style.width = "100%";
+    });
+    parametersHeader.style.display = "none";
+    parametersDescription.style.display = "none";
+    unitSetting.settingEl.style.display = "none";
+    plusminusStepSetting.settingEl.style.display = "none";
+    minValueSetting.settingEl.style.display = "none";
+    maxValueSetting.settingEl.style.display = "none";
+    stepSetting.settingEl.style.display = "none";
+    const limitsHeader = contentEl.createEl("h3", { text: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438" });
+    const limitsDescription = contentEl.createEl("p", {
+      text: '\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F. \u041F\u0440\u0438\u043C. "\u041D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 5000 \u0448\u0430\u0433\u043E\u0432 \u0432 \u0434\u0435\u043D\u044C", "\u041D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 3\u0445 \u0448\u043E\u043A\u043E\u043B\u0430\u0434\u043E\u043A"',
+      cls: "tracker-notes__limits-description"
+    });
+    limitsDescription.style.fontSize = "0.9em";
+    limitsDescription.style.color = "var(--text-muted, #999999)";
+    limitsDescription.style.marginTop = "0.5em";
+    limitsDescription.style.marginBottom = "1em";
+    const minLimitSetting = new import_obsidian6.Setting(contentEl).setName("\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
+      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue("").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const maxLimitSetting = new import_obsidian6.Setting(contentEl).setName("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
+      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue("").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    limitsHeader.style.display = "none";
+    limitsDescription.style.display = "none";
+    minLimitSetting.settingEl.style.display = "none";
+    maxLimitSetting.settingEl.style.display = "none";
+    const typeDropdownSelect = typeSetting.controlEl.querySelector("select");
+    if (typeDropdownSelect) {
+      typeDropdownSelect.onchange = () => {
+        const isScale = typeDropdownSelect.value === "scale";
+        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(
+          typeDropdownSelect.value
+        );
+        const isPlusminus = typeDropdownSelect.value === "plusminus";
+        const isText = typeDropdownSelect.value === "text";
+        if (isMetric) {
+          parametersHeader.style.display = "";
+          parametersDescription.style.display = "";
+          unitSetting.settingEl.style.display = "";
+          if (isText) {
+            if (unitInput) {
+              unitInput.value = "\u0441\u043B\u043E\u0432";
+              unitInput.disabled = true;
+            }
+          } else if (unitInput) {
+            unitInput.disabled = false;
+          }
+          if (isScale) {
+            minValueSetting.settingEl.style.display = "";
+            maxValueSetting.settingEl.style.display = "";
+            stepSetting.settingEl.style.display = "";
+            plusminusStepSetting.settingEl.style.display = "none";
+          } else {
+            minValueSetting.settingEl.style.display = "none";
+            maxValueSetting.settingEl.style.display = "none";
+            stepSetting.settingEl.style.display = "none";
+            plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
+          }
+        } else {
+          parametersHeader.style.display = "none";
+          parametersDescription.style.display = "none";
+          unitSetting.settingEl.style.display = "none";
+          plusminusStepSetting.settingEl.style.display = "none";
+          minValueSetting.settingEl.style.display = "none";
+          maxValueSetting.settingEl.style.display = "none";
+          stepSetting.settingEl.style.display = "none";
+        }
+        if (isMetric) {
+          limitsHeader.style.display = "";
+          limitsDescription.style.display = "";
+          minLimitSetting.settingEl.style.display = "";
+          maxLimitSetting.settingEl.style.display = "";
+        } else {
+          limitsHeader.style.display = "none";
+          limitsDescription.style.display = "none";
+          minLimitSetting.settingEl.style.display = "none";
+          maxLimitSetting.settingEl.style.display = "none";
+        }
+      };
+    }
+    new import_obsidian6.Setting(contentEl).addButton((button) => {
+      button.setButtonText("\u0421\u043E\u0437\u0434\u0430\u0442\u044C").setCta().onClick(async () => {
+        const nameInput = nameSetting.controlEl.querySelector("input");
+        const name = nameInput.value.trim();
+        if (!name) {
+          new import_obsidian6.Notice("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435");
+          return;
+        }
+        const typeDropdownSelect2 = typeSetting.controlEl.querySelector("select");
+        const type = typeDropdownSelect2 ? typeDropdownSelect2.value : "good-habit";
+        const minValue = type === "scale" ? minValueSetting.controlEl.querySelector("input")?.value || "0" : "0";
+        const maxValue = type === "scale" ? maxValueSetting.controlEl.querySelector("input")?.value || "10" : "10";
+        const step = type === "scale" ? stepSetting.controlEl.querySelector("input")?.value || "1" : type === "plusminus" ? plusminusStepSetting.controlEl.querySelector("input")?.value || "1" : "1";
+        const minLimitInput = minLimitSetting.controlEl.querySelector("input");
+        const maxLimitInput = maxLimitSetting.controlEl.querySelector("input");
+        const minLimit = minLimitInput?.value.trim() || "";
+        const maxLimit = maxLimitInput?.value.trim() || "";
+        const unitInputValue = unitSetting.controlEl.querySelector("input");
+        const unitRaw = unitInputValue?.value.trim() || "";
+        const unit = type === "text" ? "\u0441\u043B\u043E\u0432" : unitRaw;
+        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(type);
+        const fileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
+        const folderInput = folderSetting.controlEl.querySelector("input");
+        let inputFolder = folderInput?.value.trim() || "";
+        if (inputFolder === "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)") {
+          inputFolder = "";
+        }
+        const targetFolder = inputFolder || this.plugin.settings.trackersFolder;
+        const filePath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
+        try {
+          const file = await this.plugin.ensureFileWithHeading(filePath, type);
+          const content = await this.app.vault.read(file);
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const escapedName = name.replace(/"/g, '\\"');
+          let newFrontmatter = `name: "${escapedName}"
+type: "${type}"
+`;
+          if (type === "scale") {
+            newFrontmatter += `minValue: ${parseFloat(minValue) || 0}
+`;
+            newFrontmatter += `maxValue: ${parseFloat(maxValue) || 10}
+`;
+            newFrontmatter += `step: ${parseFloat(step) || 1}
+`;
+          } else if (type === "plusminus") {
+            newFrontmatter += `step: ${parseFloat(step) || 1}
+`;
+          }
+          if (minLimit) {
+            newFrontmatter += `minLimit: ${parseFloat(minLimit)}
+`;
+          }
+          if (maxLimit) {
+            newFrontmatter += `maxLimit: ${parseFloat(maxLimit)}
+`;
+          }
+          if (unit && isMetric) {
+            const escapedUnit = unit.replace(/"/g, '\\"');
+            newFrontmatter += `unit: "${escapedUnit}"
+`;
+          }
+          newFrontmatter += `data: {}
+`;
+          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
+          const newContent = `---
+${newFrontmatter}---${body ? `
+
+${body}` : ""}`;
+          await this.app.vault.modify(file, newContent);
+          new import_obsidian6.Notice(`\u0421\u043E\u0437\u0434\u0430\u043D \u0442\u0440\u0435\u043A\u0435\u0440: ${name}`);
+          const fileFolderPath = this.plugin.getFolderPathFromFile(file.path);
+          await this.plugin.onTrackerCreated(fileFolderPath);
+          this.close();
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          new import_obsidian6.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
+          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+        }
+      });
+    });
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/ui/modals/edit-tracker-modal.ts
+var import_obsidian7 = require("obsidian");
+var EditTrackerModal = class extends import_obsidian7.Modal {
+  constructor(app, plugin, file) {
+    super(app);
+    this.plugin = plugin;
+    this.file = file;
+  }
+  async onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440" });
+    const fileOpts = await this.plugin.getFileTypeFromFrontmatter(this.file);
+    const currentType = fileOpts.mode || "good-habit";
+    const currentName = this.file.basename;
+    const currentUnit = fileOpts.unit || "";
+    const currentMinValue = fileOpts.minValue || "";
+    const currentMaxValue = fileOpts.maxValue || "";
+    const currentStep = fileOpts.step || "";
+    const currentMinLimit = fileOpts.minLimit || "";
+    const currentMaxLimit = fileOpts.maxLimit || "";
+    const nameSetting = new import_obsidian7.Setting(contentEl).setName("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435").addText((text) => {
+      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430");
+      text.setValue(currentName);
+      text.inputEl.style.width = "100%";
+    });
+    const typeSetting = new import_obsidian7.Setting(contentEl).setName("\u0422\u0438\u043F").addDropdown((dropdown) => {
+      dropdown.addOption("good-habit", "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
+      dropdown.addOption("bad-habit", "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
+      dropdown.addOption("number", "\u0427\u0438\u0441\u043B\u043E");
+      dropdown.addOption("scale", "\u0428\u043A\u0430\u043B\u0430");
+      dropdown.addOption("plusminus", "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)");
+      dropdown.addOption("text", "\u0422\u0435\u043A\u0441\u0442");
+      dropdown.setValue(currentType);
+      dropdown.selectEl.disabled = true;
+    });
+    const typeDropdown = typeSetting.controlEl.querySelector("select");
+    if (typeDropdown) {
+      typeDropdown.innerHTML = "";
+      const habitsGroup = document.createElement("optgroup");
+      habitsGroup.label = "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438";
+      const goodHabitOption = document.createElement("option");
+      goodHabitOption.value = "good-habit";
+      goodHabitOption.textContent = "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      habitsGroup.appendChild(goodHabitOption);
+      const badHabitOption = document.createElement("option");
+      badHabitOption.value = "bad-habit";
+      badHabitOption.textContent = "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      habitsGroup.appendChild(badHabitOption);
+      typeDropdown.appendChild(habitsGroup);
+      const metricsGroup = document.createElement("optgroup");
+      metricsGroup.label = "\u041C\u0435\u0442\u0440\u0438\u043A\u0438";
+      const numberOption = document.createElement("option");
+      numberOption.value = "number";
+      numberOption.textContent = "\u0427\u0438\u0441\u043B\u043E";
+      metricsGroup.appendChild(numberOption);
+      const scaleOption = document.createElement("option");
+      scaleOption.value = "scale";
+      scaleOption.textContent = "\u0428\u043A\u0430\u043B\u0430";
+      metricsGroup.appendChild(scaleOption);
+      const plusminusOption = document.createElement("option");
+      plusminusOption.value = "plusminus";
+      plusminusOption.textContent = "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)";
+      metricsGroup.appendChild(plusminusOption);
+      const textOption = document.createElement("option");
+      textOption.value = "text";
+      textOption.textContent = "\u0422\u0435\u043A\u0441\u0442";
+      metricsGroup.appendChild(textOption);
+      typeDropdown.appendChild(metricsGroup);
+      typeDropdown.value = currentType;
+      typeDropdown.disabled = true;
+    }
+    const parametersHeader = contentEl.createEl("h3", { text: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" });
+    const parametersDescription = contentEl.createEl("p", {
+      text: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F - \u043D\u0435 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u043F\u043E\u043B\u0435. \u041C\u043E\u0436\u043D\u043E \u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C.",
+      cls: "tracker-notes__limits-description"
+    });
+    parametersDescription.style.fontSize = "0.9em";
+    parametersDescription.style.color = "var(--text-muted, #999999)";
+    parametersDescription.style.marginTop = "0.5em";
+    parametersDescription.style.marginBottom = "1em";
+    const unitSetting = new import_obsidian7.Setting(contentEl).setName("\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F").addText((text) => {
+      const unitValue = currentType === "text" ? "\u0441\u043B\u043E\u0432" : currentUnit;
+      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u043C\u0435\u0442\u0440\u044B, \u043C\u0438\u043D\u0443\u0442\u044B, \u043A\u0433");
+      text.setValue(unitValue);
+      text.inputEl.style.width = "100%";
+      if (currentType === "text") {
+        text.inputEl.disabled = true;
+      }
+    });
+    const unitInput = unitSetting.controlEl.querySelector("input");
+    const plusminusStepSetting = new import_obsidian7.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
+      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
+      text.inputEl.step = "any";
+      text.inputEl.style.width = "100%";
+    });
+    const minValueSetting = new import_obsidian7.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"').addText((text) => {
+      text.setPlaceholder("0").setValue(currentMinValue || "0").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const maxValueSetting = new import_obsidian7.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"').addText((text) => {
+      text.setPlaceholder("10").setValue(currentMaxValue || "10").inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const stepSetting = new import_obsidian7.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
+      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
+      text.inputEl.step = "any";
+      text.inputEl.style.width = "100%";
+    });
+    const limitsHeader = contentEl.createEl("h3", { text: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438" });
+    const limitsDescription = contentEl.createEl("p", {
+      text: '\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F. \u041F\u0440\u0438\u043C. "\u041D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 5000 \u0448\u0430\u0433\u043E\u0432 \u0432 \u0434\u0435\u043D\u044C", "\u041D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 3\u0445 \u0448\u043E\u043A\u043E\u043B\u0430\u0434\u043E\u043A"',
+      cls: "tracker-notes__limits-description"
+    });
+    limitsDescription.style.fontSize = "0.9em";
+    limitsDescription.style.color = "var(--text-muted, #999999)";
+    limitsDescription.style.marginTop = "0.5em";
+    limitsDescription.style.marginBottom = "1\u0435\u043C";
+    const minLimitSetting = new import_obsidian7.Setting(contentEl).setName("\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
+      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMinLimit).inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const maxLimitSetting = new import_obsidian7.Setting(contentEl).setName("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
+      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMaxLimit).inputEl.type = "number";
+      text.inputEl.style.width = "100%";
+    });
+    const updateFieldsVisibility = () => {
+      const isScale = typeDropdown.value === "scale";
+      const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(typeDropdown.value);
+      const isPlusminus = typeDropdown.value === "plusminus";
+      const isText = typeDropdown.value === "text";
+      if (isMetric) {
+        parametersHeader.style.display = "";
+        parametersDescription.style.display = "";
+        unitSetting.settingEl.style.display = "";
+        if (isText) {
+          if (unitInput) {
+            unitInput.value = "\u0441\u043B\u043E\u0432";
+            unitInput.disabled = true;
+          }
+        } else if (unitInput) {
+          unitInput.disabled = false;
+        }
+        if (isScale) {
+          minValueSetting.settingEl.style.display = "";
+          maxValueSetting.settingEl.style.display = "";
+          stepSetting.settingEl.style.display = "";
+          plusminusStepSetting.settingEl.style.display = "none";
+        } else {
+          minValueSetting.settingEl.style.display = "none";
+          maxValueSetting.settingEl.style.display = "none";
+          stepSetting.settingEl.style.display = "none";
+          plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
+        }
+      } else {
+        parametersHeader.style.display = "none";
+        parametersDescription.style.display = "none";
+        unitSetting.settingEl.style.display = "none";
+        plusminusStepSetting.settingEl.style.display = "none";
+        minValueSetting.settingEl.style.display = "none";
+        maxValueSetting.settingEl.style.display = "none";
+        stepSetting.settingEl.style.display = "none";
+      }
+      if (isMetric) {
+        limitsHeader.style.display = "";
+        limitsDescription.style.display = "";
+        minLimitSetting.settingEl.style.display = "";
+        maxLimitSetting.settingEl.style.display = "";
+      } else {
+        limitsHeader.style.display = "none";
+        limitsDescription.style.display = "none";
+        minLimitSetting.settingEl.style.display = "none";
+        maxLimitSetting.settingEl.style.display = "none";
+      }
+    };
+    updateFieldsVisibility();
+    if (typeDropdown) {
+      typeDropdown.onchange = updateFieldsVisibility;
+    }
+    new import_obsidian7.Setting(contentEl).addButton((button) => {
+      button.setButtonText("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C").setCta().onClick(async () => {
+        const nameInput = nameSetting.controlEl.querySelector("input");
+        const name = nameInput.value.trim();
+        if (!name) {
+          new import_obsidian7.Notice("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435");
+          return;
+        }
+        const type = typeDropdown ? typeDropdown.value : currentType;
+        const minValue = type === "scale" ? minValueSetting.controlEl.querySelector("input")?.value || "0" : "0";
+        const maxValue = type === "scale" ? maxValueSetting.controlEl.querySelector("input")?.value || "10" : "10";
+        const step = type === "scale" ? stepSetting.controlEl.querySelector("input")?.value || "1" : type === "plusminus" ? plusminusStepSetting.controlEl.querySelector("input")?.value || "1" : "1";
+        const minLimitInput = minLimitSetting.controlEl.querySelector("input");
+        const maxLimitInput = maxLimitSetting.controlEl.querySelector("input");
+        const minLimit = minLimitInput?.value.trim() || "";
+        const maxLimit = maxLimitInput?.value.trim() || "";
+        const unitInputValue = unitSetting.controlEl.querySelector("input");
+        const unitRaw = unitInputValue?.value.trim() || "";
+        const unit = type === "text" ? "\u0441\u043B\u043E\u0432" : unitRaw;
+        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(type);
+        try {
+          const content = await this.app.vault.read(this.file);
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
+          let existingData = {};
+          if (frontmatterMatch) {
+            existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
+          }
+          const escapedName = name.replace(/"/g, '\\"');
+          let newFrontmatter = `name: "${escapedName}"
+type: "${type}"
+`;
+          if (type === "scale") {
+            newFrontmatter += `minValue: ${parseFloat(minValue) || 0}
+`;
+            newFrontmatter += `maxValue: ${parseFloat(maxValue) || 10}
+`;
+            newFrontmatter += `step: ${parseFloat(step) || 1}
+`;
+          } else if (type === "plusminus") {
+            newFrontmatter += `step: ${parseFloat(step) || 1}
+`;
+          }
+          if (minLimit) {
+            newFrontmatter += `minLimit: ${parseFloat(minLimit)}
+`;
+          }
+          if (maxLimit) {
+            newFrontmatter += `maxLimit: ${parseFloat(maxLimit)}
+`;
+          }
+          if (unit && isMetric) {
+            const escapedUnit = unit.replace(/"/g, '\\"');
+            newFrontmatter += `unit: "${escapedUnit}"
+`;
+          }
+          const dataYaml = this.plugin.formatDataToYaml(existingData);
+          newFrontmatter += dataYaml;
+          const newContent = `---
+${newFrontmatter}---${body ? `
+
+${body}` : ""}`;
+          await this.app.vault.modify(this.file, newContent);
+          if (name !== this.file.basename) {
+            const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
+            const newPath = this.file.path.replace(this.file.name, newFileName);
+            await this.app.vault.rename(this.file, newPath);
+          }
+          new import_obsidian7.Notice(`\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D: ${name}`);
+          const fileFolderPath = this.plugin.getFolderPathFromFile(this.file.path);
+          await this.plugin.onTrackerCreated(fileFolderPath);
+          this.close();
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          new import_obsidian7.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
+          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+        }
+      });
+    });
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
+
+// src/ui/modals/file-picker-modal.ts
+var import_obsidian8 = require("obsidian");
+var FilePickerModal = class extends import_obsidian8.Modal {
+  constructor(app, files, onPick) {
+    super(app);
+    this.files = files;
+    this.onPick = onPick;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    if (this.files.length === 0) {
+      new import_obsidian8.Notice("\u041D\u0435\u0442 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432");
+      this.close();
+      return;
+    }
+    contentEl.createEl("h3", { text: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0440\u0435\u043A\u0435\u0440" });
+    this.files.slice(0, 200).forEach((file) => {
+      const btn = contentEl.createEl("button", { text: file.path });
+      btn.onclick = () => {
+        this.close();
+        this.onPick(file);
+      };
+    });
+  }
+  onClose() {
+    this.onPick(null);
+    this.contentEl.empty();
+  }
+};
+
+// src/core/tracker-plugin.ts
+Chart.register(...registerables);
+var TrackerPlugin = class extends import_obsidian9.Plugin {
   constructor() {
     super(...arguments);
     this.activeBlocks = /* @__PURE__ */ new Set();
@@ -14739,6 +15739,8 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
   }
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.folderTreeService = new FolderTreeService(this.app);
+    this.trackerFileService = new TrackerFileService(this.app);
     this.addStyleSheet();
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
@@ -14750,7 +15752,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
     });
     this.registerEvent(
       this.app.vault.on("create", (file) => {
-        if (file instanceof import_obsidian.TFile && file.extension === "md" && this.isFileInTrackersFolder(file)) {
+        if (file instanceof import_obsidian9.TFile && file.extension === "md" && this.isFileInTrackersFolder(file)) {
           const fileFolderPath = this.getFolderPathFromFile(file.path);
           setTimeout(() => {
             this.refreshBlocksForFolder(fileFolderPath);
@@ -14766,6 +15768,9 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
   }
   getFolderPathFromFile(filePath) {
     return filePath.substring(0, filePath.lastIndexOf("/"));
+  }
+  getFolderTree(folderPath) {
+    return this.folderTreeService.getFolderTree(folderPath);
   }
   addStyleSheet() {
     const styleEl = document.createElement("style");
@@ -15071,54 +16076,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
   }
   // Вспомогательная функция для получения типа из frontmatter файла
   async getFileTypeFromFrontmatter(file) {
-    const fileOpts = {};
-    try {
-      const fileContent = await this.app.vault.read(file);
-      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
-        if (typeMatch && typeMatch[1]) {
-          fileOpts.mode = typeMatch[1].trim();
-        } else {
-          fileOpts.mode = "good-habit";
-        }
-        const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
-        if (maxRatingMatch) {
-          fileOpts.maxRating = maxRatingMatch[1];
-        }
-        const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
-        if (minValueMatch) {
-          fileOpts.minValue = minValueMatch[1];
-        }
-        const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
-        if (maxValueMatch) {
-          fileOpts.maxValue = maxValueMatch[1];
-        }
-        const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
-        if (stepMatch) {
-          fileOpts.step = stepMatch[1];
-        }
-        const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
-        if (minLimitMatch) {
-          fileOpts.minLimit = minLimitMatch[1];
-        }
-        const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
-        if (maxLimitMatch) {
-          fileOpts.maxLimit = maxLimitMatch[1];
-        }
-        const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
-        if (unitMatch && unitMatch[1]) {
-          fileOpts.unit = unitMatch[1].trim();
-        }
-      } else {
-        fileOpts.mode = "good-habit";
-      }
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F frontmatter", error);
-      fileOpts.mode = "good-habit";
-    }
-    return fileOpts;
+    return this.trackerFileService.getFileTypeFromFrontmatter(file);
   }
   async updateTrackerDate(trackerItem, file, dateIso, opts) {
     const controlsContainerEl = trackerItem.querySelector(".tracker-notes__controls");
@@ -15237,7 +16195,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       input.onchange = async () => {
         const val = input.checked ? 1 : 0;
         await this.writeLogLine(file, dateIso, String(val));
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${val}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${val}`, 2e3);
         input.style.transform = "scale(1.1)";
         setTimeout(() => input.style.transform = "", 200);
         await updateVisualizations();
@@ -15251,7 +16209,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
         const val = Number(input.value);
         if (input.value === "" || isNaN(val)) return;
         await this.writeLogLine(file, dateIso, String(val));
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${val}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${val}`, 2e3);
         input.value = String(val);
         input.style.transform = "scale(0.98)";
         setTimeout(() => input.style.transform = "", 200);
@@ -15307,7 +16265,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
             else s.removeClass("active");
           });
           await this.writeLogLine(file, dateIso, String(i));
-          new import_obsidian.Notice(`\u2B50 \u041E\u0446\u0435\u043D\u043A\u0430: ${dateIso}: ${i}/${maxRating}`, 2e3);
+          new import_obsidian9.Notice(`\u2B50 \u041E\u0446\u0435\u043D\u043A\u0430: ${dateIso}: ${i}/${maxRating}`, 2e3);
           await updateVisualizations();
         };
       }
@@ -15323,7 +16281,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       btn.onclick = async () => {
         const val = input.value.trim();
         await this.writeLogLine(file, dateIso, val);
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}`, 2e3);
         btn.style.transform = "scale(0.95)";
         setTimeout(() => btn.style.transform = "", 200);
         await updateVisualizations();
@@ -15408,7 +16366,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
           progressBarInput.style.cursor = "";
           if (hasMoved) {
             await this.writeLogLine(file, dateIso, String(currentValue));
-            new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
+            new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
             await updateVisualizations();
           }
         }
@@ -15425,7 +16383,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
         currentValue = newValue;
         updateProgressBar(currentValue);
         await this.writeLogLine(file, dateIso, String(currentValue));
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
         await updateVisualizations();
       };
       const handleKeyDown = (e) => {
@@ -15451,7 +16409,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       const handleKeyUp = async (e) => {
         if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
           await this.writeLogLine(file, dateIso, String(currentValue));
-          new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
+          new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateIso}: ${currentValue}`, 2e3);
           await updateVisualizations();
         }
       };
@@ -15553,7 +16511,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
         const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
         const newValue = isChecked ? 0 : 1;
         await this.writeLogLine(file, dateStr, String(newValue));
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
         await updateVisualizations(dateStr, dayDiv);
       };
       const hasValue = entries.has(dateStr) && (entries.get(dateStr) === 1 || entries.get(dateStr) === "1" || String(entries.get(dateStr)) === "true");
@@ -15669,7 +16627,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
         const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
         const newValue = isChecked ? 0 : 1;
         await this.writeLogLine(file, dateStr, String(newValue));
-        new import_obsidian.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
         await updateVisualizations(dateStr, dayDiv);
       };
     }
@@ -15691,12 +16649,6 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
         performScroll();
       });
     });
-  }
-  // Вспомогательная функция для подсчета слов в тексте
-  countWords(text) {
-    const trimmed = text.trim();
-    if (trimmed === "") return 0;
-    return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
   }
   async renderChart(container, file, dateIso, daysToShow) {
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
@@ -15807,7 +16759,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       let numVal = 0;
       if (val != null) {
         if (metricType === "text") {
-          numVal = this.countWords(String(val));
+          numVal = countWords(String(val));
         } else if (typeof val === "number") {
           numVal = val;
         } else if (val === "1" || String(val) === "true") {
@@ -16222,7 +17174,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       let numVal = 0;
       if (val != null) {
         if (metricType === "text") {
-          numVal = this.countWords(String(val));
+          numVal = countWords(String(val));
         } else if (typeof val === "number") {
           numVal = val;
         } else if (val === "1" || String(val) === "true") {
@@ -16308,7 +17260,7 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
       let numVal = 0;
       if (val != null) {
         if (metricType === "text") {
-          numVal = this.countWords(String(val));
+          numVal = countWords(String(val));
         } else if (typeof val === "number") {
           numVal = val;
         } else if (val === "1" || String(val) === "true") {
@@ -16357,120 +17309,13 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
     await this.updateStats(statsDiv, file, dateIso, daysToShow, trackerType);
   }
   getStartTrackingDate(entries, file) {
-    const m = window.moment;
-    let startTrackingDate = null;
-    if (file) {
-      const fileStat = file.stat;
-      if (fileStat && fileStat.ctime) {
-        startTrackingDate = m ? m(fileStat.ctime) : new Date(fileStat.ctime);
-        if (m) {
-          startTrackingDate = startTrackingDate.startOf("day");
-        } else {
-          startTrackingDate.setHours(0, 0, 0, 0);
-        }
-      }
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = m ? m(firstDateStr, this.settings.dateFormat) : parseDate(firstDateStr, this.settings.dateFormat);
-      if (!startTrackingDate || (m ? firstDate.isBefore(startTrackingDate) : firstDate < startTrackingDate)) {
-        startTrackingDate = firstDate;
-      }
-    }
-    if (!startTrackingDate) {
-      return null;
-    }
-    return m ? startTrackingDate.format(this.settings.dateFormat) : formatDate(startTrackingDate, this.settings.dateFormat);
+    return this.trackerFileService.getStartTrackingDate(entries, this.settings, file);
   }
   calculateStreak(entries, m, endDate, trackerType, file) {
-    let streak = 0;
-    let currentDate = m ? m(endDate) : new Date(endDate);
-    const metricType = (trackerType || "good-habit").toLowerCase();
-    const isBadHabit = metricType === "bad-habit";
-    let startTrackingDate = null;
-    if (file) {
-      const fileStat = file.stat;
-      if (fileStat && fileStat.ctime) {
-        startTrackingDate = m ? m(fileStat.ctime) : new Date(fileStat.ctime);
-        if (m) {
-          startTrackingDate = startTrackingDate.startOf("day");
-        } else {
-          startTrackingDate.setHours(0, 0, 0, 0);
-        }
-      }
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = m ? m(firstDateStr, this.settings.dateFormat) : parseDate(firstDateStr, this.settings.dateFormat);
-      if (!startTrackingDate || (m ? firstDate.isBefore(startTrackingDate) : firstDate < startTrackingDate)) {
-        startTrackingDate = firstDate;
-      }
-    }
-    if (!startTrackingDate) {
-      startTrackingDate = m ? m(endDate).subtract(365, "days") : addDays(endDate, -365);
-    }
-    const maxDaysBack = 3650;
-    let daysChecked = 0;
-    while (daysChecked < maxDaysBack) {
-      if (m) {
-        if (currentDate.isBefore(startTrackingDate)) {
-          break;
-        }
-      } else {
-        if (currentDate < startTrackingDate) {
-          break;
-        }
-      }
-      const dateStr = m ? currentDate.format(this.settings.dateFormat) : formatDate(currentDate, this.settings.dateFormat);
-      const val = entries.get(dateStr);
-      let isSuccess = false;
-      if (isBadHabit) {
-        if (val == null) {
-          isSuccess = true;
-        } else {
-          const valStr = String(val);
-          const hasValue = typeof val === "number" ? val !== 0 : valStr === "1" || valStr === "true" || valStr.trim() !== "";
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null) {
-          const valStr = String(val);
-          isSuccess = typeof val === "number" ? val !== 0 : valStr === "1" || valStr === "true" || valStr.trim() !== "";
-        } else {
-          isSuccess = false;
-        }
-      }
-      if (isSuccess) {
-        streak++;
-      } else {
-        break;
-      }
-      if (m) {
-        currentDate = currentDate.subtract(1, "day");
-      } else {
-        currentDate = addDays(currentDate, -1);
-      }
-      daysChecked++;
-    }
-    return streak;
+    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file);
   }
   async readAllEntries(file) {
-    const entries = /* @__PURE__ */ new Map();
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return entries;
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
-      Object.entries(data).forEach(([date, value]) => {
-        entries.set(date, value);
-      });
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439", error);
-    }
-    return entries;
+    return this.trackerFileService.readAllEntries(file);
   }
   // ---- Создание привычки ----------------------------------------------------
   async createNewTracker() {
@@ -16481,125 +17326,25 @@ var TrackerPlugin = class extends import_obsidian.Plugin {
   }
   // ---- Чтение/запись --------------------------------------------------------
   async ensureFileWithHeading(filePath, type = "good-habit") {
-    const existing = this.app.vault.getAbstractFileByPath(filePath);
-    if (existing instanceof import_obsidian.TFile) return existing;
-    const dir = filePath.split("/").slice(0, -1).join("/");
-    if (dir && !this.app.vault.getAbstractFileByPath(dir)) {
-      await this.app.vault.createFolder(dir);
-    }
-    const name = filePath.split("/").pop()?.replace(".md", "") || "Untitled";
-    const content = `---
-name: "${name.replace(/"/g, '\\"')}"
-type: "${type}"
-data: {}
----
-`;
-    return await this.app.vault.create(filePath, content);
+    return this.trackerFileService.ensureFileWithHeading(filePath, type);
   }
   // Парсит YAML frontmatter и возвращает объект данных
   parseFrontmatterData(frontmatter) {
-    const data = {};
-    const dataMatch = frontmatter.match(/data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/);
-    if (dataMatch) {
-      if (frontmatter.match(/data:\s*\{\}/)) {
-        return data;
-      }
-      const dataContent = dataMatch[1];
-      if (dataContent) {
-        const dataLines = dataContent.split(/\n/);
-        dataLines.forEach((line) => {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith("#") || trimmed === "{}") return;
-          const match = trimmed.match(/^["']([^"']+)["']\s*:\s*(.+)$/);
-          if (match) {
-            const key = match[1].trim();
-            let value = match[2].trim();
-            if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-              value = value.slice(1, -1);
-              value = value.replace(/\\"/g, '"').replace(/\\'/g, "'");
-            }
-            data[key] = parseMaybeNumber(value);
-          } else {
-            const matchNoQuotes = trimmed.match(/^([^:]+?)\s*:\s*(.+)$/);
-            if (matchNoQuotes) {
-              const key = matchNoQuotes[1].trim();
-              let value = matchNoQuotes[2].trim();
-              if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
-                value = value.slice(1, -1);
-                value = value.replace(/\\"/g, '"').replace(/\\'/g, "'");
-              }
-              data[key] = parseMaybeNumber(value);
-            }
-          }
-        });
-      }
-    }
-    return data;
+    return this.trackerFileService.parseFrontmatterData(frontmatter);
   }
   // Форматирует данные в YAML формат
   formatDataToYaml(data) {
-    if (Object.keys(data).length === 0) {
-      return "data: {}\n";
-    }
-    let yaml = "data:\n";
-    const sortedDates = Object.keys(data).sort();
-    sortedDates.forEach((date) => {
-      const value = data[date];
-      if (typeof value === "string") {
-        const escapedValue = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r");
-        yaml += `  "${date}": "${escapedValue}"
-`;
-      } else {
-        yaml += `  "${date}": ${value}
-`;
-      }
-    });
-    return yaml;
+    return this.trackerFileService.formatDataToYaml(data);
   }
   async readValueForDate(file, dateIso) {
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return null;
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
-      return data[dateIso] ?? null;
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F", error);
-      return null;
-    }
+    return this.trackerFileService.readValueForDate(file, dateIso);
   }
   async writeLogLine(file, dateIso, value) {
     try {
-      let f = file;
-      if (!f) throw new Error("file missing");
-      const content = await this.app.vault.read(f);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) {
-        throw new Error("Frontmatter \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D");
-      }
-      const frontmatter = frontmatterMatch[1];
-      const body = content.slice(frontmatterMatch[0].length);
-      let data = this.parseFrontmatterData(frontmatter);
-      data[dateIso] = parseMaybeNumber(value);
-      const dataYaml = this.formatDataToYaml(data);
-      let newFrontmatter = frontmatter.trim();
-      const dataMatch = newFrontmatter.match(/data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/);
-      if (dataMatch) {
-        const dataYamlTrimmed = dataYaml.endsWith("\n") ? dataYaml.slice(0, -1) : dataYaml;
-        newFrontmatter = newFrontmatter.replace(/data:\s*(?:\{\}|(?:\n((?:\s+[^\n]+\n?)*)))/, dataYamlTrimmed);
-      } else {
-        newFrontmatter = newFrontmatter + "\n" + dataYaml.trimEnd();
-      }
-      if (!newFrontmatter.endsWith("\n")) {
-        newFrontmatter += "\n";
-      }
-      const newContent = `---
-${newFrontmatter}---${body}`;
-      await this.app.vault.modify(f, newContent);
+      await this.trackerFileService.writeLogLine(file, dateIso, value);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      new import_obsidian.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438: ${errorMsg}`);
+      new import_obsidian9.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438: ${errorMsg}`);
       console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", error);
       throw error;
     }
@@ -16608,7 +17353,7 @@ ${newFrontmatter}---${body}`;
   async pickTrackerFile() {
     const files = this.app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(this.settings.trackersFolder + "/"));
     if (files.length === 0) {
-      new import_obsidian.Notice("\u041D\u0435\u0442 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432");
+      new import_obsidian9.Notice("\u041D\u0435\u0442 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432");
       return null;
     }
     if (files.length === 1) return files[0];
@@ -16620,669 +17365,9 @@ ${newFrontmatter}---${body}`;
     await this.saveData(this.settings);
   }
 };
-var TrackerSettingsTab = class extends import_obsidian.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-  display() {
-    const { containerEl } = this;
-    containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("\u041F\u0430\u043F\u043A\u0430 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C folder: `path`").addText((t) => t.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v) => {
-      this.plugin.settings.trackersFolder = v.trim();
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showChart: `true/false`").addToggle((t) => t.setValue(this.plugin.settings.showChartByDefault).onChange(async (v) => {
-      this.plugin.settings.showChartByDefault = v;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showStats: `true/false`").addToggle((t) => t.setValue(this.plugin.settings.showStatsByDefault).onChange(async (v) => {
-      this.plugin.settings.showStatsByDefault = v;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle((t) => t.setValue(this.plugin.settings.hideChartOnMobile).onChange(async (v) => {
-      this.plugin.settings.hideChartOnMobile = v;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle((t) => t.setValue(this.plugin.settings.hideStatsOnMobile).onChange(async (v) => {
-      this.plugin.settings.hideStatsOnMobile = v;
-      await this.plugin.saveSettings();
-    }));
-    new import_obsidian.Setting(containerEl).setName("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0434\u043D\u0435\u0439").setDesc("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043F\u0440\u043E\u0448\u0435\u0434\u0448\u0438\u0445 \u0434\u043D\u0435\u0439, \u043A\u043E\u0442\u043E\u0440\u043E\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u043E\u0432 \u0438 \u043F\u0440\u0438\u0432\u044B\u0447\u0435\u043A").addText((t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
-      const num = parseInt(v.trim());
-      if (!isNaN(num) && num > 0) {
-        this.plugin.settings.daysToShow = num;
-        await this.plugin.saveSettings();
-      }
-    }));
-  }
-};
-function parseOptions(src) {
-  const o = {};
-  src.split(/\r?\n/).forEach((l) => {
-    const m = l.match(/^\s*([a-zA-Z_]+)\s*:\s*(.+)\s*$/);
-    if (m) o[m[1].trim()] = m[2].trim();
-  });
-  return o;
-}
-function resolveDateIso(input, fmt) {
-  const m = window.moment;
-  if (!m) {
-    const today = /* @__PURE__ */ new Date();
-    if (!input || input.toLowerCase() === "today") {
-      return formatDate(today, fmt);
-    }
-    const parsed = new Date(input);
-    return isNaN(parsed.getTime()) ? formatDate(today, fmt) : formatDate(parsed, fmt);
-  }
-  if (!input || input.toLowerCase() === "today") return m().format(fmt);
-  const tryParse = m(input, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"], true);
-  return tryParse.isValid() ? tryParse.format(fmt) : m().format(fmt);
-}
-function formatDate(date, fmt) {
-  if (fmt === "YYYY-MM-DD") {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-  return date.toISOString().split("T")[0];
-}
-function parseDate(dateStr, fmt) {
-  if (fmt === "YYYY-MM-DD") {
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      return new Date(year, month, day);
-    }
-  }
-  return new Date(dateStr);
-}
-function addDays(date, days) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-function parseMaybeNumber(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : v;
-}
-var CreateTrackerModal = class extends import_obsidian.Modal {
-  constructor(app, plugin) {
-    super(app);
-    this.plugin = plugin;
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h2", { text: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u044B\u0439 \u0442\u0440\u0435\u043A\u0435\u0440" });
-    const nameSetting = new import_obsidian.Setting(contentEl).setName("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435").addText((text) => {
-      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430");
-      text.inputEl.style.width = "100%";
-    });
-    const folders = this.app.vault.getAllFolders();
-    const folderSetting = new import_obsidian.Setting(contentEl).setName("\u041F\u0443\u0442\u044C").addText((text) => {
-      const defaultPath = this.plugin.settings.trackersFolder || DEFAULT_SETTINGS.trackersFolder;
-      text.setPlaceholder(defaultPath);
-      text.setValue("");
-      text.inputEl.style.width = "100%";
-      new FolderSuggest(this.app, text.inputEl, folders);
-    });
-    const typeSetting = new import_obsidian.Setting(contentEl).setName("\u0422\u0438\u043F").addDropdown((dropdown) => {
-      dropdown.addOption("good-habit", "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("bad-habit", "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("number", "\u0427\u0438\u0441\u043B\u043E");
-      dropdown.addOption("scale", "\u0428\u043A\u0430\u043B\u0430");
-      dropdown.addOption("plusminus", "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)");
-      dropdown.addOption("text", "\u0422\u0435\u043A\u0441\u0442");
-      dropdown.setValue("good-habit");
-    });
-    const typeDropdown = typeSetting.controlEl.querySelector("select");
-    if (typeDropdown) {
-      typeDropdown.innerHTML = "";
-      const habitsGroup = document.createElement("optgroup");
-      habitsGroup.label = "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438";
-      const goodHabitOption = document.createElement("option");
-      goodHabitOption.value = "good-habit";
-      goodHabitOption.textContent = "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
-      habitsGroup.appendChild(goodHabitOption);
-      const badHabitOption = document.createElement("option");
-      badHabitOption.value = "bad-habit";
-      badHabitOption.textContent = "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
-      habitsGroup.appendChild(badHabitOption);
-      typeDropdown.appendChild(habitsGroup);
-      const metricsGroup = document.createElement("optgroup");
-      metricsGroup.label = "\u041C\u0435\u0442\u0440\u0438\u043A\u0438";
-      const numberOption = document.createElement("option");
-      numberOption.value = "number";
-      numberOption.textContent = "\u0427\u0438\u0441\u043B\u043E";
-      metricsGroup.appendChild(numberOption);
-      const scaleOption = document.createElement("option");
-      scaleOption.value = "scale";
-      scaleOption.textContent = "\u0428\u043A\u0430\u043B\u0430";
-      metricsGroup.appendChild(scaleOption);
-      const plusminusOption = document.createElement("option");
-      plusminusOption.value = "plusminus";
-      plusminusOption.textContent = "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)";
-      metricsGroup.appendChild(plusminusOption);
-      const textOption = document.createElement("option");
-      textOption.value = "text";
-      textOption.textContent = "\u0422\u0435\u043A\u0441\u0442";
-      metricsGroup.appendChild(textOption);
-      typeDropdown.appendChild(metricsGroup);
-      typeDropdown.value = "good-habit";
-    }
-    const parametersHeader = contentEl.createEl("h3", { text: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" });
-    const parametersDescription = contentEl.createEl("p", {
-      text: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F - \u043D\u0435 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u043F\u043E\u043B\u0435. \u041C\u043E\u0436\u043D\u043E \u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C.",
-      cls: "tracker-notes__limits-description"
-    });
-    parametersDescription.style.fontSize = "0.9em";
-    parametersDescription.style.color = "var(--text-muted, #999999)";
-    parametersDescription.style.marginTop = "0.5em";
-    parametersDescription.style.marginBottom = "1em";
-    const unitSetting = new import_obsidian.Setting(contentEl).setName("\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F").addText((text) => {
-      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u043C\u0435\u0442\u0440\u044B, \u043C\u0438\u043D\u0443\u0442\u044B, \u043A\u0433");
-      text.inputEl.style.width = "100%";
-    });
-    const unitInput = unitSetting.controlEl.querySelector("input");
-    const plusminusStepSetting = new import_obsidian.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue("1").inputEl.type = "number";
-      text.inputEl.step = "any";
-      text.inputEl.style.width = "100%";
-    });
-    const minValueSetting = new import_obsidian.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"').addText((text) => {
-      text.setPlaceholder("0").setValue("0").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const maxValueSetting = new import_obsidian.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"').addText((text) => {
-      text.setPlaceholder("10").setValue("10").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const stepSetting = new import_obsidian.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue("1").inputEl.type = "number";
-      text.inputEl.step = "any";
-      text.inputEl.style.width = "100%";
-    });
-    parametersHeader.style.display = "none";
-    parametersDescription.style.display = "none";
-    unitSetting.settingEl.style.display = "none";
-    plusminusStepSetting.settingEl.style.display = "none";
-    minValueSetting.settingEl.style.display = "none";
-    maxValueSetting.settingEl.style.display = "none";
-    stepSetting.settingEl.style.display = "none";
-    const limitsHeader = contentEl.createEl("h3", { text: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438" });
-    const limitsDescription = contentEl.createEl("p", {
-      text: '\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F. \u041F\u0440\u0438\u043C. "\u041D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 5000 \u0448\u0430\u0433\u043E\u0432 \u0432 \u0434\u0435\u043D\u044C", "\u041D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 3\u0445 \u0448\u043E\u043A\u043E\u043B\u0430\u0434\u043E\u043A"',
-      cls: "tracker-notes__limits-description"
-    });
-    limitsDescription.style.fontSize = "0.9em";
-    limitsDescription.style.color = "var(--text-muted, #999999)";
-    limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1em";
-    const minLimitSetting = new import_obsidian.Setting(contentEl).setName("\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue("").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const maxLimitSetting = new import_obsidian.Setting(contentEl).setName("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue("").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    limitsHeader.style.display = "none";
-    limitsDescription.style.display = "none";
-    minLimitSetting.settingEl.style.display = "none";
-    maxLimitSetting.settingEl.style.display = "none";
-    const typeDropdownSelect = typeSetting.controlEl.querySelector("select");
-    if (typeDropdownSelect) {
-      typeDropdownSelect.onchange = () => {
-        const isScale = typeDropdownSelect.value === "scale";
-        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(typeDropdownSelect.value);
-        const isPlusminus = typeDropdownSelect.value === "plusminus";
-        const isText = typeDropdownSelect.value === "text";
-        if (isMetric) {
-          parametersHeader.style.display = "";
-          parametersDescription.style.display = "";
-          unitSetting.settingEl.style.display = "";
-          if (isText) {
-            if (unitInput) {
-              unitInput.value = "\u0441\u043B\u043E\u0432";
-              unitInput.disabled = true;
-            }
-          } else {
-            if (unitInput) {
-              unitInput.disabled = false;
-            }
-          }
-          if (isScale) {
-            minValueSetting.settingEl.style.display = "";
-            maxValueSetting.settingEl.style.display = "";
-            stepSetting.settingEl.style.display = "";
-            plusminusStepSetting.settingEl.style.display = "none";
-          } else {
-            minValueSetting.settingEl.style.display = "none";
-            maxValueSetting.settingEl.style.display = "none";
-            stepSetting.settingEl.style.display = "none";
-            plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
-          }
-        } else {
-          parametersHeader.style.display = "none";
-          parametersDescription.style.display = "none";
-          unitSetting.settingEl.style.display = "none";
-          plusminusStepSetting.settingEl.style.display = "none";
-          minValueSetting.settingEl.style.display = "none";
-          maxValueSetting.settingEl.style.display = "none";
-          stepSetting.settingEl.style.display = "none";
-        }
-        if (isMetric) {
-          limitsHeader.style.display = "";
-          limitsDescription.style.display = "";
-          minLimitSetting.settingEl.style.display = "";
-          maxLimitSetting.settingEl.style.display = "";
-        } else {
-          limitsHeader.style.display = "none";
-          limitsDescription.style.display = "none";
-          minLimitSetting.settingEl.style.display = "none";
-          maxLimitSetting.settingEl.style.display = "none";
-        }
-      };
-    }
-    new import_obsidian.Setting(contentEl).addButton((button) => {
-      button.setButtonText("\u0421\u043E\u0437\u0434\u0430\u0442\u044C").setCta().onClick(async () => {
-        const nameInput = nameSetting.controlEl.querySelector("input");
-        const name = nameInput.value.trim();
-        if (!name) {
-          new import_obsidian.Notice("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435");
-          return;
-        }
-        const typeDropdownSelect2 = typeSetting.controlEl.querySelector("select");
-        const type = typeDropdownSelect2 ? typeDropdownSelect2.value : "good-habit";
-        const minValue = type === "scale" ? minValueSetting.controlEl.querySelector("input")?.value || "0" : "0";
-        const maxValue = type === "scale" ? maxValueSetting.controlEl.querySelector("input")?.value || "10" : "10";
-        const step = type === "scale" ? stepSetting.controlEl.querySelector("input")?.value || "1" : type === "plusminus" ? plusminusStepSetting.controlEl.querySelector("input")?.value || "1" : "1";
-        const minLimitInput = minLimitSetting.controlEl.querySelector("input");
-        const maxLimitInput = maxLimitSetting.controlEl.querySelector("input");
-        const minLimit = minLimitInput?.value.trim() || "";
-        const maxLimit = maxLimitInput?.value.trim() || "";
-        const unitInputValue = unitSetting.controlEl.querySelector("input");
-        const unitRaw = unitInputValue?.value.trim() || "";
-        const unit = type === "text" ? "\u0441\u043B\u043E\u0432" : unitRaw;
-        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(type);
-        const fileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
-        const folderInput = folderSetting.controlEl.querySelector("input");
-        let inputFolder = folderInput?.value.trim() || "";
-        if (inputFolder === "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)") {
-          inputFolder = "";
-        }
-        const targetFolder = inputFolder || this.plugin.settings.trackersFolder;
-        const filePath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
-        try {
-          const file = await this.plugin.ensureFileWithHeading(filePath, type);
-          const content = await this.app.vault.read(file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-          const escapedName = name.replace(/"/g, '\\"');
-          let newFrontmatter = `name: "${escapedName}"
-type: "${type}"
-`;
-          if (type === "scale") {
-            newFrontmatter += `minValue: ${parseFloat(minValue) || 0}
-`;
-            newFrontmatter += `maxValue: ${parseFloat(maxValue) || 10}
-`;
-            newFrontmatter += `step: ${parseFloat(step) || 1}
-`;
-          } else if (type === "plusminus") {
-            newFrontmatter += `step: ${parseFloat(step) || 1}
-`;
-          }
-          if (minLimit) {
-            newFrontmatter += `minLimit: ${parseFloat(minLimit)}
-`;
-          }
-          if (maxLimit) {
-            newFrontmatter += `maxLimit: ${parseFloat(maxLimit)}
-`;
-          }
-          if (unit && isMetric) {
-            const escapedUnit = unit.replace(/"/g, '\\"');
-            newFrontmatter += `unit: "${escapedUnit}"
-`;
-          }
-          newFrontmatter += `data: {}
-`;
-          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
-          const newContent = `---
-${newFrontmatter}---${body ? `
 
-${body}` : ""}`;
-          await this.app.vault.modify(file, newContent);
-          new import_obsidian.Notice(`\u0421\u043E\u0437\u0434\u0430\u043D \u0442\u0440\u0435\u043A\u0435\u0440: ${name}`);
-          const fileFolderPath = this.plugin.getFolderPathFromFile(file.path);
-          await this.plugin.onTrackerCreated(fileFolderPath);
-          this.close();
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          new import_obsidian.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
-        }
-      });
-    });
-  }
-  onClose() {
-    this.contentEl.empty();
-  }
-};
-var EditTrackerModal = class extends import_obsidian.Modal {
-  constructor(app, plugin, file) {
-    super(app);
-    this.plugin = plugin;
-    this.file = file;
-  }
-  async onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.createEl("h2", { text: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440" });
-    const fileOpts = await this.plugin.getFileTypeFromFrontmatter(this.file);
-    const currentType = fileOpts.mode || "good-habit";
-    const currentName = this.file.basename;
-    const currentUnit = fileOpts.unit || "";
-    const currentMinValue = fileOpts.minValue || "";
-    const currentMaxValue = fileOpts.maxValue || "";
-    const currentStep = fileOpts.step || "";
-    const currentMinLimit = fileOpts.minLimit || "";
-    const currentMaxLimit = fileOpts.maxLimit || "";
-    const nameSetting = new import_obsidian.Setting(contentEl).setName("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435").addText((text) => {
-      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430");
-      text.setValue(currentName);
-      text.inputEl.style.width = "100%";
-    });
-    const typeSetting = new import_obsidian.Setting(contentEl).setName("\u0422\u0438\u043F").addDropdown((dropdown) => {
-      dropdown.addOption("good-habit", "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("bad-habit", "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("number", "\u0427\u0438\u0441\u043B\u043E");
-      dropdown.addOption("scale", "\u0428\u043A\u0430\u043B\u0430");
-      dropdown.addOption("plusminus", "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)");
-      dropdown.addOption("text", "\u0422\u0435\u043A\u0441\u0442");
-      dropdown.setValue(currentType);
-      dropdown.selectEl.disabled = true;
-    });
-    const typeDropdown = typeSetting.controlEl.querySelector("select");
-    if (typeDropdown) {
-      typeDropdown.innerHTML = "";
-      const habitsGroup = document.createElement("optgroup");
-      habitsGroup.label = "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438";
-      const goodHabitOption = document.createElement("option");
-      goodHabitOption.value = "good-habit";
-      goodHabitOption.textContent = "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
-      habitsGroup.appendChild(goodHabitOption);
-      const badHabitOption = document.createElement("option");
-      badHabitOption.value = "bad-habit";
-      badHabitOption.textContent = "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
-      habitsGroup.appendChild(badHabitOption);
-      typeDropdown.appendChild(habitsGroup);
-      const metricsGroup = document.createElement("optgroup");
-      metricsGroup.label = "\u041C\u0435\u0442\u0440\u0438\u043A\u0438";
-      const numberOption = document.createElement("option");
-      numberOption.value = "number";
-      numberOption.textContent = "\u0427\u0438\u0441\u043B\u043E";
-      metricsGroup.appendChild(numberOption);
-      const scaleOption = document.createElement("option");
-      scaleOption.value = "scale";
-      scaleOption.textContent = "\u0428\u043A\u0430\u043B\u0430";
-      metricsGroup.appendChild(scaleOption);
-      const plusminusOption = document.createElement("option");
-      plusminusOption.value = "plusminus";
-      plusminusOption.textContent = "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)";
-      metricsGroup.appendChild(plusminusOption);
-      const textOption = document.createElement("option");
-      textOption.value = "text";
-      textOption.textContent = "\u0422\u0435\u043A\u0441\u0442";
-      metricsGroup.appendChild(textOption);
-      typeDropdown.appendChild(metricsGroup);
-      typeDropdown.value = currentType;
-      typeDropdown.disabled = true;
-    }
-    const parametersHeader = contentEl.createEl("h3", { text: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" });
-    const parametersDescription = contentEl.createEl("p", {
-      text: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F - \u043D\u0435 \u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u043F\u043E\u043B\u0435. \u041C\u043E\u0436\u043D\u043E \u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C.",
-      cls: "tracker-notes__limits-description"
-    });
-    parametersDescription.style.fontSize = "0.9em";
-    parametersDescription.style.color = "var(--text-muted, #999999)";
-    parametersDescription.style.marginTop = "0.5em";
-    parametersDescription.style.marginBottom = "1em";
-    const unitSetting = new import_obsidian.Setting(contentEl).setName("\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F").addText((text) => {
-      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u043C\u0435\u0442\u0440\u044B, \u043C\u0438\u043D\u0443\u0442\u044B, \u043A\u0433");
-      const unitValue = currentType === "text" ? "\u0441\u043B\u043E\u0432" : currentUnit;
-      text.setValue(unitValue);
-      text.inputEl.style.width = "100%";
-      if (currentType === "text") {
-        text.inputEl.disabled = true;
-      }
-    });
-    const unitInput = unitSetting.controlEl.querySelector("input");
-    const plusminusStepSetting = new import_obsidian.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
-      text.inputEl.step = "any";
-      text.inputEl.style.width = "100%";
-    });
-    const minValueSetting = new import_obsidian.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"').addText((text) => {
-      text.setPlaceholder("0").setValue(currentMinValue || "0").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const maxValueSetting = new import_obsidian.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"').addText((text) => {
-      text.setPlaceholder("10").setValue(currentMaxValue || "10").inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const stepSetting = new import_obsidian.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
-      text.inputEl.step = "any";
-      text.inputEl.style.width = "100%";
-    });
-    const limitsHeader = contentEl.createEl("h3", { text: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438" });
-    const limitsDescription = contentEl.createEl("p", {
-      text: '\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F. \u041F\u0440\u0438\u043C. "\u041D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 5000 \u0448\u0430\u0433\u043E\u0432 \u0432 \u0434\u0435\u043D\u044C", "\u041D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 3\u0445 \u0448\u043E\u043A\u043E\u043B\u0430\u0434\u043E\u043A"',
-      cls: "tracker-notes__limits-description"
-    });
-    limitsDescription.style.fontSize = "0.9em";
-    limitsDescription.style.color = "var(--text-muted, #999999)";
-    limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1em";
-    const minLimitSetting = new import_obsidian.Setting(contentEl).setName("\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMinLimit).inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const maxLimitSetting = new import_obsidian.Setting(contentEl).setName("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMaxLimit).inputEl.type = "number";
-      text.inputEl.style.width = "100%";
-    });
-    const updateFieldsVisibility = () => {
-      const isScale = typeDropdown.value === "scale";
-      const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(typeDropdown.value);
-      const isPlusminus = typeDropdown.value === "plusminus";
-      const isText = typeDropdown.value === "text";
-      if (isMetric) {
-        parametersHeader.style.display = "";
-        parametersDescription.style.display = "";
-        unitSetting.settingEl.style.display = "";
-        if (isText) {
-          if (unitInput) {
-            unitInput.value = "\u0441\u043B\u043E\u0432";
-            unitInput.disabled = true;
-          }
-        } else {
-          if (unitInput) {
-            unitInput.disabled = false;
-          }
-        }
-        if (isScale) {
-          minValueSetting.settingEl.style.display = "";
-          maxValueSetting.settingEl.style.display = "";
-          stepSetting.settingEl.style.display = "";
-          plusminusStepSetting.settingEl.style.display = "none";
-        } else {
-          minValueSetting.settingEl.style.display = "none";
-          maxValueSetting.settingEl.style.display = "none";
-          stepSetting.settingEl.style.display = "none";
-          plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
-        }
-      } else {
-        parametersHeader.style.display = "none";
-        parametersDescription.style.display = "none";
-        unitSetting.settingEl.style.display = "none";
-        plusminusStepSetting.settingEl.style.display = "none";
-        minValueSetting.settingEl.style.display = "none";
-        maxValueSetting.settingEl.style.display = "none";
-        stepSetting.settingEl.style.display = "none";
-      }
-      if (isMetric) {
-        limitsHeader.style.display = "";
-        limitsDescription.style.display = "";
-        minLimitSetting.settingEl.style.display = "";
-        maxLimitSetting.settingEl.style.display = "";
-      } else {
-        limitsHeader.style.display = "none";
-        limitsDescription.style.display = "none";
-        minLimitSetting.settingEl.style.display = "none";
-        maxLimitSetting.settingEl.style.display = "none";
-      }
-    };
-    updateFieldsVisibility();
-    if (typeDropdown) {
-      typeDropdown.onchange = updateFieldsVisibility;
-    }
-    new import_obsidian.Setting(contentEl).addButton((button) => {
-      button.setButtonText("\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C").setCta().onClick(async () => {
-        const nameInput = nameSetting.controlEl.querySelector("input");
-        const name = nameInput.value.trim();
-        if (!name) {
-          new import_obsidian.Notice("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435");
-          return;
-        }
-        const type = typeDropdown ? typeDropdown.value : currentType;
-        const minValue = type === "scale" ? minValueSetting.controlEl.querySelector("input")?.value || "0" : "0";
-        const maxValue = type === "scale" ? maxValueSetting.controlEl.querySelector("input")?.value || "10" : "10";
-        const step = type === "scale" ? stepSetting.controlEl.querySelector("input")?.value || "1" : type === "plusminus" ? plusminusStepSetting.controlEl.querySelector("input")?.value || "1" : "1";
-        const minLimitInput = minLimitSetting.controlEl.querySelector("input");
-        const maxLimitInput = maxLimitSetting.controlEl.querySelector("input");
-        const minLimit = minLimitInput?.value.trim() || "";
-        const maxLimit = maxLimitInput?.value.trim() || "";
-        const unitInputValue = unitSetting.controlEl.querySelector("input");
-        const unitRaw = unitInputValue?.value.trim() || "";
-        const unit = type === "text" ? "\u0441\u043B\u043E\u0432" : unitRaw;
-        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(type);
-        try {
-          const content = await this.app.vault.read(this.file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
-          let existingData = {};
-          if (frontmatterMatch) {
-            existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
-          }
-          const escapedName = name.replace(/"/g, '\\"');
-          let newFrontmatter = `name: "${escapedName}"
-type: "${type}"
-`;
-          if (type === "scale") {
-            newFrontmatter += `minValue: ${parseFloat(minValue) || 0}
-`;
-            newFrontmatter += `maxValue: ${parseFloat(maxValue) || 10}
-`;
-            newFrontmatter += `step: ${parseFloat(step) || 1}
-`;
-          } else if (type === "plusminus") {
-            newFrontmatter += `step: ${parseFloat(step) || 1}
-`;
-          }
-          if (minLimit) {
-            newFrontmatter += `minLimit: ${parseFloat(minLimit)}
-`;
-          }
-          if (maxLimit) {
-            newFrontmatter += `maxLimit: ${parseFloat(maxLimit)}
-`;
-          }
-          if (unit && isMetric) {
-            const escapedUnit = unit.replace(/"/g, '\\"');
-            newFrontmatter += `unit: "${escapedUnit}"
-`;
-          }
-          const dataYaml = this.plugin.formatDataToYaml(existingData);
-          newFrontmatter += dataYaml;
-          const newContent = `---
-${newFrontmatter}---${body ? `
-
-${body}` : ""}`;
-          await this.app.vault.modify(this.file, newContent);
-          if (name !== this.file.basename) {
-            const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
-            const newPath = this.file.path.replace(this.file.name, newFileName);
-            await this.app.vault.rename(this.file, newPath);
-          }
-          new import_obsidian.Notice(`\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D: ${name}`);
-          const fileFolderPath = this.plugin.getFolderPathFromFile(this.file.path);
-          await this.plugin.onTrackerCreated(fileFolderPath);
-          this.close();
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          new import_obsidian.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
-        }
-      });
-    });
-  }
-  onClose() {
-    this.contentEl.empty();
-  }
-};
-var FilePickerModal = class extends import_obsidian.Modal {
-  constructor(app, files, onPick) {
-    super(app);
-    this.files = files;
-    this.onPick = onPick;
-  }
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0440\u0435\u043A\u0435\u0440" });
-    this.files.slice(0, 200).forEach((f) => {
-      const btn = contentEl.createEl("button", { text: f.path });
-      btn.onclick = () => {
-        this.close();
-        this.onPick(f);
-      };
-    });
-  }
-  onClose() {
-    this.onPick(null);
-    this.contentEl.empty();
-  }
-};
-var FolderSuggest = class extends import_obsidian.AbstractInputSuggest {
-  constructor(app, inputEl, folders) {
-    super(app, inputEl);
-    this.folders = folders;
-  }
-  getSuggestions(query) {
-    const normalizedQuery = query.toLowerCase().trim();
-    if (!normalizedQuery) {
-      return this.folders.slice(0, 100);
-    }
-    return this.folders.filter((folder) => {
-      const path = folder.path || "";
-      return path.toLowerCase().includes(normalizedQuery);
-    }).slice(0, 100);
-  }
-  renderSuggestion(folder, el) {
-    const path = folder.path || "";
-    el.textContent = path || "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)";
-  }
-  selectSuggestion(folder) {
-    const path = folder.path || "";
-    this.setValue(path);
-    this.close();
-  }
-};
+// src/main.ts
+var main_default = TrackerPlugin;
 /*! Bundled license information:
 
 @kurkle/color/dist/color.esm.js:
