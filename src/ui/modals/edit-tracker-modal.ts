@@ -337,11 +337,10 @@ export class EditTrackerModal extends Modal {
 
           const newContent = `---\n${newFrontmatter}---${body ? `\n\n${body}` : ""}`;
 
+          // Модифицируем содержимое
           await this.app.vault.modify(this.file, newContent);
-          
-          // Инвалидируем кеш для корректного обновления после модификации
-          this.plugin.trackerFileService.invalidateCacheForPath(this.file.path);
 
+          // Переименовываем если нужно
           if (name !== this.file.basename) {
             const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
             const newPath = this.file.path.replace(this.file.name, newFileName);
@@ -349,9 +348,9 @@ export class EditTrackerModal extends Modal {
           }
 
           new Notice(`Трекер обновлен: ${name}`);
-
-          const fileFolderPath = this.plugin.getFolderPathFromFile(this.file.path);
-          await this.plugin.onTrackerCreated(fileFolderPath);
+          this.close();
+          
+          // Event listeners в tracker-plugin.ts автоматически обработают modify и rename события
 
           this.close();
         } catch (error) {

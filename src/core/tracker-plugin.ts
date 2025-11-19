@@ -97,15 +97,23 @@ export default class TrackerPlugin extends Plugin {
         this.trackerFileService.invalidateCacheForPath(file.path);
         const folderPath = this.getFolderPathFromFile(file.path);
         this.folderTreeService.invalidate(folderPath);
-        void this.refreshBlocksForFolder(folderPath);
 
         if (typeof oldPath === "string") {
           this.trackerFileService.invalidateCacheForPath(oldPath);
           const oldFolderPath = this.getFolderPathFromFile(oldPath);
           this.folderTreeService.invalidate(oldFolderPath);
-          if (oldFolderPath !== folderPath) {
-            void this.refreshBlocksForFolder(oldFolderPath);
-          }
+          
+          // Добавляем задержку для обновления UI после переименования
+          setTimeout(() => {
+            void this.refreshBlocksForFolder(folderPath);
+            if (oldFolderPath !== folderPath) {
+              void this.refreshBlocksForFolder(oldFolderPath);
+            }
+          }, 300);
+        } else {
+          setTimeout(() => {
+            void this.refreshBlocksForFolder(folderPath);
+          }, 300);
         }
       })
     );

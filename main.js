@@ -15988,15 +15988,13 @@ ${newFrontmatter}---${body ? `
 
 ${body}` : ""}`;
         await this.app.vault.modify(this.file, newContent);
-        this.plugin.trackerFileService.invalidateCacheForPath(this.file.path);
         if (name !== this.file.basename) {
           const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
           const newPath = this.file.path.replace(this.file.name, newFileName);
           await this.app.vault.rename(this.file, newPath);
         }
         new import_obsidian7.Notice(`\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D: ${name}`);
-        const fileFolderPath = this.plugin.getFolderPathFromFile(this.file.path);
-        await this.plugin.onTrackerCreated(fileFolderPath);
+        this.close();
         this.close();
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -16116,14 +16114,20 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
         this.trackerFileService.invalidateCacheForPath(file.path);
         const folderPath = this.getFolderPathFromFile(file.path);
         this.folderTreeService.invalidate(folderPath);
-        void this.refreshBlocksForFolder(folderPath);
         if (typeof oldPath === "string") {
           this.trackerFileService.invalidateCacheForPath(oldPath);
           const oldFolderPath = this.getFolderPathFromFile(oldPath);
           this.folderTreeService.invalidate(oldFolderPath);
-          if (oldFolderPath !== folderPath) {
-            void this.refreshBlocksForFolder(oldFolderPath);
-          }
+          setTimeout(() => {
+            void this.refreshBlocksForFolder(folderPath);
+            if (oldFolderPath !== folderPath) {
+              void this.refreshBlocksForFolder(oldFolderPath);
+            }
+          }, 300);
+        } else {
+          setTimeout(() => {
+            void this.refreshBlocksForFolder(folderPath);
+          }, 300);
         }
       })
     );
