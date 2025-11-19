@@ -2,9 +2,18 @@ import { App, TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { addDays, formatDate, parseDate } from "../utils/date";
 import { parseMaybeNumber } from "../utils/misc";
+import { TrackerDataCache } from "./tracker-data-cache";
 
 export class TrackerFileService {
-  constructor(private readonly app: App) {}
+  private readonly cache: TrackerDataCache;
+  private modifyGuards?: {
+    onBeforeModify?: (path: string) => void;
+    onAfterModify?: (path: string) => void;
+  };
+
+  constructor(private readonly app: App) {
+    this.cache = new TrackerDataCache();
+  }
 
   async ensureFileWithHeading(filePath: string, type: string = "good-habit"): Promise<TFile> {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
@@ -87,41 +96,34 @@ export class TrackerFileService {
   }
 
   async readAllEntries(file: TFile): Promise<Map<string, string | number>> {
-    const entries = new Map<string, string | number>();
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return entries;
+    return this.cache.getEntries(file, async () => {
+      const entries = new Map<string, string | number>();
+      try {
+        const raw = await this.app.vault.read(file);
+        const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return entries;
 
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
+        const frontmatter = frontmatterMatch[1];
+        const data = this.parseFrontmatterData(frontmatter);
 
-      Object.entries(data).forEach(([date, value]) => {
-        entries.set(date, value);
-      });
-    } catch (error) {
-      console.error("Tracker: ошибка чтения всех записей", error);
-    }
+        Object.entries(data).forEach(([date, value]) => {
+          entries.set(date, value);
+        });
+      } catch (error) {
+        console.error("Tracker: ошибка чтения всех записей", error);
+      }
 
-    return entries;
+      return entries;
+    });
   }
 
   async readValueForDate(file: TFile, dateIso: string): Promise<string | number | null> {
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return null;
-
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
-      return data[dateIso] ?? null;
-    } catch (error) {
-      console.error("Tracker: ошибка чтения значения", error);
-      return null;
-    }
+    const entries = await this.readAllEntries(file);
+    return entries.get(dateIso) ?? null;
   }
 
   async writeLogLine(file: TFile, dateIso: string, value: string) {
+    this.modifyGuards?.onBeforeModify?.(file.path);
     try {
       const content = await this.app.vault.read(file);
       const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
@@ -156,50 +158,55 @@ export class TrackerFileService {
 
       const newContent = `---\n${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
+      this.cache.invalidate(file.path);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("Tracker: ошибка записи", error);
       throw new Error(errorMsg);
+    } finally {
+      this.modifyGuards?.onAfterModify?.(file.path);
     }
   }
 
   async getFileTypeFromFrontmatter(file: TFile): Promise<TrackerFileOptions> {
-    const fileOpts: TrackerFileOptions = {};
-    try {
-      const fileContent = await this.app.vault.read(file);
-      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
-        fileOpts.mode = typeMatch && typeMatch[1] ? typeMatch[1].trim() : "good-habit";
-        const nameMatch = frontmatter.match(/^name:\s*["']?([^"'\n]+)["']?/m);
-        if (nameMatch && nameMatch[1]) {
-          fileOpts.name = nameMatch[1].trim();
+    return this.cache.getFrontmatter(file, async () => {
+      const fileOpts: TrackerFileOptions = {};
+      try {
+        const fileContent = await this.app.vault.read(file);
+        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+        if (frontmatterMatch) {
+          const frontmatter = frontmatterMatch[1];
+          const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
+          fileOpts.mode = typeMatch && typeMatch[1] ? typeMatch[1].trim() : "good-habit";
+          const nameMatch = frontmatter.match(/^name:\s*["']?([^"'\n]+)["']?/m);
+          if (nameMatch && nameMatch[1]) {
+            fileOpts.name = nameMatch[1].trim();
+          }
+          const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
+          if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
+          const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
+          if (minValueMatch) fileOpts.minValue = minValueMatch[1];
+          const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
+          if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
+          const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
+          if (stepMatch) fileOpts.step = stepMatch[1];
+          const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
+          if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
+          const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
+          if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
+          const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
+          if (unitMatch && unitMatch[1]) {
+            fileOpts.unit = unitMatch[1].trim();
+          }
+        } else {
+          fileOpts.mode = "good-habit";
         }
-        const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
-        if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
-        const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
-        if (minValueMatch) fileOpts.minValue = minValueMatch[1];
-        const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
-        if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
-        const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
-        if (stepMatch) fileOpts.step = stepMatch[1];
-        const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
-        if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
-        const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
-        if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
-        const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
-        if (unitMatch && unitMatch[1]) {
-          fileOpts.unit = unitMatch[1].trim();
-        }
-      } else {
+      } catch (error) {
+        console.error("Tracker: ошибка чтения frontmatter", error);
         fileOpts.mode = "good-habit";
       }
-    } catch (error) {
-      console.error("Tracker: ошибка чтения frontmatter", error);
-      fileOpts.mode = "good-habit";
-    }
-    return fileOpts;
+      return fileOpts;
+    });
   }
 
   getStartTrackingDate(
@@ -318,6 +325,18 @@ export class TrackerFileService {
     }
 
     return streak;
+  }
+
+  invalidateCacheForPath(path: string) {
+    this.cache.invalidate(path);
+  }
+
+  invalidateAllCache() {
+    this.cache.invalidateAll();
+  }
+
+  setModifyGuards(guards: { onBeforeModify?: (path: string) => void; onAfterModify?: (path: string) => void }) {
+    this.modifyGuards = guards;
   }
 }
 

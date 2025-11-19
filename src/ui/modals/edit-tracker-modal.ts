@@ -307,6 +307,9 @@ export class EditTrackerModal extends Modal {
           const newContent = `---\n${newFrontmatter}---${body ? `\n\n${body}` : ""}`;
 
           await this.app.vault.modify(this.file, newContent);
+          
+          // Инвалидируем кеш для корректного обновления после модификации
+          this.plugin.trackerFileService.invalidateCacheForPath(this.file.path);
 
           if (name !== this.file.basename) {
             const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";

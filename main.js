@@ -14648,7 +14648,71 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
         }
       }
       let dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      let pendingDateIso = null;
+      let isProcessingDateUpdate = false;
       const mainContainer = this.containerEl.createDiv({ cls: "tracker-notes" });
+      const trackerDateUpdate = async (targetIso) => {
+        dateIso = targetIso;
+        const trackerItems = Array.from(
+          mainContainer.querySelectorAll(".tracker-notes__tracker")
+        );
+        const updatePromises = trackerItems.map(async (trackerItem) => {
+          const filePath = trackerItem.dataset.filePath;
+          if (!filePath) return;
+          const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
+          if (file instanceof import_obsidian.TFile) {
+            await this.plugin.updateTrackerDate(trackerItem, file, targetIso, this.opts);
+          }
+        });
+        await Promise.allSettled(updatePromises);
+      };
+      let dateInput = null;
+      const dateNavButtons = [];
+      let loadingIndicator = null;
+      const setDateUpdatingState = (updating) => {
+        if (loadingIndicator) {
+          loadingIndicator.toggleClass("is-active", updating);
+        }
+        dateInput?.classList.toggle("is-updating", updating);
+        if (dateInput) {
+          dateInput.disabled = updating;
+        }
+        for (const btn of dateNavButtons) {
+          btn.disabled = updating;
+        }
+      };
+      const processNextDateUpdate = async () => {
+        if (isProcessingDateUpdate || !pendingDateIso) return;
+        isProcessingDateUpdate = true;
+        const targetIso = pendingDateIso;
+        pendingDateIso = null;
+        setDateUpdatingState(true);
+        try {
+          await trackerDateUpdate(targetIso);
+        } finally {
+          setDateUpdatingState(false);
+          isProcessingDateUpdate = false;
+          if (pendingDateIso) {
+            void processNextDateUpdate();
+          }
+        }
+      };
+      const requestDateUpdate = (newDate) => {
+        const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
+        pendingDateIso = newDateIso;
+        if (dateInput) {
+          dateInput.value = newDateIso;
+        }
+        void processNextDateUpdate();
+      };
+      const navigateDate = (days) => {
+        const referenceIso = pendingDateIso ?? dateIso;
+        const m = window.moment;
+        const currentDateObj = m ? m(referenceIso, this.plugin.settings.dateFormat) : parseDate(referenceIso, this.plugin.settings.dateFormat);
+        const newDate = m ? currentDateObj.clone().add(days, "days") : addDays(new Date(currentDateObj.getTime()), days);
+        const newDateStr = m ? newDate.format(this.plugin.settings.dateFormat) : formatDate(newDate, this.plugin.settings.dateFormat);
+        requestDateUpdate(newDateStr);
+      };
       if (view === "control") {
         const blockHeader = this.containerEl.createDiv({ cls: "tracker-notes__header" });
         this.containerEl.insertBefore(blockHeader, mainContainer);
@@ -14659,46 +14723,29 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           cls: "tracker-notes__date-picker-container"
         });
         const datePicker = datePickerContainer.createDiv({ cls: "tracker-notes__date-picker" });
-        const updateDate = async (newDate) => {
-          const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
-          dateInput.value = newDateIso;
-          dateIso = newDateIso;
-          const trackerItems = mainContainer.querySelectorAll(".tracker-notes__tracker");
-          for (const trackerItem of Array.from(trackerItems)) {
-            const filePath = trackerItem.dataset.filePath;
-            if (filePath) {
-              const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-              if (file instanceof import_obsidian.TFile) {
-                await this.plugin.updateTrackerDate(trackerItem, file, newDateIso, this.opts);
-              }
-            }
-          }
-        };
-        const navigateDate = async (days) => {
-          const m = window.moment;
-          const currentDateObj = m ? m(dateIso, this.plugin.settings.dateFormat) : parseDate(dateIso, this.plugin.settings.dateFormat);
-          const newDate = m ? currentDateObj.clone().add(days, "days") : addDays(new Date(currentDateObj.getTime()), days);
-          const newDateStr = m ? newDate.format(this.plugin.settings.dateFormat) : formatDate(newDate, this.plugin.settings.dateFormat);
-          await updateDate(newDateStr);
-        };
         const dayBackBtn = datePicker.createEl("button", {
           text: "\u25C0",
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left"
         });
         dayBackBtn.onclick = () => navigateDate(-1);
         dayBackBtn.title = "\u0412\u0447\u0435\u0440\u0430";
-        const dateInput = datePicker.createEl("input", {
+        dateNavButtons.push(dayBackBtn);
+        dateInput = datePicker.createEl("input", {
           type: "date",
           cls: "tracker-notes__date-input",
           value: dateIso
         });
-        dateInput.onchange = () => updateDate(dateInput.value);
+        dateInput.onchange = () => requestDateUpdate(dateInput.value);
         const dayForwardBtn = datePicker.createEl("button", {
           text: "\u25B6",
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right"
         });
         dayForwardBtn.onclick = () => navigateDate(1);
         dayForwardBtn.title = "\u0417\u0430\u0432\u0442\u0440\u0430";
+        dateNavButtons.push(dayForwardBtn);
+        loadingIndicator = blockHeader.createDiv({ cls: "tracker-notes__loading" });
+        loadingIndicator.createDiv({ cls: "tracker-notes__loading-dot" });
+        loadingIndicator.createEl("span", { text: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435\u2026" });
       }
       const trackersContainer = mainContainer.createDiv({ cls: "tracker-notes__hierarchy" });
       await this.renderFolderNode(folderTree, trackersContainer, dateIso, view, this.opts);
@@ -14712,9 +14759,12 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
     }
   }
   async renderFolderNode(node, parentEl, dateIso, view, opts) {
-    const nodeContainer = parentEl.createDiv({
-      cls: `tracker-notes__folder-node level-${node.level}`
-    });
+    const fragment = document.createDocumentFragment();
+    const nodeContainer = document.createElement("div");
+    nodeContainer.addClass("tracker-notes__folder-node");
+    nodeContainer.addClass(`level-${node.level}`);
+    fragment.appendChild(nodeContainer);
+    parentEl.appendChild(fragment);
     const shouldShowHeader = node.files.length > 0 || node.level > 0 && node.children.length > 0;
     if (shouldShowHeader) {
       const folderHeader = nodeContainer.createDiv({
@@ -14724,9 +14774,14 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
     }
     if (node.files.length > 0) {
       const trackersContainer = nodeContainer.createDiv({ cls: "tracker-notes__trackers" });
-      for (const file of node.files) {
-        await this.plugin.renderTracker(trackersContainer, file, dateIso, view, opts);
-      }
+      const renderPromises = node.files.map(async (file) => {
+        try {
+          await this.plugin.renderTracker(trackersContainer, file, dateIso, view, opts);
+        } catch (error) {
+          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0440\u0435\u043D\u0434\u0435\u0440\u0430 \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+        }
+      });
+      await Promise.all(renderPromises);
     }
     for (const childNode of node.children) {
       await this.renderFolderNode(childNode, nodeContainer, dateIso, view, opts);
@@ -14734,6 +14789,9 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
   }
   getFolderPath() {
     return this.folderPath;
+  }
+  getOptions() {
+    return this.opts;
   }
   onload() {
   }
@@ -14758,8 +14816,20 @@ var import_obsidian2 = require("obsidian");
 var FolderTreeService = class {
   constructor(app) {
     this.app = app;
+    this.cache = /* @__PURE__ */ new Map();
+  }
+  normalizePath(path) {
+    return (path || "").trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
+  }
+  cacheKey(folderPath, maxDepth) {
+    return `${this.normalizePath(folderPath)}::${maxDepth}`;
   }
   getFolderTree(folderPath, maxDepth = 3) {
+    const key = this.cacheKey(folderPath, maxDepth);
+    const cached = this.cache.get(key);
+    if (cached) {
+      return cached;
+    }
     const folder = this.app.vault.getAbstractFileByPath(folderPath);
     if (!folder) {
       return null;
@@ -14774,7 +14844,9 @@ var FolderTreeService = class {
       };
     }
     if (folder instanceof import_obsidian2.TFolder) {
-      return this.buildFolderTree(folder, maxDepth, 0);
+      const tree = this.buildFolderTree(folder, maxDepth, 0);
+      this.cache.set(key, tree);
+      return tree;
     }
     return null;
   }
@@ -14805,6 +14877,19 @@ var FolderTreeService = class {
     }
     return node;
   }
+  invalidate(folderPath) {
+    if (!folderPath) {
+      this.cache.clear();
+      return;
+    }
+    const normalized = this.normalizePath(folderPath);
+    for (const key of Array.from(this.cache.keys())) {
+      const [cachedPath] = key.split("::");
+      if (cachedPath === normalized || cachedPath.startsWith(`${normalized}/`) || normalized.startsWith(`${cachedPath}/`)) {
+        this.cache.delete(key);
+      }
+    }
+  }
 };
 
 // src/services/tracker-file-service.ts
@@ -14821,10 +14906,71 @@ function countWords(text) {
   return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
 }
 
+// src/services/tracker-data-cache.ts
+var TrackerDataCache = class {
+  constructor() {
+    this.cache = /* @__PURE__ */ new Map();
+  }
+  getKey(file) {
+    return file.path;
+  }
+  getMtime(file) {
+    return file.stat?.mtime ?? 0;
+  }
+  ensureEntry(file) {
+    const key = this.getKey(file);
+    let entry = this.cache.get(key);
+    if (!entry) {
+      entry = { mtime: this.getMtime(file) };
+      this.cache.set(key, entry);
+    }
+    return entry;
+  }
+  isStale(file, entry) {
+    if (!entry) return true;
+    return entry.mtime !== this.getMtime(file);
+  }
+  invalidate(path) {
+    this.cache.delete(path);
+  }
+  invalidateAll() {
+    this.cache.clear();
+  }
+  async getFrontmatter(file, loader) {
+    const key = this.getKey(file);
+    const entry = this.cache.get(key);
+    if (this.isStale(file, entry) || !entry?.frontmatter) {
+      const freshEntry = {
+        mtime: this.getMtime(file),
+        frontmatter: await loader(),
+        entries: this.isStale(file, entry) ? void 0 : entry?.entries
+      };
+      this.cache.set(key, freshEntry);
+      return freshEntry.frontmatter ?? {};
+    }
+    return entry.frontmatter;
+  }
+  async getEntries(file, loader) {
+    const key = this.getKey(file);
+    const entry = this.cache.get(key);
+    if (this.isStale(file, entry) || !entry?.entries) {
+      const freshEntry = {
+        mtime: this.getMtime(file),
+        entries: await loader(),
+        frontmatter: this.isStale(file, entry) ? void 0 : entry?.frontmatter
+      };
+      this.cache.set(key, freshEntry);
+      return freshEntry.entries ?? /* @__PURE__ */ new Map();
+    }
+    return entry.entries;
+  }
+};
+
 // src/services/tracker-file-service.ts
 var TrackerFileService = class {
   constructor(app) {
     this.app = app;
+    this.cache = new TrackerDataCache();
   }
   async ensureFileWithHeading(filePath, type = "good-habit") {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
@@ -14901,35 +15047,29 @@ data: {}
     return yaml;
   }
   async readAllEntries(file) {
-    const entries = /* @__PURE__ */ new Map();
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return entries;
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
-      Object.entries(data).forEach(([date, value]) => {
-        entries.set(date, value);
-      });
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439", error);
-    }
-    return entries;
+    return this.cache.getEntries(file, async () => {
+      const entries = /* @__PURE__ */ new Map();
+      try {
+        const raw = await this.app.vault.read(file);
+        const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+        if (!frontmatterMatch) return entries;
+        const frontmatter = frontmatterMatch[1];
+        const data = this.parseFrontmatterData(frontmatter);
+        Object.entries(data).forEach(([date, value]) => {
+          entries.set(date, value);
+        });
+      } catch (error) {
+        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439", error);
+      }
+      return entries;
+    });
   }
   async readValueForDate(file, dateIso) {
-    try {
-      const raw = await this.app.vault.read(file);
-      const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-      if (!frontmatterMatch) return null;
-      const frontmatter = frontmatterMatch[1];
-      const data = this.parseFrontmatterData(frontmatter);
-      return data[dateIso] ?? null;
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F", error);
-      return null;
-    }
+    const entries = await this.readAllEntries(file);
+    return entries.get(dateIso) ?? null;
   }
   async writeLogLine(file, dateIso, value) {
+    this.modifyGuards?.onBeforeModify?.(file.path);
     try {
       const content = await this.app.vault.read(file);
       const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
@@ -14958,49 +15098,54 @@ data: {}
       const newContent = `---
 ${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
+      this.cache.invalidate(file.path);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", error);
       throw new Error(errorMsg);
+    } finally {
+      this.modifyGuards?.onAfterModify?.(file.path);
     }
   }
   async getFileTypeFromFrontmatter(file) {
-    const fileOpts = {};
-    try {
-      const fileContent = await this.app.vault.read(file);
-      const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
-        fileOpts.mode = typeMatch && typeMatch[1] ? typeMatch[1].trim() : "good-habit";
-        const nameMatch = frontmatter.match(/^name:\s*["']?([^"'\n]+)["']?/m);
-        if (nameMatch && nameMatch[1]) {
-          fileOpts.name = nameMatch[1].trim();
+    return this.cache.getFrontmatter(file, async () => {
+      const fileOpts = {};
+      try {
+        const fileContent = await this.app.vault.read(file);
+        const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
+        if (frontmatterMatch) {
+          const frontmatter = frontmatterMatch[1];
+          const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
+          fileOpts.mode = typeMatch && typeMatch[1] ? typeMatch[1].trim() : "good-habit";
+          const nameMatch = frontmatter.match(/^name:\s*["']?([^"'\n]+)["']?/m);
+          if (nameMatch && nameMatch[1]) {
+            fileOpts.name = nameMatch[1].trim();
+          }
+          const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
+          if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
+          const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
+          if (minValueMatch) fileOpts.minValue = minValueMatch[1];
+          const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
+          if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
+          const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
+          if (stepMatch) fileOpts.step = stepMatch[1];
+          const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
+          if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
+          const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
+          if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
+          const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
+          if (unitMatch && unitMatch[1]) {
+            fileOpts.unit = unitMatch[1].trim();
+          }
+        } else {
+          fileOpts.mode = "good-habit";
         }
-        const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
-        if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
-        const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
-        if (minValueMatch) fileOpts.minValue = minValueMatch[1];
-        const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
-        if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
-        const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
-        if (stepMatch) fileOpts.step = stepMatch[1];
-        const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
-        if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
-        const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
-        if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
-        const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
-        if (unitMatch && unitMatch[1]) {
-          fileOpts.unit = unitMatch[1].trim();
-        }
-      } else {
+      } catch (error) {
+        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F frontmatter", error);
         fileOpts.mode = "good-habit";
       }
-    } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F frontmatter", error);
-      fileOpts.mode = "good-habit";
-    }
-    return fileOpts;
+      return fileOpts;
+    });
   }
   getStartTrackingDate(entries, settings, file) {
     const m = window.moment;
@@ -15084,6 +15229,15 @@ ${newFrontmatter}---${body}`;
       daysChecked++;
     }
     return streak;
+  }
+  invalidateCacheForPath(path) {
+    this.cache.invalidate(path);
+  }
+  invalidateAllCache() {
+    this.cache.invalidateAll();
+  }
+  setModifyGuards(guards) {
+    this.modifyGuards = guards;
   }
 };
 
@@ -15678,6 +15832,7 @@ ${newFrontmatter}---${body ? `
 
 ${body}` : ""}`;
           await this.app.vault.modify(this.file, newContent);
+          this.plugin.trackerFileService.invalidateCacheForPath(this.file.path);
           if (name !== this.file.basename) {
             const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
             const newPath = this.file.path.replace(this.file.name, newFileName);
@@ -15732,7 +15887,7 @@ var FilePickerModal = class extends import_obsidian8.Modal {
 };
 
 // src/styles/tracker.css
-var tracker_default = '.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-habit:hover,\r\n.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-tracker:hover { box-shadow: none; cursor: default; }\r\n.tracker-notes { margin: 1em 0; padding: 1em; border-radius: 10px; background: var(--background-secondary); border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__header { display: flex; flex-direction: column; gap: 0.75em; margin: 1em 0; margin-bottom: 0.5em; box-sizing: border-box; align-items: center; }\r\n      .tracker-notes__header-title { display: flex; align-items: center; gap: 0.5em; font-weight: 700; font-size: 1.15em; color: var(--text-normal); }\r\n      .tracker-notes__header-icon { font-size: 1.3em; }\r\n      .tracker-notes__header-label { }\r\n      .tracker-notes__date-picker-container { width: 100%; display: flex; justify-content: center; }\r\n      .tracker-notes__trackers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1em; }\r\n      .tracker-notes__tracker { padding: 1em; border-radius: 8px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__tracker-header { margin-bottom: 0.75em; padding-bottom: 0.5em; border-bottom: 1px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__tracker-title { font-weight: 600; font-size: 1em; color: var(--text-normal); margin: 0; word-wrap: break-word; overflow-wrap: break-word; text-decoration: none !important; flex: 1; }\r\n      .tracker-notes__settings-btn { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; flex-grow: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__settings-btn:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__settings-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__row { display: flex; align-items: center; gap: 0.6em; padding: 0.4em 0; flex-wrap: wrap; }\r\n      .tracker-notes__value { min-width: 2.5em; text-align: center; font-weight: 600; font-size: 1em; color: var(--text-normal); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes__value.updated { animation: pulse 0.3s ease; }\r\n      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }\r\n      .tracker-notes input { outline: none !important; }\r\n      .tracker-notes input[type="checkbox"] { width: 1.4em; height: 1.4em; cursor: pointer; accent-color: var(--interactive-accent); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes input[type="checkbox"]:hover { transform: scale(1.1); }\r\n      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; }\r\n      .tracker-notes input[type="number"]:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes input[type="range"], .tracker-notes__slider { flex: 1 1 auto; min-width: 0; height: 6px; border-radius: 3px; background: var(--background-modifier-border); outline: none; -webkit-appearance: none; cursor: pointer; }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb, .tracker-notes__slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb:hover, .tracker-notes__slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb, .tracker-notes__slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; border: none; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb:hover, .tracker-notes__slider::-moz-range-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes__progress-bar-wrapper { display: inline; white-space: normal; width: 100%; }\r\n      .tracker-notes__progress-bar-input { height: var(--input-height, 2.5em); width: 100%; border-radius: var(--input-radius, 4px); border: var(--border-width, 1px) solid var(--background-modifier-border); position: relative; cursor: col-resize; background: var(--background-modifier-form-field, var(--background-secondary-alt)); user-select: none; box-sizing: border-box; outline: none; overflow: hidden; }\r\n      .tracker-notes__progress-bar-input:hover { border-color: var(--background-modifier-border-hover, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-input:focus-visible { box-shadow: 0 0 0 3px var(--background-modifier-border-focus, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-progress { height: 100%; background: var(--color-accent, var(--interactive-accent)); border-radius: var(--input-radius, 4px); pointer-events: none; z-index: 0; }\r\n      .tracker-notes__progress-bar-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--font-ui-small, 0.9em); font-weight: 600; color: var(--text-normal); pointer-events: none; z-index: 2; white-space: nowrap; }\r\n      .tracker-notes__progress-bar-label-left { position: absolute; top: 50%; transform: translate(0, -50%); left: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes__progress-bar-label-right { position: absolute; top: 50%; transform: translate(0, -50%); right: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes button { padding: 0.4em 0.8em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; }\r\n      .tracker-notes button:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes button:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__rating { display: flex; gap: 0.3em; align-items: center; flex-wrap: wrap; }\r\n      .tracker-notes__rating-star { font-size: 1.4em; cursor: pointer; color: var(--text-faint); transition: all 0.2s ease; user-select: none; flex-shrink: 0; }\r\n      .tracker-notes__rating-star:hover { transform: scale(1.2); filter: brightness(1.2); }\r\n      .tracker-notes__rating-star.active { color: #ffd700; text-shadow: 0 0 4px rgba(255, 215, 0, 0.5); }\r\n      .tracker-notes__text-input { width: 100%; max-width: 100%; padding: 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--background-primary); color: var(--text-normal); font-family: inherit; font-size: 0.9em; transition: border-color 0.2s ease; resize: vertical; min-height: 60px; box-sizing: border-box; }\r\n      .tracker-notes__text-input:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes__stats { margin-top: 0.75em; margin-bottom: 0.5em; padding-top: 0.75em; padding-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); font-size: 0.85em; color: var(--text-muted); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__stats > div { margin: 0.3em 0; }\r\n      .tracker-notes__calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3em; margin-top: 0.75em; max-width: 100%; }\r\n      .tracker-notes__calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.8em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: default; min-width: 0; }\r\n      .tracker-notes__calendar-day.has-value { background: var(--interactive-accent); color: var(--text-on-accent); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }\r\n      .tracker-notes__calendar-day:hover { transform: scale(1.1); }\r\n      .tracker-notes__chart { margin-top: 0.75em; margin-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); padding-top: 0.75em; width: 100%; max-width: 100%; position: relative; height: 200px; box-sizing: border-box; overflow: hidden; }\r\n      .tracker-notes__chart canvas { max-width: 100% !important; height: 180px !important; }\r\n      .tracker-notes__date-picker { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; justify-content: center; }\r\n      .tracker-notes__date-nav-btn { padding: 0.5em 0.75em; font-size: 1em; min-width: 2.5em; height: 2.5em; border: none; border-radius: var(--input-radius, 5px); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; transition: all 0.2s ease; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\r\n      .tracker-notes__date-nav-btn:hover { background: var(--interactive-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__date-nav-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__date-input { padding: 0.5em 0.75em; border: none !important; border-radius: var(--input-radius, 5px); background: var(--background-primary); color: var(--text-normal); font-size: 1em !important; transition: all 0.2s ease; height: 2.5em; width: 160px; box-sizing: border-box; font-weight: 600; text-align: center; flex-shrink: 0; }\r\n      .tracker-notes__date-input:focus { outline: none !important; box-shadow: none !important; }\r\n      .tracker-notes__date-btn { padding: 0.5em 1em; font-size: 0.9em; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--interactive-accent); border-radius: var(--input-radius, 5px); background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); cursor: pointer; transition: all 0.2s ease; font-weight: 600; height: 2.5em; }\r\n      .tracker-notes__date-btn:hover { background: var(--interactive-accent-hover, var(--interactive-accent)); border-color: var(--interactive-accent-hover, var(--interactive-accent)); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }\r\n      .tracker-notes__date-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__error { color: var(--text-on-accent, #ffffff); padding: 0.75em 1em; background: var(--text-error, #d32f2f); border: 1px solid var(--text-error, #d32f2f); border-radius: 5px; margin: 0.5em 0; font-size: 0.9em; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__success { color: var(--text-success, var(--text-normal)); padding: 0.4em 0.6em; background: var(--background-modifier-success, var(--background-modifier-border)); border-radius: 5px; margin: 0.4em 0; font-size: 0.85em; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__heatmap { display: flex; gap: 0.3em; overflow-x: auto; scroll-behavior: auto; padding: 0.5em 0; margin-top: 0.5em; min-height: 2.5em; max-width: 100%; box-sizing: border-box; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar { height: 6px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-track { background: var(--background-modifier-border); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }\r\n      .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }\r\n      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r\n      .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.start-day { \r\n        flex-direction: column;\r\n        justify-content: center;\r\n        align-items: center;\r\n        line-height: 1;\r\n      }\r\n      .tracker-notes__heatmap-day.start-day::after {\r\n        content: "START";\r\n        font-size: 0.5em;\r\n        line-height: 1;\r\n        margin-top: 0.1em;\r\n        opacity: 0.7;\r\n        font-weight: 600;\r\n      }\r\n      .tracker-notes__calendar-day.start-day { position: relative; box-shadow: 0 0 0 2px var(--text-accent, var(--interactive-accent)) !important; opacity: 0.9; }\r\n      .tracker-notes__stats > div { transition: opacity 0.2s ease; }\r\n      .tracker-notes__calendar-day { transition: background-color 0.2s ease, color 0.2s ease; }\r\n      .tracker-notes__heatmap { transition: opacity 0.15s ease; }\r\n      .tracker-notes__chart { transition: opacity 0.15s ease; }\r\n      .tracker-notes__hierarchy { display: flex; flex-direction: column; gap: 1.5em; }\r\n      .tracker-notes__folder-node { display: flex; flex-direction: column; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 1.5em; }\r\n      .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 1em; margin-bottom: 1.25em; }\r\n      .tracker-notes__folder-node.level-2 { padding-left: 1em; margin-top: 0.75em; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-3 { padding-left: 0.5em; margin-top: 0.5em; margin-bottom: 0.75em; }\r\n      .tracker-notes__folder-header { font-weight: 700; color: var(--text-normal); margin-bottom: 0.75em; margin-top: 0.5em; padding-bottom: 0.5em; border-bottom: 2px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-0 { font-size: 1.4em; margin-top: 0; }\r\n      .tracker-notes__folder-header.level-1 { font-size: 1.35em; margin-top: 0.25em; }\r\n      .tracker-notes__folder-header.level-2 { font-size: 1.15em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-3 { font-size: 1em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      \r\n      /* \u041C\u0435\u0434\u0438\u0430-\u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0434\u043B\u044F \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432 */\r\n      @media (max-width: 768px) {\r\n        .tracker-notes { padding: 0.5em; margin: 0.5em 0; border-radius: 8px; }\r\n        .tracker-notes__header { margin: 0.5em 0; margin-bottom: 0.25em; gap: 0.5em; }\r\n        .tracker-notes__header-title { font-size: 1em; }\r\n        .tracker-notes__trackers { grid-template-columns: 1fr !important; gap: 0.5em; }\r\n        .tracker-notes__tracker { padding: 0.5em; border-radius: 6px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.5em; padding-bottom: 0.4em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.9em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker-container { padding: 0; }\r\n        .tracker-notes__date-picker { gap: 0.3em; flex-wrap: wrap; }\r\n        .tracker-notes__date-nav-btn { padding: 0.4em 0.6em; font-size: 0.9em; min-width: 2em; height: 2.2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__date-input { padding: 0.4em 0.6em; font-size: 0.9em !important; height: 2.2em; width: 140px; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.4em; padding: 0.3em 0; }\r\n        .tracker-notes__value { font-size: 0.9em; min-width: 2em; }\r\n        .tracker-notes input[type="number"] { width: 100%; padding: 0.3em 0.5em; font-size: 0.85em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.3em 0.6em; font-size: 0.85em; width: 100%; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__rating { gap: 0.2em; justify-content: center; }\r\n        .tracker-notes__rating-star { font-size: 1.2em; }\r\n        .tracker-notes__text-input { padding: 0.4em; font-size: 0.85em; min-height: 50px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; padding-bottom: 0.4em; font-size: 0.8em; }\r\n        .tracker-notes__heatmap { gap: 0.2em; padding: 0.4em 0; margin-top: 0.4em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 4px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.5em; max-width: 2.8em; font-size: 0.8em; }\r\n        .tracker-notes__calendar { gap: 0.15em; margin-top: 0.5em; }\r\n        .tracker-notes__calendar-day { font-size: 0.65em; }\r\n        .tracker-notes__chart { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; height: 160px; }\r\n        .tracker-notes__chart canvas { height: 140px !important; }\r\n        .tracker-notes__hierarchy { gap: 1em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 1em; }\r\n        .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 0.75em; margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-2 { padding-left: 0; margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-3 { padding-left: 0; margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.5em; margin-top: 0.25em; padding-bottom: 0.4em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.15em; margin-top: 0; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1.1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.95em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.9em; }\r\n      }\r\n      \r\n      @media (max-width: 480px) {\r\n        .tracker-notes { padding: 0.4em; margin: 0.4em 0; border-radius: 6px; }\r\n        .tracker-notes__header { margin: 0.4em 0; margin-bottom: 0.2em; gap: 0.4em; }\r\n        .tracker-notes__header-title { font-size: 0.95em; }\r\n        .tracker-notes__trackers { gap: 0.4em; }\r\n        .tracker-notes__tracker { padding: 0.4em; border-radius: 5px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.4em; padding-bottom: 0.3em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.85em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker { gap: 0.25em; }\r\n        .tracker-notes__date-nav-btn { padding: 0.35em 0.5em; font-size: 0.85em; min-width: 1.8em; height: 2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__date-input { padding: 0.35em 0.5em; font-size: 0.85em !important; height: 2em; width: 120px; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.3em; padding: 0.25em 0; }\r\n        .tracker-notes__value { font-size: 0.85em; min-width: 1.8em; }\r\n        .tracker-notes input[type="number"] { padding: 0.25em 0.4em; font-size: 0.8em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.25em 0.5em; font-size: 0.8em; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__rating-star { font-size: 1.1em; }\r\n        .tracker-notes__text-input { padding: 0.35em; font-size: 0.8em; min-height: 45px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; padding-bottom: 0.3em; font-size: 0.75em; }\r\n        .tracker-notes__heatmap { gap: 0.15em; padding: 0.3em 0; margin-top: 0.3em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 3px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.8em; max-width: 3em; font-size: 0.85em; }\r\n        .tracker-notes__heatmap-day.start-day::after { font-size: 0.4em; }\r\n        .tracker-notes__calendar { gap: 0.1em; margin-top: 0.4em; }\r\n        .tracker-notes__calendar-day { font-size: 0.6em; }\r\n        .tracker-notes__chart { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; height: 140px; }\r\n        .tracker-notes__chart canvas { height: 120px !important; }\r\n        .tracker-notes__hierarchy { gap: 0.75em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-1 { margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-2 { margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-node.level-3 { margin-top: 0.3em; margin-bottom: 0.3em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.4em; margin-top: 0.2em; padding-bottom: 0.3em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.05em; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.9em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.85em; }\r\n      }';
+var tracker_default = '.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-habit:hover,\r\n.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-tracker:hover { box-shadow: none; cursor: default; }\r\n.tracker-notes { margin: 1em 0; padding: 1em; border-radius: 10px; background: var(--background-secondary); border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__header { display: flex; flex-direction: column; gap: 0.75em; margin: 1em 0; margin-bottom: 0.5em; box-sizing: border-box; align-items: center; }\r\n      .tracker-notes__header-title { display: flex; align-items: center; gap: 0.5em; font-weight: 700; font-size: 1.15em; color: var(--text-normal); }\r\n      .tracker-notes__header-icon { font-size: 1.3em; }\r\n      .tracker-notes__header-label { }\r\n      .tracker-notes__date-picker-container { width: 100%; display: flex; justify-content: center; }\r\n      .tracker-notes__trackers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1em; }\r\n      .tracker-notes__tracker { padding: 1em; border-radius: 8px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__tracker-header { margin-bottom: 0.75em; padding-bottom: 0.5em; border-bottom: 1px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__tracker-title { font-weight: 600; font-size: 1em; color: var(--text-normal); margin: 0; word-wrap: break-word; overflow-wrap: break-word; text-decoration: none !important; flex: 1; }\r\n      .tracker-notes__settings-btn { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; flex-grow: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__settings-btn:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__settings-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__row { display: flex; align-items: center; gap: 0.6em; padding: 0.4em 0; flex-wrap: wrap; }\r\n      .tracker-notes__value { min-width: 2.5em; text-align: center; font-weight: 600; font-size: 1em; color: var(--text-normal); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes__value.updated { animation: pulse 0.3s ease; }\r\n      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }\r\n      .tracker-notes input { outline: none !important; }\r\n      .tracker-notes input[type="checkbox"] { width: 1.4em; height: 1.4em; cursor: pointer; accent-color: var(--interactive-accent); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes input[type="checkbox"]:hover { transform: scale(1.1); }\r\n      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; }\r\n      .tracker-notes input[type="number"]:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes input[type="range"], .tracker-notes__slider { flex: 1 1 auto; min-width: 0; height: 6px; border-radius: 3px; background: var(--background-modifier-border); outline: none; -webkit-appearance: none; cursor: pointer; }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb, .tracker-notes__slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb:hover, .tracker-notes__slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb, .tracker-notes__slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; border: none; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb:hover, .tracker-notes__slider::-moz-range-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes__progress-bar-wrapper { display: inline; white-space: normal; width: 100%; }\r\n      .tracker-notes__progress-bar-input { height: var(--input-height, 2.5em); width: 100%; border-radius: var(--input-radius, 4px); border: var(--border-width, 1px) solid var(--background-modifier-border); position: relative; cursor: col-resize; background: var(--background-modifier-form-field, var(--background-secondary-alt)); user-select: none; box-sizing: border-box; outline: none; overflow: hidden; }\r\n      .tracker-notes__progress-bar-input:hover { border-color: var(--background-modifier-border-hover, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-input:focus-visible { box-shadow: 0 0 0 3px var(--background-modifier-border-focus, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-progress { height: 100%; background: var(--color-accent, var(--interactive-accent)); border-radius: var(--input-radius, 4px); pointer-events: none; z-index: 0; }\r\n      .tracker-notes__progress-bar-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--font-ui-small, 0.9em); font-weight: 600; color: var(--text-normal); pointer-events: none; z-index: 2; white-space: nowrap; }\r\n      .tracker-notes__progress-bar-label-left { position: absolute; top: 50%; transform: translate(0, -50%); left: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes__progress-bar-label-right { position: absolute; top: 50%; transform: translate(0, -50%); right: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes button { padding: 0.4em 0.8em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; }\r\n      .tracker-notes button:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes button:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__rating { display: flex; gap: 0.3em; align-items: center; flex-wrap: wrap; }\r\n      .tracker-notes__rating-star { font-size: 1.4em; cursor: pointer; color: var(--text-faint); transition: all 0.2s ease; user-select: none; flex-shrink: 0; }\r\n      .tracker-notes__rating-star:hover { transform: scale(1.2); filter: brightness(1.2); }\r\n      .tracker-notes__rating-star.active { color: #ffd700; text-shadow: 0 0 4px rgba(255, 215, 0, 0.5); }\r\n      .tracker-notes__text-input { width: 100%; max-width: 100%; padding: 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--background-primary); color: var(--text-normal); font-family: inherit; font-size: 0.9em; transition: border-color 0.2s ease; resize: vertical; min-height: 60px; box-sizing: border-box; }\r\n      .tracker-notes__text-input:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes__stats { margin-top: 0.75em; margin-bottom: 0.5em; padding-top: 0.75em; padding-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); font-size: 0.85em; color: var(--text-muted); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__stats > div { margin: 0.3em 0; }\r\n      .tracker-notes__calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3em; margin-top: 0.75em; max-width: 100%; }\r\n      .tracker-notes__calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.8em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: default; min-width: 0; }\r\n      .tracker-notes__calendar-day.has-value { background: var(--interactive-accent); color: var(--text-on-accent); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }\r\n      .tracker-notes__calendar-day:hover { transform: scale(1.1); }\r\n      .tracker-notes__chart { margin-top: 0.75em; margin-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); padding-top: 0.75em; width: 100%; max-width: 100%; position: relative; height: 200px; box-sizing: border-box; overflow: hidden; }\r\n      .tracker-notes__chart canvas { max-width: 100% !important; height: 180px !important; }\r\n      .tracker-notes__date-picker { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; justify-content: center; }\r\n      .tracker-notes__loading { display: none; align-items: center; gap: 0.4em; font-size: 0.85em; color: var(--text-muted); margin-top: 0.3em; }\r\n      .tracker-notes__loading.is-active { display: flex; }\r\n      .tracker-notes__loading-dot { width: 0.8em; height: 0.8em; border-radius: 50%; border: 2px solid var(--interactive-accent); border-top-color: transparent; animation: tracker-loading-spin 0.8s linear infinite; }\r\n      @keyframes tracker-loading-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }\r\n      .tracker-notes__date-nav-btn { padding: 0.5em 0.75em; font-size: 1em; min-width: 2.5em; height: 2.5em; border: none; border-radius: var(--input-radius, 5px); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; transition: all 0.2s ease; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\r\n      .tracker-notes__date-nav-btn:hover { background: var(--interactive-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__date-nav-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__date-input { padding: 0.5em 0.75em; border: none !important; border-radius: var(--input-radius, 5px); background: var(--background-primary); color: var(--text-normal); font-size: 1em !important; transition: all 0.2s ease; height: 2.5em; width: 160px; box-sizing: border-box; font-weight: 600; text-align: center; flex-shrink: 0; }\r\n      .tracker-notes__date-input.is-updating { opacity: 0.65; cursor: progress; }\r\n      .tracker-notes__date-input:focus { outline: none !important; box-shadow: none !important; }\r\n      .tracker-notes__date-btn { padding: 0.5em 1em; font-size: 0.9em; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--interactive-accent); border-radius: var(--input-radius, 5px); background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); cursor: pointer; transition: all 0.2s ease; font-weight: 600; height: 2.5em; }\r\n      .tracker-notes__date-btn:hover { background: var(--interactive-accent-hover, var(--interactive-accent)); border-color: var(--interactive-accent-hover, var(--interactive-accent)); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }\r\n      .tracker-notes__date-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__error { color: var(--text-on-accent, #ffffff); padding: 0.75em 1em; background: var(--text-error, #d32f2f); border: 1px solid var(--text-error, #d32f2f); border-radius: 5px; margin: 0.5em 0; font-size: 0.9em; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__success { color: var(--text-success, var(--text-normal)); padding: 0.4em 0.6em; background: var(--background-modifier-success, var(--background-modifier-border)); border-radius: 5px; margin: 0.4em 0; font-size: 0.85em; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__heatmap { display: flex; gap: 0.3em; overflow-x: auto; scroll-behavior: auto; padding: 0.5em 0; margin-top: 0.5em; min-height: 2.5em; max-width: 100%; box-sizing: border-box; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar { height: 6px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-track { background: var(--background-modifier-border); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }\r\n      .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }\r\n      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r\n      .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.start-day { \r\n        flex-direction: column;\r\n        justify-content: center;\r\n        align-items: center;\r\n        line-height: 1;\r\n      }\r\n      .tracker-notes__heatmap-day.start-day::after {\r\n        content: "START";\r\n        font-size: 0.5em;\r\n        line-height: 1;\r\n        margin-top: 0.1em;\r\n        opacity: 0.7;\r\n        font-weight: 600;\r\n      }\r\n      .tracker-notes__calendar-day.start-day { position: relative; box-shadow: 0 0 0 2px var(--text-accent, var(--interactive-accent)) !important; opacity: 0.9; }\r\n      .tracker-notes__stats > div { transition: opacity 0.2s ease; }\r\n      .tracker-notes__calendar-day { transition: background-color 0.2s ease, color 0.2s ease; }\r\n      .tracker-notes__heatmap { transition: opacity 0.15s ease; }\r\n      .tracker-notes__chart { transition: opacity 0.15s ease; }\r\n      .tracker-notes__hierarchy { display: flex; flex-direction: column; gap: 1.5em; }\r\n      .tracker-notes__folder-node { display: flex; flex-direction: column; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 1.5em; }\r\n      .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 1em; margin-bottom: 1.25em; }\r\n      .tracker-notes__folder-node.level-2 { padding-left: 1em; margin-top: 0.75em; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-3 { padding-left: 0.5em; margin-top: 0.5em; margin-bottom: 0.75em; }\r\n      .tracker-notes__folder-header { font-weight: 700; color: var(--text-normal); margin-bottom: 0.75em; margin-top: 0.5em; padding-bottom: 0.5em; border-bottom: 2px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-0 { font-size: 1.4em; margin-top: 0; }\r\n      .tracker-notes__folder-header.level-1 { font-size: 1.35em; margin-top: 0.25em; }\r\n      .tracker-notes__folder-header.level-2 { font-size: 1.15em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-3 { font-size: 1em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      \r\n      /* \u041C\u0435\u0434\u0438\u0430-\u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0434\u043B\u044F \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432 */\r\n      @media (max-width: 768px) {\r\n        .tracker-notes { padding: 0.5em; margin: 0.5em 0; border-radius: 8px; }\r\n        .tracker-notes__header { margin: 0.5em 0; margin-bottom: 0.25em; gap: 0.5em; }\r\n        .tracker-notes__header-title { font-size: 1em; }\r\n        .tracker-notes__trackers { grid-template-columns: 1fr !important; gap: 0.5em; }\r\n        .tracker-notes__tracker { padding: 0.5em; border-radius: 6px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.5em; padding-bottom: 0.4em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.9em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker-container { padding: 0; }\r\n        .tracker-notes__date-picker { gap: 0.3em; flex-wrap: wrap; }\r\n        .tracker-notes__date-nav-btn { padding: 0.4em 0.6em; font-size: 0.9em; min-width: 2em; height: 2.2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__date-input { padding: 0.4em 0.6em; font-size: 0.9em !important; height: 2.2em; width: 140px; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.4em; padding: 0.3em 0; }\r\n        .tracker-notes__value { font-size: 0.9em; min-width: 2em; }\r\n        .tracker-notes input[type="number"] { width: 100%; padding: 0.3em 0.5em; font-size: 0.85em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.3em 0.6em; font-size: 0.85em; width: 100%; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__rating { gap: 0.2em; justify-content: center; }\r\n        .tracker-notes__rating-star { font-size: 1.2em; }\r\n        .tracker-notes__text-input { padding: 0.4em; font-size: 0.85em; min-height: 50px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; padding-bottom: 0.4em; font-size: 0.8em; }\r\n        .tracker-notes__heatmap { gap: 0.2em; padding: 0.4em 0; margin-top: 0.4em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 4px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.5em; max-width: 2.8em; font-size: 0.8em; }\r\n        .tracker-notes__calendar { gap: 0.15em; margin-top: 0.5em; }\r\n        .tracker-notes__calendar-day { font-size: 0.65em; }\r\n        .tracker-notes__chart { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; height: 160px; }\r\n        .tracker-notes__chart canvas { height: 140px !important; }\r\n        .tracker-notes__hierarchy { gap: 1em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 1em; }\r\n        .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 0.75em; margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-2 { padding-left: 0; margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-3 { padding-left: 0; margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.5em; margin-top: 0.25em; padding-bottom: 0.4em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.15em; margin-top: 0; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1.1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.95em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.9em; }\r\n      }\r\n      \r\n      @media (max-width: 480px) {\r\n        .tracker-notes { padding: 0.4em; margin: 0.4em 0; border-radius: 6px; }\r\n        .tracker-notes__header { margin: 0.4em 0; margin-bottom: 0.2em; gap: 0.4em; }\r\n        .tracker-notes__header-title { font-size: 0.95em; }\r\n        .tracker-notes__trackers { gap: 0.4em; }\r\n        .tracker-notes__tracker { padding: 0.4em; border-radius: 5px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.4em; padding-bottom: 0.3em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.85em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker { gap: 0.25em; }\r\n        .tracker-notes__date-nav-btn { padding: 0.35em 0.5em; font-size: 0.85em; min-width: 1.8em; height: 2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__date-input { padding: 0.35em 0.5em; font-size: 0.85em !important; height: 2em; width: 120px; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.3em; padding: 0.25em 0; }\r\n        .tracker-notes__value { font-size: 0.85em; min-width: 1.8em; }\r\n        .tracker-notes input[type="number"] { padding: 0.25em 0.4em; font-size: 0.8em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.25em 0.5em; font-size: 0.8em; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__rating-star { font-size: 1.1em; }\r\n        .tracker-notes__text-input { padding: 0.35em; font-size: 0.8em; min-height: 45px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; padding-bottom: 0.3em; font-size: 0.75em; }\r\n        .tracker-notes__heatmap { gap: 0.15em; padding: 0.3em 0; margin-top: 0.3em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 3px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.8em; max-width: 3em; font-size: 0.85em; }\r\n        .tracker-notes__heatmap-day.start-day::after { font-size: 0.4em; }\r\n        .tracker-notes__calendar { gap: 0.1em; margin-top: 0.4em; }\r\n        .tracker-notes__calendar-day { font-size: 0.6em; }\r\n        .tracker-notes__chart { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; height: 140px; }\r\n        .tracker-notes__chart canvas { height: 120px !important; }\r\n        .tracker-notes__hierarchy { gap: 0.75em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-1 { margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-2 { margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-node.level-3 { margin-top: 0.3em; margin-bottom: 0.3em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.4em; margin-top: 0.2em; padding-bottom: 0.3em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.05em; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.9em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.85em; }\r\n      }';
 
 // src/core/tracker-plugin.ts
 Chart.register(...registerables);
@@ -15740,6 +15895,7 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
   constructor() {
     super(...arguments);
     this.activeBlocks = /* @__PURE__ */ new Set();
+    this.internalWritePaths = /* @__PURE__ */ new Set();
   }
   isMobileDevice() {
     return window.innerWidth <= 768;
@@ -15748,6 +15904,15 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
     this.trackerFileService = new TrackerFileService(this.app);
+    this.trackerFileService.setModifyGuards({
+      onBeforeModify: (path) => {
+        this.internalWritePaths.add(this.normalizePath(path));
+      },
+      onAfterModify: (path) => {
+        const normalized = this.normalizePath(path);
+        window.setTimeout(() => this.internalWritePaths.delete(normalized), 0);
+      }
+    });
     this.addStyleSheet();
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
@@ -15761,9 +15926,49 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
       this.app.vault.on("create", (file) => {
         if (file instanceof import_obsidian9.TFile && file.extension === "md" && this.isFileInTrackersFolder(file)) {
           const fileFolderPath = this.getFolderPathFromFile(file.path);
+          this.folderTreeService.invalidate(fileFolderPath);
           setTimeout(() => {
             this.refreshBlocksForFolder(fileFolderPath);
           }, 300);
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("modify", (file) => {
+        if (file instanceof import_obsidian9.TFile) {
+          this.trackerFileService.invalidateCacheForPath(file.path);
+          if (this.isFileInTrackersFolder(file) && !this.internalWritePaths.has(this.normalizePath(file.path))) {
+            void this.refreshTrackersForFile(file);
+          }
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (file instanceof import_obsidian9.TFile) {
+          this.trackerFileService.invalidateCacheForPath(file.path);
+          const folderPath = this.getFolderPathFromFile(file.path);
+          this.folderTreeService.invalidate(folderPath);
+          void this.refreshBlocksForFolder(folderPath);
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (!(file instanceof import_obsidian9.TFile)) {
+          return;
+        }
+        this.trackerFileService.invalidateCacheForPath(file.path);
+        const folderPath = this.getFolderPathFromFile(file.path);
+        this.folderTreeService.invalidate(folderPath);
+        void this.refreshBlocksForFolder(folderPath);
+        if (typeof oldPath === "string") {
+          this.trackerFileService.invalidateCacheForPath(oldPath);
+          const oldFolderPath = this.getFolderPathFromFile(oldPath);
+          this.folderTreeService.invalidate(oldFolderPath);
+          if (oldFolderPath !== folderPath) {
+            void this.refreshBlocksForFolder(oldFolderPath);
+          }
         }
       })
     );
@@ -15816,17 +16021,46 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
   removeActiveBlock(block) {
     this.activeBlocks.delete(block);
   }
+  isFolderRelevant(targetPath, blockPath) {
+    if (blockPath === targetPath) return true;
+    if (!blockPath || !targetPath) return true;
+    return targetPath.startsWith(`${blockPath}/`) || blockPath.startsWith(`${targetPath}/`);
+  }
   async refreshBlocksForFolder(folderPath) {
     const normalizedPath = this.normalizePath(folderPath);
-    const blocksToRefresh = Array.from(this.activeBlocks).filter(
-      (block) => this.normalizePath(block.getFolderPath()) === normalizedPath
-    );
+    const blocksToRefresh = Array.from(this.activeBlocks).filter((block) => {
+      const blockPath = this.normalizePath(block.getFolderPath());
+      return this.isFolderRelevant(normalizedPath, blockPath);
+    });
     for (const block of blocksToRefresh) {
       try {
         await block.render();
       } catch (error) {
         console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0431\u043B\u043E\u043A\u0430", error);
       }
+    }
+  }
+  async refreshTrackersForFile(file) {
+    const refreshPromises = [];
+    for (const block of Array.from(this.activeBlocks)) {
+      const trackers = block.containerEl.querySelectorAll(
+        `.tracker-notes__tracker[data-file-path="${file.path}"]`
+      );
+      if (trackers.length === 0) continue;
+      const opts = block.getOptions();
+      const view = (opts.view ?? "control").toLowerCase();
+      const dateInput = block.containerEl.querySelector(".tracker-notes__date-input");
+      const activeDateIso = dateInput?.value || resolveDateIso(opts.date, this.settings.dateFormat);
+      trackers.forEach((trackerItem) => {
+        const parent = trackerItem.parentElement;
+        if (!parent) return;
+        refreshPromises.push(
+          this.renderTracker(parent, file, activeDateIso, view, opts, trackerItem)
+        );
+      });
+    }
+    if (refreshPromises.length > 0) {
+      await Promise.allSettled(refreshPromises);
     }
   }
   async refreshAllBlocks() {
@@ -15941,8 +16175,23 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
       await this.updateStats(statsDiv, file, dateIso, daysToShow, trackerType);
     }
   }
-  async renderTracker(parentEl, file, dateIso, view, opts) {
-    const trackerItem = parentEl.createDiv({ cls: "tracker-notes__tracker" });
+  async renderTracker(parentEl, file, dateIso, view, opts, existingTracker) {
+    const trackerItem = existingTracker ?? parentEl.createDiv({
+      cls: "tracker-notes__tracker"
+    });
+    if (!existingTracker) {
+      trackerItem.empty();
+    } else {
+      const header2 = trackerItem.querySelector(".tracker-notes__tracker-header");
+      const controls = trackerItem.querySelector(".tracker-notes__controls");
+      const chart = trackerItem.querySelector(".tracker-notes__chart");
+      const stats = trackerItem.querySelector(".tracker-notes__stats");
+      header2?.remove();
+      controls?.remove();
+      chart?.remove();
+      stats?.remove();
+    }
+    trackerItem.classList.add("tracker-notes__tracker");
     trackerItem.dataset.filePath = file.path;
     const header = trackerItem.createDiv({ cls: "tracker-notes__tracker-header" });
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
@@ -15994,12 +16243,21 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
     }
   }
   async renderControlsForDate(container, file, dateIso, opts) {
-    container.empty();
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
     const mode = (fileOpts.mode ?? "good-habit").toLowerCase();
+    const currentMode = container.dataset.trackerMode;
+    const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
+    if (currentMode === mode && (mode === "good-habit" || mode === "bad-habit")) {
+      const heatmapDiv = container.querySelector(".tracker-notes__heatmap");
+      if (heatmapDiv) {
+        await this.updateTrackerHeatmap(heatmapDiv, file, dateIso, daysToShow, mode);
+        return;
+      }
+    }
+    container.empty();
+    container.dataset.trackerMode = mode;
     const trackerItem = container.closest(".tracker-notes__tracker");
     const mainContainer = trackerItem?.closest(".tracker-notes");
-    const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
     const updateVisualizations = async () => {
       if (!trackerItem) return;
       const currentDateIso = mainContainer?.querySelector(".tracker-notes__date-input")?.value || dateIso;
@@ -16320,6 +16578,7 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
       }
     };
     const dayElements = Array.from(heatmapDiv.children);
+    const fragment = document.createDocumentFragment();
     for (let i = 0; i < daysToShow; i++) {
       const date = m ? m(startDate).add(i, "days") : addDays(startDate, i);
       const dateStr = m ? date.format(this.settings.dateFormat) : formatDate(date, this.settings.dateFormat);
@@ -16332,20 +16591,13 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
         dayDiv.removeClass("bad-habit");
         dayDiv.addClass(trackerType);
       } else {
-        dayDiv = heatmapDiv.createDiv({ cls: "tracker-notes__heatmap-day" });
+        dayDiv = document.createElement("div");
+        dayDiv.addClass("tracker-notes__heatmap-day");
         dayDiv.setText(dayNum.toString());
         dayDiv.addClass(trackerType);
+        fragment.appendChild(dayDiv);
       }
       dayDiv.dataset.dateStr = dateStr;
-      dayDiv.onclick = async () => {
-        const currentValue = entries.get(dateStr);
-        const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
-        const newValue = isChecked ? 0 : 1;
-        await this.writeLogLine(file, dateStr, String(newValue));
-        entries.set(dateStr, newValue);
-        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
-        await updateVisualizations(dateStr, dayDiv);
-      };
       updateHeatmapDay(dateStr, dayDiv);
       if (dateStr === startTrackingDateStr) {
         dayDiv.addClass("start-day");
@@ -16353,33 +16605,82 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
         dayDiv.removeClass("start-day");
       }
     }
+    if (fragment.childNodes.length > 0) {
+      heatmapDiv.appendChild(fragment);
+    }
     while (dayElements.length > daysToShow) {
       dayElements[dayElements.length - 1].remove();
       dayElements.pop();
     }
-    const performScroll = () => {
-      const maxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
-      if (maxScroll > 0) {
-        heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
-      } else {
-        setTimeout(() => {
-          const retryMaxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
-          if (retryMaxScroll > 0) {
-            heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
-          }
-        }, 50);
-      }
-    };
-    requestAnimationFrame(() => {
+    if (heatmapDiv.dataset.autoscrolled !== "true") {
+      const performScroll = () => {
+        const maxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
+        if (maxScroll > 0) {
+          heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
+        } else {
+          setTimeout(() => {
+            const retryMaxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
+            if (retryMaxScroll > 0) {
+              heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
+            }
+          }, 50);
+        }
+      };
       requestAnimationFrame(() => {
-        performScroll();
+        requestAnimationFrame(() => {
+          performScroll();
+          heatmapDiv.dataset.autoscrolled = "true";
+        });
       });
-    });
+    }
   }
   async renderTrackerHeatmap(container, file, dateIso, daysToShow, trackerType) {
     let heatmapDiv = container.querySelector(".tracker-notes__heatmap");
     if (!heatmapDiv) {
       heatmapDiv = container.createDiv({ cls: "tracker-notes__heatmap" });
+      heatmapDiv.addEventListener("click", async (e) => {
+        const dayDiv = e.target.closest(".tracker-notes__heatmap-day");
+        if (!dayDiv) return;
+        const dateStr = dayDiv.dataset.dateStr;
+        if (!dateStr) return;
+        const entries = await this.readAllEntries(file);
+        const currentValue = entries.get(dateStr);
+        const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
+        const newValue = isChecked ? 0 : 1;
+        await this.writeLogLine(file, dateStr, String(newValue));
+        entries.set(dateStr, newValue);
+        new import_obsidian9.Notice(`\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E: ${dateStr}: ${newValue}`, 2e3);
+        if (newValue === 1) {
+          dayDiv.addClass("has-value");
+        } else {
+          dayDiv.removeClass("has-value");
+        }
+        const startTrackingDateStr = this.getStartTrackingDate(entries, file);
+        const allDayElements = Array.from(heatmapDiv.children);
+        for (const dayEl of allDayElements) {
+          const dayDateStr = dayEl.dataset.dateStr;
+          if (dayDateStr) {
+            if (dayDateStr === startTrackingDateStr) {
+              dayEl.addClass("start-day");
+            } else {
+              dayEl.removeClass("start-day");
+            }
+          }
+        }
+        const trackerItem = heatmapDiv.closest(".tracker-notes__tracker");
+        const mainContainer = trackerItem?.closest(".tracker-notes");
+        if (trackerItem) {
+          const currentDateIso = mainContainer?.querySelector(".tracker-notes__date-input")?.value || dateIso;
+          const chartDiv = trackerItem.querySelector(".tracker-notes__chart");
+          if (chartDiv) {
+            await this.updateChart(chartDiv, file, currentDateIso, daysToShow);
+          }
+          const statsDiv = trackerItem.querySelector(".tracker-notes__stats");
+          if (statsDiv) {
+            await this.updateStats(statsDiv, file, currentDateIso, daysToShow, trackerType);
+          }
+        }
+      });
     }
     await this.updateTrackerHeatmap(heatmapDiv, file, dateIso, daysToShow, trackerType);
   }
@@ -17055,7 +17356,8 @@ var TrackerPlugin = class extends import_obsidian9.Plugin {
     new CreateTrackerModal(this.app, this).open();
   }
   async onTrackerCreated(folderPath) {
-    await this.refreshAllBlocks();
+    this.folderTreeService.invalidate(folderPath);
+    await this.refreshBlocksForFolder(folderPath);
   }
   // ---- Чтение/запись --------------------------------------------------------
   async ensureFileWithHeading(filePath, type = "good-habit") {

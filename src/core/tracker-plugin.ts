@@ -20,6 +20,7 @@ export default class TrackerPlugin extends Plugin {
   private folderTreeService: FolderTreeService;
   private trackerFileService: TrackerFileService;
   private styleEl?: HTMLStyleElement;
+  private internalWritePaths: Set<string> = new Set();
 
   private isMobileDevice(): boolean {
     return window.innerWidth <= 768;
@@ -29,6 +30,15 @@ export default class TrackerPlugin extends Plugin {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
     this.trackerFileService = new TrackerFileService(this.app);
+    this.trackerFileService.setModifyGuards({
+      onBeforeModify: (path) => {
+        this.internalWritePaths.add(this.normalizePath(path));
+      },
+      onAfterModify: (path) => {
+        const normalized = this.normalizePath(path);
+        window.setTimeout(() => this.internalWritePaths.delete(normalized), 0);
+      },
+    });
     this.addStyleSheet();
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
@@ -45,9 +55,57 @@ export default class TrackerPlugin extends Plugin {
       this.app.vault.on("create", (file) => {
         if (file instanceof TFile && file.extension === "md" && this.isFileInTrackersFolder(file)) {
           const fileFolderPath = this.getFolderPathFromFile(file.path);
+          this.folderTreeService.invalidate(fileFolderPath);
           setTimeout(() => {
             this.refreshBlocksForFolder(fileFolderPath);
           }, 300);
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("modify", (file) => {
+        if (file instanceof TFile) {
+          this.trackerFileService.invalidateCacheForPath(file.path);
+          if (
+            this.isFileInTrackersFolder(file) &&
+            !this.internalWritePaths.has(this.normalizePath(file.path))
+          ) {
+            void this.refreshTrackersForFile(file);
+          }
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (file instanceof TFile) {
+          this.trackerFileService.invalidateCacheForPath(file.path);
+          const folderPath = this.getFolderPathFromFile(file.path);
+          this.folderTreeService.invalidate(folderPath);
+          void this.refreshBlocksForFolder(folderPath);
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (!(file instanceof TFile)) {
+          return;
+        }
+
+        this.trackerFileService.invalidateCacheForPath(file.path);
+        const folderPath = this.getFolderPathFromFile(file.path);
+        this.folderTreeService.invalidate(folderPath);
+        void this.refreshBlocksForFolder(folderPath);
+
+        if (typeof oldPath === "string") {
+          this.trackerFileService.invalidateCacheForPath(oldPath);
+          const oldFolderPath = this.getFolderPathFromFile(oldPath);
+          this.folderTreeService.invalidate(oldFolderPath);
+          if (oldFolderPath !== folderPath) {
+            void this.refreshBlocksForFolder(oldFolderPath);
+          }
         }
       })
     );
@@ -110,11 +168,18 @@ export default class TrackerPlugin extends Plugin {
     this.activeBlocks.delete(block);
   }
 
+  private isFolderRelevant(targetPath: string, blockPath: string): boolean {
+    if (blockPath === targetPath) return true;
+    if (!blockPath || !targetPath) return true;
+    return targetPath.startsWith(`${blockPath}/`) || blockPath.startsWith(`${targetPath}/`);
+  }
+
   async refreshBlocksForFolder(folderPath: string) {
     const normalizedPath = this.normalizePath(folderPath);
-    const blocksToRefresh = Array.from(this.activeBlocks).filter(block => 
-      this.normalizePath(block.getFolderPath()) === normalizedPath
-    );
+    const blocksToRefresh = Array.from(this.activeBlocks).filter((block) => {
+      const blockPath = this.normalizePath(block.getFolderPath());
+      return this.isFolderRelevant(normalizedPath, blockPath);
+    });
 
     for (const block of blocksToRefresh) {
       try {
@@ -122,6 +187,36 @@ export default class TrackerPlugin extends Plugin {
       } catch (error) {
         console.error("Tracker: ошибка при обновлении блока", error);
       }
+    }
+  }
+
+  private async refreshTrackersForFile(file: TFile) {
+    const refreshPromises: Promise<void>[] = [];
+    for (const block of Array.from(this.activeBlocks)) {
+      const trackers = block.containerEl.querySelectorAll<HTMLElement>(
+        `.tracker-notes__tracker[data-file-path="${file.path}"]`,
+      );
+      if (trackers.length === 0) continue;
+
+      const opts = block.getOptions();
+      const view = (opts.view ?? "control").toLowerCase();
+      const dateInput = block.containerEl.querySelector(".tracker-notes__date-input") as
+        | HTMLInputElement
+        | null;
+      const activeDateIso =
+        dateInput?.value || resolveDateIso(opts.date, this.settings.dateFormat);
+
+      trackers.forEach((trackerItem) => {
+        const parent = trackerItem.parentElement as HTMLElement | null;
+        if (!parent) return;
+        refreshPromises.push(
+          this.renderTracker(parent, file, activeDateIso, view, opts, trackerItem),
+        );
+      });
+    }
+
+    if (refreshPromises.length > 0) {
+      await Promise.allSettled(refreshPromises);
     }
   }
 
@@ -288,10 +383,37 @@ export default class TrackerPlugin extends Plugin {
     }
   }
 
-  async renderTracker(parentEl: HTMLElement, file: TFile, dateIso: string, view: string, opts: Record<string, string>) {
-    // Создаем элемент трекера внутри общего контейнера
-    const trackerItem = parentEl.createDiv({ cls: "tracker-notes__tracker" });
-    // Сохраняем путь к файлу для обновления при изменении общей даты
+  async renderTracker(
+    parentEl: HTMLElement,
+    file: TFile,
+    dateIso: string,
+    view: string,
+    opts: Record<string, string>,
+    existingTracker?: HTMLElement,
+  ) {
+    const trackerItem =
+      existingTracker ??
+      parentEl.createDiv({
+        cls: "tracker-notes__tracker",
+      });
+    
+    // Оптимизация: не очищаем полностью если трекер уже существует
+    if (!existingTracker) {
+      trackerItem.empty();
+    } else {
+      // Удаляем только содержимое, сохраняя dataset для последующей проверки
+      const header = trackerItem.querySelector('.tracker-notes__tracker-header');
+      const controls = trackerItem.querySelector('.tracker-notes__controls');
+      const chart = trackerItem.querySelector('.tracker-notes__chart');
+      const stats = trackerItem.querySelector('.tracker-notes__stats');
+      
+      header?.remove();
+      controls?.remove();
+      chart?.remove();
+      stats?.remove();
+    }
+    
+    trackerItem.classList.add("tracker-notes__tracker");
     trackerItem.dataset.filePath = file.path;
     
     // Заголовок с названием трекера
@@ -371,17 +493,30 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async renderControlsForDate(container: HTMLElement, file: TFile, dateIso: string, opts: Record<string, string>) {
-    // Очищаем контейнер перед созданием новых элементов
-    container.empty();
-    
     // Всегда определяем тип из frontmatter, игнорируя mode из opts
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
     const mode = (fileOpts.mode ?? "good-habit").toLowerCase();
     
+    // Оптимизация: проверяем, изменился ли режим
+    const currentMode = container.dataset.trackerMode;
+    const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
+    
+    // Для хитмапа можем обновить без полного пересоздания
+    if (currentMode === mode && (mode === "good-habit" || mode === "bad-habit")) {
+      const heatmapDiv = container.querySelector(".tracker-notes__heatmap") as HTMLElement;
+      if (heatmapDiv) {
+        await this.updateTrackerHeatmap(heatmapDiv, file, dateIso, daysToShow, mode);
+        return;
+      }
+    }
+    
+    // Очищаем контейнер перед созданием новых элементов только если режим изменился
+    container.empty();
+    container.dataset.trackerMode = mode;
+    
     // Находим родительский контейнер для обновления визуализаций
     const trackerItem = container.closest(".tracker-notes__tracker") as HTMLElement;
     const mainContainer = trackerItem?.closest(".tracker-notes") as HTMLElement;
-    const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
     
     // Функция для обновления визуализаций после записи данных
     const updateVisualizations = async () => {
@@ -798,6 +933,7 @@ export default class TrackerPlugin extends Plugin {
     
     // Получаем существующие элементы дней
     const dayElements = Array.from(heatmapDiv.children) as HTMLElement[];
+    const fragment = document.createDocumentFragment();
     
     for (let i = 0; i < daysToShow; i++) {
       const date = m ? m(startDate).add(i, 'days') : addDays(startDate, i);
@@ -806,43 +942,41 @@ export default class TrackerPlugin extends Plugin {
       
       let dayDiv: HTMLElement;
       if (i < dayElements.length) {
-        // Используем существующий элемент
+        // Переиспользуем существующий элемент
         dayDiv = dayElements[i];
         dayDiv.setText(dayNum.toString());
-        // Убеждаемся, что класс типа трекера установлен
+        // Обновляем класс типа трекера
         dayDiv.removeClass("good-habit");
         dayDiv.removeClass("bad-habit");
         dayDiv.addClass(trackerType);
       } else {
-        // Создаем новый элемент
-        dayDiv = heatmapDiv.createDiv({ cls: "tracker-notes__heatmap-day" });
+        // Создаем новый элемент в fragment для batch добавления
+        dayDiv = document.createElement('div');
+        dayDiv.addClass("tracker-notes__heatmap-day");
         dayDiv.setText(dayNum.toString());
         dayDiv.addClass(trackerType);
+        fragment.appendChild(dayDiv);
       }
       
-      // Сохраняем dateStr в data-атрибуте для последующего обновления start-day
-      (dayDiv as any).dataset.dateStr = dateStr;
+      // Сохраняем dateStr в data-атрибуте для event delegation
+      dayDiv.dataset.dateStr = dateStr;
       
-      // Устанавливаем обработчик события для всех элементов (включая существующие)
-      dayDiv.onclick = async () => {
-        const currentValue = entries.get(dateStr);
-        const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
-        const newValue = isChecked ? 0 : 1;
-        await this.writeLogLine(file, dateStr, String(newValue));
-        entries.set(dateStr, newValue);
-        new Notice(`✓ Записано: ${dateStr}: ${newValue}`, 2000);
-        // Обновляем только этот день и другие визуализации, не пересоздавая весь хитмап
-        await updateVisualizations(dateStr, dayDiv);
-      };
+      // НЕ устанавливаем onclick - используем event delegation из renderTrackerHeatmap
       
+      // Обновляем визуальное состояние дня
       updateHeatmapDay(dateStr, dayDiv);
       
-      // Добавляем класс start-day если это день начала отслеживания
+      // Обновляем класс start-day
       if (dateStr === startTrackingDateStr) {
         dayDiv.addClass("start-day");
       } else {
         dayDiv.removeClass("start-day");
       }
+    }
+    
+    // Добавляем новые элементы одним батчем
+    if (fragment.childNodes.length > 0) {
+      heatmapDiv.appendChild(fragment);
     }
     
     // Удаляем лишние элементы если их больше чем нужно
@@ -851,35 +985,89 @@ export default class TrackerPlugin extends Plugin {
       dayElements.pop();
     }
     
-    // Прокручиваем в конец, чтобы был виден текущий день
-    // Используем двойной requestAnimationFrame для гарантии, что layout завершен
-    const performScroll = () => {
-      const maxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
-      if (maxScroll > 0) {
-        // Всегда скроллим в конец для отображения текущего дня
-        heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
-      } else {
-        // Если размеры еще не вычислены, повторяем попытку
-        setTimeout(() => {
-          const retryMaxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
-          if (retryMaxScroll > 0) {
-            heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
-          }
-        }, 50);
-      }
-    };
-    
-    requestAnimationFrame(() => {
+    if (heatmapDiv.dataset.autoscrolled !== "true") {
+      const performScroll = () => {
+        const maxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
+        if (maxScroll > 0) {
+          heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
+        } else {
+          setTimeout(() => {
+            const retryMaxScroll = heatmapDiv.scrollWidth - heatmapDiv.clientWidth;
+            if (retryMaxScroll > 0) {
+              heatmapDiv.scrollLeft = heatmapDiv.scrollWidth;
+            }
+          }, 50);
+        }
+      };
+      
       requestAnimationFrame(() => {
-        performScroll();
+        requestAnimationFrame(() => {
+          performScroll();
+          heatmapDiv.dataset.autoscrolled = "true";
+        });
       });
-    });
+    }
   }
 
   async renderTrackerHeatmap(container: HTMLElement, file: TFile, dateIso: string, daysToShow: number, trackerType: string) {
     let heatmapDiv = container.querySelector(".tracker-notes__heatmap") as HTMLElement;
     if (!heatmapDiv) {
       heatmapDiv = container.createDiv({ cls: "tracker-notes__heatmap" });
+      
+      // Event delegation: один обработчик на весь хитмап вместо N обработчиков на каждый день
+      heatmapDiv.addEventListener('click', async (e) => {
+        const dayDiv = (e.target as HTMLElement).closest('.tracker-notes__heatmap-day') as HTMLElement;
+        if (!dayDiv) return;
+        
+        const dateStr = dayDiv.dataset.dateStr;
+        if (!dateStr) return;
+        
+        // Получаем актуальные данные
+        const entries = await this.readAllEntries(file);
+        const currentValue = entries.get(dateStr);
+        const isChecked = currentValue === 1 || currentValue === "1" || String(currentValue) === "true";
+        const newValue = isChecked ? 0 : 1;
+        
+        await this.writeLogLine(file, dateStr, String(newValue));
+        entries.set(dateStr, newValue);
+        new Notice(`✓ Записано: ${dateStr}: ${newValue}`, 2000);
+        
+        // Обновляем только визуальное состояние этого дня
+        if (newValue === 1) {
+          dayDiv.addClass("has-value");
+        } else {
+          dayDiv.removeClass("has-value");
+        }
+        
+        // Обновляем start-day маркеры и другие визуализации
+        const startTrackingDateStr = this.getStartTrackingDate(entries, file);
+        const allDayElements = Array.from(heatmapDiv.children) as HTMLElement[];
+        for (const dayEl of allDayElements) {
+          const dayDateStr = dayEl.dataset.dateStr;
+          if (dayDateStr) {
+            if (dayDateStr === startTrackingDateStr) {
+              dayEl.addClass("start-day");
+            } else {
+              dayEl.removeClass("start-day");
+            }
+          }
+        }
+        
+        // Обновляем график и статистику
+        const trackerItem = heatmapDiv.closest(".tracker-notes__tracker") as HTMLElement;
+        const mainContainer = trackerItem?.closest(".tracker-notes") as HTMLElement;
+        if (trackerItem) {
+          const currentDateIso = (mainContainer?.querySelector(".tracker-notes__date-input") as HTMLInputElement)?.value || dateIso;
+          const chartDiv = trackerItem.querySelector(".tracker-notes__chart");
+          if (chartDiv) {
+            await this.updateChart(chartDiv as HTMLElement, file, currentDateIso, daysToShow);
+          }
+          const statsDiv = trackerItem.querySelector(".tracker-notes__stats");
+          if (statsDiv) {
+            await this.updateStats(statsDiv as HTMLElement, file, currentDateIso, daysToShow, trackerType);
+          }
+        }
+      });
     }
     await this.updateTrackerHeatmap(heatmapDiv, file, dateIso, daysToShow, trackerType);
   }
@@ -1786,7 +1974,8 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async onTrackerCreated(folderPath: string) {
-    await this.refreshAllBlocks();
+    this.folderTreeService.invalidate(folderPath);
+    await this.refreshBlocksForFolder(folderPath);
   }
 
 

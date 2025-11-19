@@ -53,10 +53,15 @@
       .tracker-notes__chart { margin-top: 0.75em; margin-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); padding-top: 0.75em; width: 100%; max-width: 100%; position: relative; height: 200px; box-sizing: border-box; overflow: hidden; }
       .tracker-notes__chart canvas { max-width: 100% !important; height: 180px !important; }
       .tracker-notes__date-picker { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; justify-content: center; }
+      .tracker-notes__loading { display: none; align-items: center; gap: 0.4em; font-size: 0.85em; color: var(--text-muted); margin-top: 0.3em; }
+      .tracker-notes__loading.is-active { display: flex; }
+      .tracker-notes__loading-dot { width: 0.8em; height: 0.8em; border-radius: 50%; border: 2px solid var(--interactive-accent); border-top-color: transparent; animation: tracker-loading-spin 0.8s linear infinite; }
+      @keyframes tracker-loading-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       .tracker-notes__date-nav-btn { padding: 0.5em 0.75em; font-size: 1em; min-width: 2.5em; height: 2.5em; border: none; border-radius: var(--input-radius, 5px); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; transition: all 0.2s ease; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
       .tracker-notes__date-nav-btn:hover { background: var(--interactive-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
       .tracker-notes__date-nav-btn:active { transform: scale(0.95) translateY(0); }
       .tracker-notes__date-input { padding: 0.5em 0.75em; border: none !important; border-radius: var(--input-radius, 5px); background: var(--background-primary); color: var(--text-normal); font-size: 1em !important; transition: all 0.2s ease; height: 2.5em; width: 160px; box-sizing: border-box; font-weight: 600; text-align: center; flex-shrink: 0; }
+      .tracker-notes__date-input.is-updating { opacity: 0.65; cursor: progress; }
       .tracker-notes__date-input:focus { outline: none !important; box-shadow: none !important; }
       .tracker-notes__date-btn { padding: 0.5em 1em; font-size: 0.9em; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--interactive-accent); border-radius: var(--input-radius, 5px); background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); cursor: pointer; transition: all 0.2s ease; font-weight: 600; height: 2.5em; }
       .tracker-notes__date-btn:hover { background: var(--interactive-accent-hover, var(--interactive-accent)); border-color: var(--interactive-accent-hover, var(--interactive-accent)); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }

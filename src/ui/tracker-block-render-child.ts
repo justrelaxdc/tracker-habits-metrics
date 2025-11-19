@@ -115,8 +115,84 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       }
 
       let dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      let pendingDateIso: string | null = null;
+      let isProcessingDateUpdate = false;
 
       const mainContainer = this.containerEl.createDiv({ cls: "tracker-notes" });
+
+      const trackerDateUpdate = async (targetIso: string) => {
+        dateIso = targetIso;
+        const trackerItems = Array.from(
+          mainContainer.querySelectorAll<HTMLElement>(".tracker-notes__tracker"),
+        );
+        const updatePromises = trackerItems.map(async (trackerItem) => {
+          const filePath = trackerItem.dataset.filePath;
+          if (!filePath) return;
+          const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
+          if (file instanceof TFile) {
+            await this.plugin.updateTrackerDate(trackerItem, file, targetIso, this.opts);
+          }
+        });
+        await Promise.allSettled(updatePromises);
+      };
+
+      let dateInput: HTMLInputElement | null = null;
+      const dateNavButtons: HTMLButtonElement[] = [];
+      let loadingIndicator: HTMLElement | null = null;
+
+      const setDateUpdatingState = (updating: boolean) => {
+        if (loadingIndicator) {
+          loadingIndicator.toggleClass("is-active", updating);
+        }
+        dateInput?.classList.toggle("is-updating", updating);
+        if (dateInput) {
+          dateInput.disabled = updating;
+        }
+        for (const btn of dateNavButtons) {
+          btn.disabled = updating;
+        }
+      };
+
+      const processNextDateUpdate = async () => {
+        if (isProcessingDateUpdate || !pendingDateIso) return;
+        isProcessingDateUpdate = true;
+        const targetIso = pendingDateIso;
+        pendingDateIso = null;
+        setDateUpdatingState(true);
+        try {
+          await trackerDateUpdate(targetIso);
+        } finally {
+          setDateUpdatingState(false);
+          isProcessingDateUpdate = false;
+          if (pendingDateIso) {
+            void processNextDateUpdate();
+          }
+        }
+      };
+
+      const requestDateUpdate = (newDate: string) => {
+        const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
+        pendingDateIso = newDateIso;
+        if (dateInput) {
+          dateInput.value = newDateIso;
+        }
+        void processNextDateUpdate();
+      };
+
+      const navigateDate = (days: number) => {
+        const referenceIso = pendingDateIso ?? dateIso;
+        const m = (window as any).moment;
+        const currentDateObj = m
+          ? m(referenceIso, this.plugin.settings.dateFormat)
+          : parseDate(referenceIso, this.plugin.settings.dateFormat);
+        const newDate = m
+          ? currentDateObj.clone().add(days, "days")
+          : addDays(new Date(currentDateObj.getTime()), days);
+        const newDateStr = m
+          ? newDate.format(this.plugin.settings.dateFormat)
+          : formatDate(newDate, this.plugin.settings.dateFormat);
+        requestDateUpdate(newDateStr);
+      };
 
       if (view === "control") {
         const blockHeader = this.containerEl.createDiv({ cls: "tracker-notes__header" });
@@ -131,57 +207,32 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         });
         const datePicker = datePickerContainer.createDiv({ cls: "tracker-notes__date-picker" });
 
-        const updateDate = async (newDate: string) => {
-          const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
-          dateInput.value = newDateIso;
-          dateIso = newDateIso;
-
-          const trackerItems = mainContainer.querySelectorAll(".tracker-notes__tracker");
-          for (const trackerItem of Array.from(trackerItems)) {
-            const filePath = (trackerItem as HTMLElement).dataset.filePath;
-            if (filePath) {
-              const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-              if (file instanceof TFile) {
-                await this.plugin.updateTrackerDate(trackerItem as HTMLElement, file, newDateIso, this.opts);
-              }
-            }
-          }
-        };
-
-        const navigateDate = async (days: number) => {
-          const m = (window as any).moment;
-          const currentDateObj = m
-            ? m(dateIso, this.plugin.settings.dateFormat)
-            : parseDate(dateIso, this.plugin.settings.dateFormat);
-          const newDate = m
-            ? currentDateObj.clone().add(days, "days")
-            : addDays(new Date(currentDateObj.getTime()), days);
-          const newDateStr = m
-            ? newDate.format(this.plugin.settings.dateFormat)
-            : formatDate(newDate, this.plugin.settings.dateFormat);
-          await updateDate(newDateStr);
-        };
-
         const dayBackBtn = datePicker.createEl("button", {
           text: "◀",
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left",
-        });
+        }) as HTMLButtonElement;
         dayBackBtn.onclick = () => navigateDate(-1);
         dayBackBtn.title = "Вчера";
+        dateNavButtons.push(dayBackBtn);
 
-        const dateInput = datePicker.createEl("input", {
+        dateInput = datePicker.createEl("input", {
           type: "date",
           cls: "tracker-notes__date-input",
           value: dateIso,
         }) as HTMLInputElement;
-        dateInput.onchange = () => updateDate(dateInput.value);
+        dateInput.onchange = () => requestDateUpdate(dateInput!.value);
 
         const dayForwardBtn = datePicker.createEl("button", {
           text: "▶",
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right",
-        });
+        }) as HTMLButtonElement;
         dayForwardBtn.onclick = () => navigateDate(1);
         dayForwardBtn.title = "Завтра";
+        dateNavButtons.push(dayForwardBtn);
+
+        loadingIndicator = blockHeader.createDiv({ cls: "tracker-notes__loading" });
+        loadingIndicator.createDiv({ cls: "tracker-notes__loading-dot" });
+        loadingIndicator.createEl("span", { text: "Обновление…" });
       }
 
       const trackersContainer = mainContainer.createDiv({ cls: "tracker-notes__hierarchy" });
@@ -203,9 +254,12 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     view: string,
     opts: Record<string, string>,
   ): Promise<void> {
-    const nodeContainer = parentEl.createDiv({
-      cls: `tracker-notes__folder-node level-${node.level}`,
-    });
+    const fragment = document.createDocumentFragment();
+    const nodeContainer = document.createElement("div");
+    nodeContainer.addClass("tracker-notes__folder-node");
+    nodeContainer.addClass(`level-${node.level}`);
+    fragment.appendChild(nodeContainer);
+    parentEl.appendChild(fragment);
 
     const shouldShowHeader =
       node.files.length > 0 || (node.level > 0 && node.children.length > 0);
@@ -220,9 +274,14 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     if (node.files.length > 0) {
       const trackersContainer = nodeContainer.createDiv({ cls: "tracker-notes__trackers" });
 
-      for (const file of node.files) {
-        await this.plugin.renderTracker(trackersContainer, file, dateIso, view, opts);
-      }
+      const renderPromises = node.files.map(async (file) => {
+        try {
+          await this.plugin.renderTracker(trackersContainer, file, dateIso, view, opts);
+        } catch (error) {
+          console.error("Tracker: ошибка рендера трекера", error);
+        }
+      });
+      await Promise.all(renderPromises);
     }
 
     for (const childNode of node.children) {
@@ -232,6 +291,10 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
 
   getFolderPath(): string {
     return this.folderPath;
+  }
+
+  getOptions(): Record<string, string> {
+    return this.opts;
   }
 
   onload() {}
