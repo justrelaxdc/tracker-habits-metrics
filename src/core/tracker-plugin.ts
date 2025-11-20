@@ -6,7 +6,7 @@ import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { DEFAULT_SETTINGS } from "../domain/types";
 import { FolderTreeService } from "../services/folder-tree-service";
 import { TrackerFileService } from "../services/tracker-file-service";
-import { resolveDateIso, formatDate, parseDate, addDays } from "../utils/date";
+import { resolveDateIso } from "../utils/date";
 import { countWords, parseMaybeNumber } from "../utils/misc";
 import { isTrackerValueTrue } from "../utils/validation";
 import { TrackerSettingsTab } from "../ui/tracker-settings-tab";
@@ -18,7 +18,8 @@ import { DateService } from "../services/date-service";
 import { HeatmapService } from "../services/heatmap-service";
 import { ControlsRenderer } from "../services/controls-renderer";
 import { TrackerRenderer } from "../services/tracker-renderer";
-import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS } from "../constants";
+import { VisualizationService } from "../services/visualization-service";
+import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { showNoticeIfNotMobile } from "../utils/notifications";
 
@@ -32,15 +33,17 @@ export default class TrackerPlugin extends Plugin {
   private heatmapService: HeatmapService;
   private controlsRenderer: ControlsRenderer;
   private trackerRenderer: TrackerRenderer;
+  private visualizationService: VisualizationService;
 
   private isMobileDevice(): boolean {
-    return window.innerWidth <= 768;
+    return window.innerWidth <= MOBILE_BREAKPOINT;
   }
 
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
     this.trackerFileService = new TrackerFileService(this.app);
+    this.visualizationService = new VisualizationService();
     
     // Инициализируем сервисы рендеринга
     this.heatmapService = new HeatmapService(
@@ -601,8 +604,8 @@ export default class TrackerPlugin extends Plugin {
     
     for (let i = 0; i < days; i++) {
       // Все точки одинаковые, не меняем border для активной точки
-      pointRadii.push(3);
-      pointBorderWidths.push(2);
+      pointRadii.push(CHART_CONFIG.POINT_RADIUS);
+      pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
     
     // Автоматически настраиваем min/max оси Y на основе лимитов и значений scale
@@ -638,7 +641,7 @@ export default class TrackerPlugin extends Plugin {
     
     // Если max не больше min (например, только minLimit задан), расширяем диапазон вверх
     if (yAxisMax <= yAxisMin) {
-      const padding = Math.max(1, Math.abs(yAxisMin) * 0.1 || 1);
+      const padding = Math.max(1, Math.abs(yAxisMin) * CHART_CONFIG.PADDING_FACTOR || 1);
       yAxisMax = yAxisMin + padding;
     }
     
@@ -646,8 +649,8 @@ export default class TrackerPlugin extends Plugin {
     const ctx = canvas.getContext('2d');
     let gradient: CanvasGradient | null = null;
     if (ctx) {
-      gradient = ctx.createLinearGradient(0, 0, 0, 180);
-      gradient.addColorStop(0, colorToRgba(colors.accentColor, 0.25));
+      gradient = ctx.createLinearGradient(0, 0, 0, CHART_CONFIG.GRADIENT_HEIGHT);
+      gradient.addColorStop(0, colorToRgba(colors.accentColor, CHART_CONFIG.OPACITY_LIGHT));
       gradient.addColorStop(1, colorToRgba(colors.accentColor, 0));
     }
     
@@ -676,7 +679,7 @@ export default class TrackerPlugin extends Plugin {
       
       ctx.save();
       ctx.strokeStyle = colorToRgba(color, 0.6);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = CHART_CONFIG.LINE_WIDTH;
       // Пунктирная линия для даты начала отслеживания
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -699,7 +702,7 @@ export default class TrackerPlugin extends Plugin {
       
       ctx.save();
       ctx.strokeStyle = colorToRgba(color, 0.6);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = CHART_CONFIG.LINE_WIDTH;
       // Сплошная линия для выбранного дня
       ctx.setLineDash([]);
       ctx.beginPath();
@@ -737,8 +740,8 @@ export default class TrackerPlugin extends Plugin {
           label: chartLabel,
           data: values,
           borderColor: colors.accentColor,
-          backgroundColor: gradient || colorToRgba(colors.accentColor, 0.1),
-          borderWidth: 2.5,
+          backgroundColor: gradient || colorToRgba(colors.accentColor, CHART_CONFIG.OPACITY_DARK),
+          borderWidth: CHART_CONFIG.BORDER_WIDTH,
           fill: false,
           tension: 0.4,
           pointRadius: pointRadii,
@@ -758,7 +761,7 @@ export default class TrackerPlugin extends Plugin {
           },
           pointHoverBorderWidth: (ctx: any) => {
             const index = ctx.dataIndex;
-            return pointBorderWidths[index] || pointBorderWidths[0] || 2;
+            return pointBorderWidths[index] || pointBorderWidths[0] || CHART_CONFIG.POINT_BORDER_WIDTH;
           },
         }]
       },
@@ -795,7 +798,7 @@ export default class TrackerPlugin extends Plugin {
           x: {
             grid: {
               display: true,
-              color: colorToRgba(colors.borderColor, 0.3),
+              color: colorToRgba(colors.borderColor, CHART_CONFIG.OPACITY_MEDIUM),
               lineWidth: 1,
               drawBorder: false,
             },
@@ -813,7 +816,7 @@ export default class TrackerPlugin extends Plugin {
           y: {
             grid: {
               display: true,
-              color: colorToRgba(colors.borderColor, 0.3),
+              color: colorToRgba(colors.borderColor, CHART_CONFIG.OPACITY_MEDIUM),
               lineWidth: 1,
               drawBorder: false,
             },
@@ -964,7 +967,7 @@ export default class TrackerPlugin extends Plugin {
       
       ctx.save();
       ctx.strokeStyle = colorToRgba(color, 0.6);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = CHART_CONFIG.LINE_WIDTH;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.moveTo(chartArea.left, yPos);
@@ -1125,8 +1128,8 @@ export default class TrackerPlugin extends Plugin {
     
     for (let i = 0; i < days; i++) {
       // Все точки одинаковые, не меняем border для активной точки
-      pointRadii.push(3);
-      pointBorderWidths.push(2);
+      pointRadii.push(CHART_CONFIG.POINT_RADIUS);
+      pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
     
     // Автоматически настраиваем min/max оси Y на основе лимитов и значений scale
@@ -1162,7 +1165,7 @@ export default class TrackerPlugin extends Plugin {
     
     // Если max не больше min (например, задан только minLimit), расширяем диапазон вверх
     if (yAxisMax <= yAxisMin) {
-      const padding = Math.max(1, Math.abs(yAxisMin) * 0.1 || 1);
+      const padding = Math.max(1, Math.abs(yAxisMin) * CHART_CONFIG.PADDING_FACTOR || 1);
       yAxisMax = yAxisMin + padding;
     }
     
@@ -1204,76 +1207,25 @@ export default class TrackerPlugin extends Plugin {
     const metricType = trackerType || (fileOpts.mode ?? "good-habit").toLowerCase();
     
     const endDate = dateIso 
-      ? DateService.parse(dateIso, this.settings.dateFormat)
+      ? DateService.parse(dateIso, 'YYYY-MM-DD')
       : DateService.now();
     const days = daysToShow || this.settings.daysToShow;
-    const startDate = endDate.clone().subtract(days - 1, 'days');
+    const dateIsoFormatted = DateService.format(endDate, this.settings.dateFormat);
     
-    const periodDays: number[] = [];
-    
-    for (let i = 0; i < days; i++) {
-      const date = startDate.clone().add(i, 'days');
-      const dateStr = DateService.format(date, this.settings.dateFormat);
-      const val = entriesToUse.get(dateStr);
-      let numVal = 0;
-      if (val != null) {
-        // Для метрики типа "text" используем количество слов
-        if (metricType === "text") {
-          numVal = countWords(String(val));
-        } else if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
-      
-      // Для плохих привычек инвертируем: отсутствие отметки = успех
-      if (metricType === "bad-habit") {
-        numVal = numVal === 1 ? 0 : 1;
-      }
-      
-      periodDays.push(numVal);
-    }
-    
-    const sum = periodDays.reduce((a, b) => a + b, 0);
-    const avg = sum / days;
-    const total = entriesToUse.size;
+    // Используем VisualizationService для расчета статистики
+    const stats = this.visualizationService.calculateStats(
+      entriesToUse,
+      this.settings,
+      dateIsoFormatted,
+      days,
+      metricType
+    );
     
     // Вычисляем текущий стрик (последовательные дни с записью)
     const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file);
     
-    // Обновляем содержимое на месте
-    const children = Array.from(statsDiv.children);
-    if (children.length >= 1) {
-      children[0].textContent = `Всего записей: ${total}`;
-    } else {
-      statsDiv.createEl("div", { text: `Всего записей: ${total}` });
-    }
-    
-    if (children.length >= 2) {
-      children[1].textContent = `Последние ${days} дней: ${sum.toFixed(1)} (среднее: ${avg.toFixed(1)})`;
-    } else {
-      statsDiv.createEl("div", { text: `Последние ${days} дней: ${sum.toFixed(1)} (среднее: ${avg.toFixed(1)})` });
-    }
-    
-    // Обновляем или создаем стрик
-    if (currentStreak > 0) {
-      if (children.length >= 3) {
-        const streakEl = children[2] as HTMLElement;
-        streakEl.textContent = `🔥 Текущий стрик: ${currentStreak} ${currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дня' : 'дней'}`;
-        streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
-      } else {
-        const streakEl = statsDiv.createEl("div", { text: `🔥 Текущий стрик: ${currentStreak} ${currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дня' : 'дней'}` });
-        streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
-      }
-    } else if (children.length >= 3) {
-      // Удаляем стрик если его нет
-      children[2].remove();
-    }
+    // Используем VisualizationService для обновления DOM
+    this.visualizationService.updateStatsDisplay(statsDiv, stats, currentStreak, days);
   }
 
   async renderStats(container: HTMLElement, file: TFile, dateIso?: string, daysToShow?: number, trackerType?: string, entries?: Map<string, string | number>) {
@@ -1432,7 +1384,7 @@ export default class TrackerPlugin extends Plugin {
           
           setTimeout(() => {
             tracker.remove();
-          }, 200);
+          }, UI_CONSTANTS.TRANSITION_OPACITY_DURATION_MS);
         }
       }
     }

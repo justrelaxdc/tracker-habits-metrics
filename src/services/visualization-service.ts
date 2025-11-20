@@ -1,7 +1,7 @@
 import type { TFile } from "obsidian";
 import type { TrackerSettings } from "../domain/types";
-import { CSS_CLASSES, TrackerType } from "../constants";
-import { formatDate, parseDate, addDays } from "../utils/date";
+import { CSS_CLASSES, TrackerType, UI_CONSTANTS, STATS_LABELS } from "../constants";
+import { DateService } from "./date-service";
 import { countWords } from "../utils/misc";
 
 /**
@@ -23,16 +23,15 @@ export class VisualizationService {
     avg: number;
     periodDays: number[];
   } {
-    const m = (window as any).moment;
-    const endDate = m ? m(dateIso, settings.dateFormat) : parseDate(dateIso, settings.dateFormat);
-    const startDate = m ? m(endDate).subtract(daysToShow - 1, 'days') : addDays(endDate, -(daysToShow - 1));
+    const endDate = DateService.parse(dateIso, settings.dateFormat);
+    const startDate = endDate.clone().subtract(daysToShow - 1, 'days');
     
     const periodDays: number[] = [];
     const metricType = trackerType.toLowerCase();
     
     for (let i = 0; i < daysToShow; i++) {
-      const date = m ? m(startDate).add(i, 'days') : addDays(startDate, i);
-      const dateStr = m ? date.format(settings.dateFormat) : formatDate(date, settings.dateFormat);
+      const date = startDate.clone().add(i, 'days');
+      const dateStr = DateService.format(date, settings.dateFormat);
       const val = entries.get(dateStr);
       let numVal = 0;
       
@@ -75,29 +74,30 @@ export class VisualizationService {
     const children = Array.from(statsDiv.children);
     
     if (children.length >= 1) {
-      children[0].textContent = `Всего записей: ${stats.total}`;
+      children[0].textContent = `${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}`;
     } else {
-      statsDiv.createEl("div", { text: `Всего записей: ${stats.total}` });
+      statsDiv.createEl("div", { text: `${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}` });
     }
     
     if (children.length >= 2) {
-      children[1].textContent = `Последние ${daysToShow} дней: ${stats.sum.toFixed(1)} (среднее: ${stats.avg.toFixed(1)})`;
+      children[1].textContent = `${STATS_LABELS.LAST_DAYS} ${daysToShow} ${STATS_LABELS.DAYS_PLURAL_5_PLUS}: ${stats.sum.toFixed(1)} (${STATS_LABELS.AVERAGE}: ${stats.avg.toFixed(1)})`;
     } else {
-      statsDiv.createEl("div", { text: `Последние ${daysToShow} дней: ${stats.sum.toFixed(1)} (среднее: ${stats.avg.toFixed(1)})` });
+      statsDiv.createEl("div", { text: `${STATS_LABELS.LAST_DAYS} ${daysToShow} ${STATS_LABELS.DAYS_PLURAL_5_PLUS}: ${stats.sum.toFixed(1)} (${STATS_LABELS.AVERAGE}: ${stats.avg.toFixed(1)})` });
     }
     
     // Update or create streak
     if (currentStreak > 0) {
-      const streakText = `🔥 Текущий стрик: ${currentStreak} ${currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дня' : 'дней'}`;
+      const daysLabel = currentStreak === 1 ? STATS_LABELS.DAYS_SINGULAR : currentStreak < 5 ? STATS_LABELS.DAYS_PLURAL_2_4 : STATS_LABELS.DAYS_PLURAL_5_PLUS;
+      const streakText = `🔥 ${STATS_LABELS.CURRENT_STREAK}: ${currentStreak} ${daysLabel}`;
       if (children.length >= 3) {
         const streakEl = children[2] as HTMLElement;
         streakEl.textContent = streakText;
         streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
+        streakEl.style.fontWeight = UI_CONSTANTS.FONT_WEIGHT_BOLD;
       } else {
         const streakEl = statsDiv.createEl("div", { text: streakText });
         streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
+        streakEl.style.fontWeight = UI_CONSTANTS.FONT_WEIGHT_BOLD;
       }
     } else if (children.length >= 3) {
       // Remove streak if it's 0

@@ -15234,6 +15234,27 @@ var FALLBACK_COLORS = {
   BORDER: "#e0e0e0",
   BG_PRIMARY: "#ffffff"
 };
+var CHART_CONFIG = {
+  DEFAULT_HEIGHT: 200,
+  CANVAS_HEIGHT: 180,
+  POINT_RADIUS: 3,
+  POINT_BORDER_WIDTH: 2,
+  POINT_HOVER_RADIUS: 5,
+  POINT_HIT_RADIUS: 10,
+  BORDER_WIDTH: 2.5,
+  LINE_TENSION: 0.4,
+  MAX_TICKS_LIMIT: 10,
+  GRID_LINE_WIDTH: 1,
+  FONT_SIZE_SMALL: 11,
+  FUTURE_DAYS_OFFSET: 5,
+  // Show 5 days ahead in chart
+  GRADIENT_HEIGHT: 180,
+  OPACITY_LIGHT: 0.25,
+  OPACITY_DARK: 0.1,
+  OPACITY_MEDIUM: 0.3,
+  PADDING_FACTOR: 0.1,
+  LINE_WIDTH: 2
+};
 var ERROR_MESSAGES = {
   NO_TRACKERS: "\u0432 \u043F\u0430\u043F\u043A\u0435 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432",
   NO_FRONTMATTER: "Frontmatter \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D",
@@ -15297,6 +15318,19 @@ var DEFAULTS = {
   MAX_VALUE: 10,
   MAX_RATING: 5,
   TEXT_UNIT: "\u0441\u043B\u043E\u0432"
+};
+var UI_CONSTANTS = {
+  FONT_WEIGHT_BOLD: "600",
+  TRANSITION_OPACITY_DURATION_MS: 200
+};
+var STATS_LABELS = {
+  TOTAL_RECORDS: "\u0412\u0441\u0435\u0433\u043E \u0437\u0430\u043F\u0438\u0441\u0435\u0439",
+  LAST_DAYS: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435",
+  CURRENT_STREAK: "\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0441\u0442\u0440\u0438\u043A",
+  DAYS_SINGULAR: "\u0434\u0435\u043D\u044C",
+  DAYS_PLURAL_2_4: "\u0434\u043D\u044F",
+  DAYS_PLURAL_5_PLUS: "\u0434\u043D\u0435\u0439",
+  AVERAGE: "\u0441\u0440\u0435\u0434\u043D\u0435\u0435"
 };
 
 // src/utils/validation.ts
@@ -16840,6 +16874,96 @@ var TrackerRenderer = class {
   }
 };
 
+// src/services/visualization-service.ts
+var VisualizationService = class {
+  /**
+   * Calculates statistics for a tracker
+   */
+  calculateStats(entries, settings, dateIso, daysToShow, trackerType) {
+    const endDate = DateService.parse(dateIso, settings.dateFormat);
+    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
+    const periodDays = [];
+    const metricType = trackerType.toLowerCase();
+    for (let i = 0; i < daysToShow; i++) {
+      const date = startDate.clone().add(i, "days");
+      const dateStr = DateService.format(date, settings.dateFormat);
+      const val = entries.get(dateStr);
+      let numVal = 0;
+      if (val != null) {
+        if (metricType === TrackerType.TEXT) {
+          numVal = countWords(String(val));
+        } else if (typeof val === "number") {
+          numVal = val;
+        } else if (val === "1" || String(val) === "true") {
+          numVal = 1;
+        } else {
+          numVal = Number(val) || 0;
+        }
+      }
+      if (metricType === TrackerType.BAD_HABIT) {
+        numVal = numVal === 1 ? 0 : 1;
+      }
+      periodDays.push(numVal);
+    }
+    const sum = periodDays.reduce((a, b) => a + b, 0);
+    const avg = sum / daysToShow;
+    const total = entries.size;
+    return { total, sum, avg, periodDays };
+  }
+  /**
+   * Updates statistics DOM element
+   */
+  updateStatsDisplay(statsDiv, stats, currentStreak, daysToShow) {
+    const children = Array.from(statsDiv.children);
+    if (children.length >= 1) {
+      children[0].textContent = `${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}`;
+    } else {
+      statsDiv.createEl("div", { text: `${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}` });
+    }
+    if (children.length >= 2) {
+      children[1].textContent = `${STATS_LABELS.LAST_DAYS} ${daysToShow} ${STATS_LABELS.DAYS_PLURAL_5_PLUS}: ${stats.sum.toFixed(1)} (${STATS_LABELS.AVERAGE}: ${stats.avg.toFixed(1)})`;
+    } else {
+      statsDiv.createEl("div", { text: `${STATS_LABELS.LAST_DAYS} ${daysToShow} ${STATS_LABELS.DAYS_PLURAL_5_PLUS}: ${stats.sum.toFixed(1)} (${STATS_LABELS.AVERAGE}: ${stats.avg.toFixed(1)})` });
+    }
+    if (currentStreak > 0) {
+      const daysLabel = currentStreak === 1 ? STATS_LABELS.DAYS_SINGULAR : currentStreak < 5 ? STATS_LABELS.DAYS_PLURAL_2_4 : STATS_LABELS.DAYS_PLURAL_5_PLUS;
+      const streakText = `\u{1F525} ${STATS_LABELS.CURRENT_STREAK}: ${currentStreak} ${daysLabel}`;
+      if (children.length >= 3) {
+        const streakEl = children[2];
+        streakEl.textContent = streakText;
+        streakEl.style.color = "var(--interactive-accent)";
+        streakEl.style.fontWeight = UI_CONSTANTS.FONT_WEIGHT_BOLD;
+      } else {
+        const streakEl = statsDiv.createEl("div", { text: streakText });
+        streakEl.style.color = "var(--interactive-accent)";
+        streakEl.style.fontWeight = UI_CONSTANTS.FONT_WEIGHT_BOLD;
+      }
+    } else if (children.length >= 3) {
+      children[2].remove();
+    }
+  }
+  /**
+   * Updates heatmap day visual state
+   */
+  updateHeatmapDayState(dayDiv, dateStr, entries, startTrackingDateStr, trackerType) {
+    const value = entries.get(dateStr);
+    const hasValue = value === 1 || value === "1" || String(value) === "true";
+    if (hasValue) {
+      dayDiv.addClass(CSS_CLASSES.HEATMAP_DAY_HAS_VALUE);
+    } else {
+      dayDiv.removeClass(CSS_CLASSES.HEATMAP_DAY_HAS_VALUE);
+    }
+    dayDiv.removeClass(TrackerType.GOOD_HABIT);
+    dayDiv.removeClass(TrackerType.BAD_HABIT);
+    dayDiv.addClass(trackerType);
+    if (dateStr === startTrackingDateStr) {
+      dayDiv.addClass(CSS_CLASSES.HEATMAP_DAY_START);
+    } else {
+      dayDiv.removeClass(CSS_CLASSES.HEATMAP_DAY_START);
+    }
+  }
+};
+
 // src/utils/theme.ts
 function getCSSVar(varName, fallback = "#000000") {
   const root = document.body || document.documentElement;
@@ -16902,12 +17026,13 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.trackerState = /* @__PURE__ */ new Map();
   }
   isMobileDevice() {
-    return window.innerWidth <= 768;
+    return window.innerWidth <= MOBILE_BREAKPOINT;
   }
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
     this.trackerFileService = new TrackerFileService(this.app);
+    this.visualizationService = new VisualizationService();
     this.heatmapService = new HeatmapService(
       this.settings,
       (file) => this.readAllEntries(file),
@@ -17311,8 +17436,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const pointRadii = [];
     const pointBorderWidths = [];
     for (let i = 0; i < days; i++) {
-      pointRadii.push(3);
-      pointBorderWidths.push(2);
+      pointRadii.push(CHART_CONFIG.POINT_RADIUS);
+      pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
     let yAxisMin = 0;
     let yAxisMax = maxValue;
@@ -17336,14 +17461,14 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       yAxisMax = 1;
     }
     if (yAxisMax <= yAxisMin) {
-      const padding = Math.max(1, Math.abs(yAxisMin) * 0.1 || 1);
+      const padding = Math.max(1, Math.abs(yAxisMin) * CHART_CONFIG.PADDING_FACTOR || 1);
       yAxisMax = yAxisMin + padding;
     }
     const ctx = canvas.getContext("2d");
     let gradient = null;
     if (ctx) {
-      gradient = ctx.createLinearGradient(0, 0, 0, 180);
-      gradient.addColorStop(0, colorToRgba(colors2.accentColor, 0.25));
+      gradient = ctx.createLinearGradient(0, 0, 0, CHART_CONFIG.GRADIENT_HEIGHT);
+      gradient.addColorStop(0, colorToRgba(colors2.accentColor, CHART_CONFIG.OPACITY_LIGHT));
       gradient.addColorStop(1, colorToRgba(colors2.accentColor, 0));
     }
     let chartLabel;
@@ -17362,7 +17487,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       if (xPos < chartArea.left || xPos > chartArea.right) return;
       ctx2.save();
       ctx2.strokeStyle = colorToRgba(color2, 0.6);
-      ctx2.lineWidth = 2;
+      ctx2.lineWidth = CHART_CONFIG.LINE_WIDTH;
       ctx2.setLineDash([5, 5]);
       ctx2.beginPath();
       ctx2.moveTo(xPos, chartArea.top);
@@ -17379,7 +17504,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       if (xPos < chartArea.left || xPos > chartArea.right) return;
       ctx2.save();
       ctx2.strokeStyle = colorToRgba(color2, 0.6);
-      ctx2.lineWidth = 2;
+      ctx2.lineWidth = CHART_CONFIG.LINE_WIDTH;
       ctx2.setLineDash([]);
       ctx2.beginPath();
       ctx2.moveTo(xPos, chartArea.top);
@@ -17409,8 +17534,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           label: chartLabel,
           data: values,
           borderColor: colors2.accentColor,
-          backgroundColor: gradient || colorToRgba(colors2.accentColor, 0.1),
-          borderWidth: 2.5,
+          backgroundColor: gradient || colorToRgba(colors2.accentColor, CHART_CONFIG.OPACITY_DARK),
+          borderWidth: CHART_CONFIG.BORDER_WIDTH,
           fill: false,
           tension: 0.4,
           pointRadius: pointRadii,
@@ -17430,7 +17555,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           },
           pointHoverBorderWidth: (ctx2) => {
             const index2 = ctx2.dataIndex;
-            return pointBorderWidths[index2] || pointBorderWidths[0] || 2;
+            return pointBorderWidths[index2] || pointBorderWidths[0] || CHART_CONFIG.POINT_BORDER_WIDTH;
           }
         }]
       },
@@ -17466,7 +17591,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           x: {
             grid: {
               display: true,
-              color: colorToRgba(colors2.borderColor, 0.3),
+              color: colorToRgba(colors2.borderColor, CHART_CONFIG.OPACITY_MEDIUM),
               lineWidth: 1,
               drawBorder: false
             },
@@ -17484,7 +17609,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           y: {
             grid: {
               display: true,
-              color: colorToRgba(colors2.borderColor, 0.3),
+              color: colorToRgba(colors2.borderColor, CHART_CONFIG.OPACITY_MEDIUM),
               lineWidth: 1,
               drawBorder: false
             },
@@ -17599,7 +17724,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       if (yPos < chartArea.top || yPos > chartArea.bottom) return;
       ctx2.save();
       ctx2.strokeStyle = colorToRgba(color2, 0.6);
-      ctx2.lineWidth = 2;
+      ctx2.lineWidth = CHART_CONFIG.LINE_WIDTH;
       ctx2.setLineDash([5, 5]);
       ctx2.beginPath();
       ctx2.moveTo(chartArea.left, yPos);
@@ -17708,8 +17833,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const pointRadii = [];
     const pointBorderWidths = [];
     for (let i = 0; i < days; i++) {
-      pointRadii.push(3);
-      pointBorderWidths.push(2);
+      pointRadii.push(CHART_CONFIG.POINT_RADIUS);
+      pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
     let yAxisMin = 0;
     let yAxisMax = maxValue;
@@ -17733,7 +17858,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       yAxisMax = 1;
     }
     if (yAxisMax <= yAxisMin) {
-      const padding = Math.max(1, Math.abs(yAxisMin) * 0.1 || 1);
+      const padding = Math.max(1, Math.abs(yAxisMin) * CHART_CONFIG.PADDING_FACTOR || 1);
       yAxisMax = yAxisMin + padding;
     }
     chartInstance.startTrackingIndex = startTrackingIndex;
@@ -17759,60 +17884,18 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const entriesToUse = entries ?? await this.readAllEntries(file);
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
     const metricType = trackerType || (fileOpts.mode ?? "good-habit").toLowerCase();
-    const endDate = dateIso ? DateService.parse(dateIso, this.settings.dateFormat) : DateService.now();
+    const endDate = dateIso ? DateService.parse(dateIso, "YYYY-MM-DD") : DateService.now();
     const days = daysToShow || this.settings.daysToShow;
-    const startDate = endDate.clone().subtract(days - 1, "days");
-    const periodDays = [];
-    for (let i = 0; i < days; i++) {
-      const date = startDate.clone().add(i, "days");
-      const dateStr = DateService.format(date, this.settings.dateFormat);
-      const val = entriesToUse.get(dateStr);
-      let numVal = 0;
-      if (val != null) {
-        if (metricType === "text") {
-          numVal = countWords(String(val));
-        } else if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
-      if (metricType === "bad-habit") {
-        numVal = numVal === 1 ? 0 : 1;
-      }
-      periodDays.push(numVal);
-    }
-    const sum = periodDays.reduce((a, b) => a + b, 0);
-    const avg = sum / days;
-    const total = entriesToUse.size;
+    const dateIsoFormatted = DateService.format(endDate, this.settings.dateFormat);
+    const stats = this.visualizationService.calculateStats(
+      entriesToUse,
+      this.settings,
+      dateIsoFormatted,
+      days,
+      metricType
+    );
     const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file);
-    const children = Array.from(statsDiv.children);
-    if (children.length >= 1) {
-      children[0].textContent = `\u0412\u0441\u0435\u0433\u043E \u0437\u0430\u043F\u0438\u0441\u0435\u0439: ${total}`;
-    } else {
-      statsDiv.createEl("div", { text: `\u0412\u0441\u0435\u0433\u043E \u0437\u0430\u043F\u0438\u0441\u0435\u0439: ${total}` });
-    }
-    if (children.length >= 2) {
-      children[1].textContent = `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 ${days} \u0434\u043D\u0435\u0439: ${sum.toFixed(1)} (\u0441\u0440\u0435\u0434\u043D\u0435\u0435: ${avg.toFixed(1)})`;
-    } else {
-      statsDiv.createEl("div", { text: `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 ${days} \u0434\u043D\u0435\u0439: ${sum.toFixed(1)} (\u0441\u0440\u0435\u0434\u043D\u0435\u0435: ${avg.toFixed(1)})` });
-    }
-    if (currentStreak > 0) {
-      if (children.length >= 3) {
-        const streakEl = children[2];
-        streakEl.textContent = `\u{1F525} \u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0441\u0442\u0440\u0438\u043A: ${currentStreak} ${currentStreak === 1 ? "\u0434\u0435\u043D\u044C" : currentStreak < 5 ? "\u0434\u043D\u044F" : "\u0434\u043D\u0435\u0439"}`;
-        streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
-      } else {
-        const streakEl = statsDiv.createEl("div", { text: `\u{1F525} \u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0441\u0442\u0440\u0438\u043A: ${currentStreak} ${currentStreak === 1 ? "\u0434\u0435\u043D\u044C" : currentStreak < 5 ? "\u0434\u043D\u044F" : "\u0434\u043D\u0435\u0439"}` });
-        streakEl.style.color = "var(--interactive-accent)";
-        streakEl.style.fontWeight = "600";
-      }
-    } else if (children.length >= 3) {
-      children[2].remove();
-    }
+    this.visualizationService.updateStatsDisplay(statsDiv, stats, currentStreak, days);
   }
   async renderStats(container, file, dateIso, daysToShow, trackerType, entries) {
     const statsDiv = container.createDiv({ cls: "tracker-notes__stats" });
@@ -17939,7 +18022,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           tracker.style.opacity = "0";
           setTimeout(() => {
             tracker.remove();
-          }, 200);
+          }, UI_CONSTANTS.TRANSITION_OPACITY_DURATION_MS);
         }
       }
     }

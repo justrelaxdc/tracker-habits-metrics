@@ -13,6 +13,7 @@ export const ANIMATION_DURATION_MS = 300; // Animation duration for UI updates
 export const ANIMATION_DURATION_SHORT_MS = 200; // Short animation duration for UI updates
 export const SCROLL_RESTORE_DELAY_2_MS = 100; // Second delay for scroll restoration
 export const IMMEDIATE_TIMEOUT_MS = 0; // Immediate timeout
+export const NOTICE_TIMEOUT_MS = 2000; // Timeout for notice messages
 
 // Tracker types
 export const TrackerType = {
@@ -167,6 +168,12 @@ export const CHART_CONFIG = {
   GRID_LINE_WIDTH: 1,
   FONT_SIZE_SMALL: 11,
   FUTURE_DAYS_OFFSET: 5, // Show 5 days ahead in chart
+  GRADIENT_HEIGHT: 180,
+  OPACITY_LIGHT: 0.25,
+  OPACITY_DARK: 0.1,
+  OPACITY_MEDIUM: 0.3,
+  PADDING_FACTOR: 0.1,
+  LINE_WIDTH: 2,
 } as const;
 
 // Date formats
@@ -251,5 +258,22 @@ export const DEFAULTS = {
   MAX_VALUE: 10,
   MAX_RATING: 5,
   TEXT_UNIT: 'слов',
+} as const;
+
+// UI constants
+export const UI_CONSTANTS = {
+  FONT_WEIGHT_BOLD: "600",
+  TRANSITION_OPACITY_DURATION_MS: 200,
+} as const;
+
+// Statistics labels
+export const STATS_LABELS = {
+  TOTAL_RECORDS: "Всего записей",
+  LAST_DAYS: "Последние",
+  CURRENT_STREAK: "Текущий стрик",
+  DAYS_SINGULAR: "день",
+  DAYS_PLURAL_2_4: "дня",
+  DAYS_PLURAL_5_PLUS: "дней",
+  AVERAGE: "среднее",
 } as const;
 
