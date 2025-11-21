@@ -1,4 +1,4 @@
-import { App, MarkdownPostProcessorContext, Notice, Plugin, TFile } from "obsidian";
+import { App, MarkdownPostProcessorContext, Notice, Plugin, TFile, TFolder } from "obsidian";
 import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 import { TrackerBlockRenderChild } from "../ui/tracker-block-render-child";
@@ -19,9 +19,11 @@ import { HeatmapService } from "../services/heatmap-service";
 import { ControlsRenderer } from "../services/controls-renderer";
 import { TrackerRenderer } from "../services/tracker-renderer";
 import { VisualizationService } from "../services/visualization-service";
+import { TrackerOrderService } from "../services/tracker-order-service";
 import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { showNoticeIfNotMobile } from "../utils/notifications";
+import { removePrefix, parseFilename } from "../utils/filename-parser";
 
 export default class TrackerPlugin extends Plugin {
   settings: TrackerSettings;
@@ -34,6 +36,7 @@ export default class TrackerPlugin extends Plugin {
   private controlsRenderer: ControlsRenderer;
   private trackerRenderer: TrackerRenderer;
   private visualizationService: VisualizationService;
+  private trackerOrderService: TrackerOrderService;
 
   private isMobileDevice(): boolean {
     return window.innerWidth <= MOBILE_BREAKPOINT;
@@ -44,6 +47,7 @@ export default class TrackerPlugin extends Plugin {
     this.folderTreeService = new FolderTreeService(this.app);
     this.trackerFileService = new TrackerFileService(this.app);
     this.visualizationService = new VisualizationService();
+    this.trackerOrderService = new TrackerOrderService(this.app);
     
     // Инициализируем сервисы рендеринга
     this.heatmapService = new HeatmapService(
@@ -83,7 +87,9 @@ export default class TrackerPlugin extends Plugin {
       (container: HTMLElement, file: TFile, dateIso?: string, daysToShow?: number, trackerType?: string, entries?: Map<string, string | number>) => 
         this.renderStats(container, file, dateIso, daysToShow, trackerType, entries),
       () => this.isMobileDevice(),
-      (file: TFile) => this.editTracker(file)
+      (file: TFile) => this.editTracker(file),
+      (file: TFile) => this.moveTrackerUp(file),
+      (file: TFile) => this.moveTrackerDown(file)
     );
     
     this.addStyleSheet();
@@ -201,7 +207,7 @@ export default class TrackerPlugin extends Plugin {
           (async () => {
             // Получаем frontmatter для проверки изменений
             const fileOpts = await this.getFileTypeFromFrontmatter(file);
-            const baseName = file.basename;
+            const baseName = removePrefix(file.basename);
             const unit = fileOpts.unit || "";
             const displayName = unit ? `${baseName} (${unit})` : baseName;
             
@@ -250,7 +256,7 @@ export default class TrackerPlugin extends Plugin {
               }
             }
             // Если имя изменилось, обновляем позицию трекера по алфавиту
-            const newBasename = file.basename;
+            const newBasename = removePrefix(file.basename);
             if (newBasename !== baseName) {
               const allTrackers = Array.from(parent.children).filter(
                 (el) => el.classList.contains('tracker-notes__tracker')
@@ -1442,6 +1448,134 @@ export default class TrackerPlugin extends Plugin {
 
   editTracker(file: TFile): void {
     new EditTrackerModal(this.app, this, file).open();
+  }
+
+  async moveTrackerUp(file: TFile): Promise<void> {
+    const folderPath = this.getFolderPathFromFile(file.path);
+    const folder = this.app.vault.getAbstractFileByPath(folderPath);
+    if (!folder || !(folder instanceof TFolder)) return;
+
+    const trackers = folder.children.filter(
+      f => f instanceof TFile && f.extension === "md"
+    ) as TFile[];
+
+    // Sort trackers by prefix
+    trackers.sort((a, b) => {
+      const aParsed = parseFilename(a.basename);
+      const bParsed = parseFilename(b.basename);
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      return a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" });
+    });
+
+    const currentIndex = trackers.findIndex(t => t.path === file.path);
+    if (currentIndex <= 0) return; // Already first or not found
+
+    // Swap with previous
+    [trackers[currentIndex - 1], trackers[currentIndex]] = [trackers[currentIndex], trackers[currentIndex - 1]];
+
+    await this.trackerOrderService.reorderTrackers(folderPath, trackers);
+    this.folderTreeService.invalidate(folderPath);
+    await this.refreshBlocksForFolder(folderPath);
+  }
+
+  async moveTrackerDown(file: TFile): Promise<void> {
+    const folderPath = this.getFolderPathFromFile(file.path);
+    const folder = this.app.vault.getAbstractFileByPath(folderPath);
+    if (!folder || !(folder instanceof TFolder)) return;
+
+    const trackers = folder.children.filter(
+      f => f instanceof TFile && f.extension === "md"
+    ) as TFile[];
+
+    // Sort trackers by prefix
+    trackers.sort((a, b) => {
+      const aParsed = parseFilename(a.basename);
+      const bParsed = parseFilename(b.basename);
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      return a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" });
+    });
+
+    const currentIndex = trackers.findIndex(t => t.path === file.path);
+    if (currentIndex < 0 || currentIndex >= trackers.length - 1) return; // Already last or not found
+
+    // Swap with next
+    [trackers[currentIndex], trackers[currentIndex + 1]] = [trackers[currentIndex + 1], trackers[currentIndex]];
+
+    await this.trackerOrderService.reorderTrackers(folderPath, trackers);
+    this.folderTreeService.invalidate(folderPath);
+    await this.refreshBlocksForFolder(folderPath);
+  }
+
+  async moveFolderUp(folderPath: string): Promise<void> {
+    const parentFolderPath = this.getFolderPathFromFile(folderPath);
+    const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
+    if (!parentFolder || !(parentFolder instanceof TFolder)) return;
+
+    const folders = parentFolder.children.filter(
+      f => f instanceof TFolder
+    ) as TFolder[];
+
+    // Sort folders by prefix
+    folders.sort((a, b) => {
+      const aParsed = parseFilename(a.name);
+      const bParsed = parseFilename(b.name);
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+
+    const currentIndex = folders.findIndex(f => f.path === folderPath);
+    if (currentIndex <= 0) return; // Already first or not found
+
+    // Swap with previous
+    [folders[currentIndex - 1], folders[currentIndex]] = [folders[currentIndex], folders[currentIndex - 1]];
+
+    await this.trackerOrderService.reorderFolders(parentFolderPath, folders);
+    this.folderTreeService.invalidate(parentFolderPath);
+    await this.refreshBlocksForFolder(parentFolderPath);
+  }
+
+  async moveFolderDown(folderPath: string): Promise<void> {
+    const parentFolderPath = this.getFolderPathFromFile(folderPath);
+    const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
+    if (!parentFolder || !(parentFolder instanceof TFolder)) return;
+
+    const folders = parentFolder.children.filter(
+      f => f instanceof TFolder
+    ) as TFolder[];
+
+    // Sort folders by prefix
+    folders.sort((a, b) => {
+      const aParsed = parseFilename(a.name);
+      const bParsed = parseFilename(b.name);
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+
+    const currentIndex = folders.findIndex(f => f.path === folderPath);
+    if (currentIndex < 0 || currentIndex >= folders.length - 1) return; // Already last or not found
+
+    // Swap with next
+    [folders[currentIndex], folders[currentIndex + 1]] = [folders[currentIndex + 1], folders[currentIndex]];
+
+    await this.trackerOrderService.reorderFolders(parentFolderPath, folders);
+    this.folderTreeService.invalidate(parentFolderPath);
+    await this.refreshBlocksForFolder(parentFolderPath);
   }
 
   // Методы для безопасной модификации файлов (игнорирование внутренних изменений)

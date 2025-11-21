@@ -58,14 +58,6 @@ export class CreateTrackerModal extends Modal {
       });
 
     const parametersHeader = contentEl.createEl("h3", { text: MODAL_LABELS.PARAMETERS });
-    const parametersDescription = contentEl.createEl("p", {
-      text: "Единица измерения - не обязательное поле. Можно оставить пустым.",
-      cls: "tracker-notes__limits-description",
-    });
-    parametersDescription.style.fontSize = "0.9em";
-    parametersDescription.style.color = "var(--text-muted, #999999)";
-    parametersDescription.style.marginTop = "0.5em";
-    parametersDescription.style.marginBottom = "1em";
 
     const unitSetting = new Setting(contentEl)
       .setName(MODAL_LABELS.UNIT)
@@ -118,7 +110,6 @@ export class CreateTrackerModal extends Modal {
       });
 
     parametersHeader.style.display = "none";
-    parametersDescription.style.display = "none";
     unitSetting.settingEl.style.display = "none";
     plusminusStepSetting.settingEl.style.display = "none";
     minValueSetting.settingEl.style.display = "none";
@@ -127,7 +118,7 @@ export class CreateTrackerModal extends Modal {
 
     const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
-      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения. Прим. "Не меньше 5000 шагов в день", "Не больше 3х шоколадок"',
+      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения, они будут отображены на графике. Если значение не будет попадать в заданный диапазон — вы увидите цветовой отклик.',
       cls: "tracker-notes__limits-description",
     });
     limitsDescription.style.fontSize = "0.9em";
@@ -170,7 +161,6 @@ export class CreateTrackerModal extends Modal {
 
         if (isMetric) {
           parametersHeader.style.display = "";
-          parametersDescription.style.display = "";
           unitSetting.settingEl.style.display = "";
           if (isText) {
             if (unitInput) {
@@ -194,7 +184,6 @@ export class CreateTrackerModal extends Modal {
           }
         } else {
           parametersHeader.style.display = "none";
-          parametersDescription.style.display = "none";
           unitSetting.settingEl.style.display = "none";
           plusminusStepSetting.settingEl.style.display = "none";
           minValueSetting.settingEl.style.display = "none";

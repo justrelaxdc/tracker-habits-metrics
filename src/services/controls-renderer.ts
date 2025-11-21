@@ -4,6 +4,7 @@ import { CSS_CLASSES, ANIMATION_DURATION_MS, TrackerType } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
 import { showNoticeIfNotMobile } from "../utils/notifications";
 import type { HeatmapService } from "./heatmap-service";
+import { checkLimits } from "../utils/limit-checker";
 
 /**
  * Service for rendering tracker control inputs
@@ -90,64 +91,45 @@ export class ControlsRenderer {
       if (this.heatmapService) {
         await this.heatmapService.renderTrackerHeatmap(container, file, dateIso, daysToShow, mode);
       }
-    } else if (mode === TrackerType.CHECKBOX) {
-      await this.renderCheckbox(container, file, dateIso, entries, updateVisualizations);
     } else if (mode === TrackerType.NUMBER) {
-      await this.renderNumber(container, file, dateIso, entries, updateVisualizations);
+      await this.renderNumber(container, file, dateIso, fileOpts, entries, updateVisualizations);
     } else if (mode === TrackerType.PLUSMINUS) {
       await this.renderPlusMinus(container, file, dateIso, fileOpts, entries, updateVisualizations);
-    } else if (mode === TrackerType.RATING) {
-      await this.renderRating(container, file, dateIso, opts, entries, updateVisualizations);
     } else if (mode === TrackerType.TEXT) {
-      await this.renderText(container, file, dateIso, entries, updateVisualizations);
+      await this.renderText(container, file, dateIso, fileOpts, entries, updateVisualizations);
     } else if (mode === TrackerType.SCALE) {
       await this.renderScale(container, file, dateIso, opts, fileOpts, entries, updateVisualizations);
     } else {
       container.createEl("div", { 
-        text: `Неизвестный mode: ${mode}. Доступны: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.RATING}, ${TrackerType.TEXT}, ${TrackerType.SCALE}` 
+        text: `Неизвестный mode: ${mode}. Доступны: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.TEXT}, ${TrackerType.SCALE}` 
       });
     }
-  }
-
-  private async renderCheckbox(
-    container: HTMLElement,
-    file: TFile,
-    dateIso: string,
-    entries: Map<string, string | number>,
-    updateVisualizations: (entries?: Map<string, string | number>) => Promise<void>
-  ): Promise<void> {
-    const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
-    const label = wrap.createEl("label", { text: "Выполнено" });
-    const input = wrap.createEl("input", { type: "checkbox" });
-    label.prepend(input);
-    const current = await this.readValueForDate(file, dateIso);
-    input.checked = isTrackerValueTrue(current);
-    input.onchange = async () => {
-      const val = input.checked ? 1 : 0;
-      // Обновляем локальный entries напрямую
-      entries.set(dateIso, val);
-      // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
-      showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${val}`, 2000);
-      // Визуальная обратная связь
-      input.style.transform = "scale(1.1)";
-      setTimeout(() => input.style.transform = "", ANIMATION_DURATION_MS);
-      // Обновляем визуализации с локальными данными
-      await updateVisualizations(entries);
-    };
   }
 
   private async renderNumber(
     container: HTMLElement,
     file: TFile,
     dateIso: string,
+    fileOpts: TrackerFileOptions,
     entries: Map<string, string | number>,
     updateVisualizations: (entries?: Map<string, string | number>) => Promise<void>
   ): Promise<void> {
+    const minLimit = fileOpts.minLimit ? parseFloat(fileOpts.minLimit) : null;
+    const maxLimit = fileOpts.maxLimit ? parseFloat(fileOpts.maxLimit) : null;
     const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
     const input = wrap.createEl("input", { type: "number", placeholder: "0" }) as HTMLInputElement;
     const current = await this.readValueForDate(file, dateIso);
-    if (current != null && !isNaN(Number(current))) input.value = String(current);
+    if (current != null && !isNaN(Number(current))) {
+      input.value = String(current);
+      // Применяем цветовые индикаторы при инициализации только если есть лимиты и значение вне диапазона
+      if (minLimit !== null || maxLimit !== null) {
+        const limitCheck = checkLimits(Number(current), minLimit, maxLimit);
+        input.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        if (limitCheck.status === 'error') {
+          input.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        }
+      }
+    }
     
     const updateValue = async () => {
       const val = Number(input.value);
@@ -158,6 +140,16 @@ export class ControlsRenderer {
       this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
       showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${val}`, 2000);
       input.value = String(val);
+      
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
+      if (minLimit !== null || maxLimit !== null) {
+        const limitCheck = checkLimits(val, minLimit, maxLimit);
+        input.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        if (limitCheck.status === 'error') {
+          input.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        }
+      }
+      
       // Визуальная обратная связь
       input.style.transform = "scale(0.98)";
       setTimeout(() => input.style.transform = "", ANIMATION_DURATION_MS);
@@ -187,78 +179,68 @@ export class ControlsRenderer {
   ): Promise<void> {
     // Получаем step из frontmatter, по умолчанию 1
     const step = parseFloat(fileOpts.step || "1") || 1;
+    const minLimit = fileOpts.minLimit ? parseFloat(fileOpts.minLimit) : null;
+    const maxLimit = fileOpts.maxLimit ? parseFloat(fileOpts.maxLimit) : null;
     
     const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
     const minus = wrap.createEl("button", { text: "−" });
     const valEl = wrap.createEl("span", { text: "0", cls: CSS_CLASSES.VALUE });
     const plus  = wrap.createEl("button", { text: "+" });
     let current = Number(await this.readValueForDate(file, dateIso) ?? 0);
-    if (!isNaN(current)) valEl.setText(String(current));
+    if (!isNaN(current)) {
+      valEl.setText(String(current));
+      // Применяем цветовые индикаторы при инициализации только если есть лимиты и значение вне диапазона
+      if (minLimit !== null || maxLimit !== null) {
+        const limitCheck = checkLimits(current, minLimit, maxLimit);
+        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        if (limitCheck.status === 'error') {
+          valEl.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        }
+      }
+    }
+    
+    const updateValueAndLimits = (newValue: number) => {
+      valEl.setText(String(newValue));
+      valEl.classList.add(CSS_CLASSES.VALUE_UPDATED);
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
+      if (minLimit !== null || maxLimit !== null) {
+        const limitCheck = checkLimits(newValue, minLimit, maxLimit);
+        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        if (limitCheck.status === 'error') {
+          valEl.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        }
+      }
+    };
+    
     minus.onclick = async () => {
       current = (Number.isFinite(current) ? current : 0) - step;
-      valEl.setText(String(current));
-      valEl.addClass(CSS_CLASSES.VALUE_UPDATED);
+      updateValueAndLimits(current);
       // Обновляем локальный entries напрямую
       entries.set(dateIso, current);
       // Записываем в файл асинхронно
       this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: ошибка записи", err));
-      setTimeout(() => valEl.removeClass(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
+      setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
     };
     plus.onclick = async () => {
       current = (Number.isFinite(current) ? current : 0) + step;
-      valEl.setText(String(current));
-      valEl.addClass(CSS_CLASSES.VALUE_UPDATED);
+      updateValueAndLimits(current);
       // Обновляем локальный entries напрямую
       entries.set(dateIso, current);
       // Записываем в файл асинхронно
       this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: ошибка записи", err));
-      setTimeout(() => valEl.removeClass(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
+      setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
     };
-  }
-
-  private async renderRating(
-    container: HTMLElement,
-    file: TFile,
-    dateIso: string,
-    opts: Record<string, string>,
-    entries: Map<string, string | number>,
-    updateVisualizations: (entries?: Map<string, string | number>) => Promise<void>
-  ): Promise<void> {
-    const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
-    const ratingDiv = wrap.createDiv({ cls: CSS_CLASSES.RATING });
-    const maxRating = parseInt(opts.maxRating || "5");
-    const current = await this.readValueForDate(file, dateIso);
-    let currentRating = typeof current === "number" ? current : (current ? parseInt(String(current)) : 0);
-    if (isNaN(currentRating)) currentRating = 0;
-    
-    for (let i = 1; i <= maxRating; i++) {
-      const star = ratingDiv.createEl("span", { text: "★", cls: CSS_CLASSES.RATING_STAR });
-      if (i <= currentRating) star.addClass(CSS_CLASSES.RATING_STAR_ACTIVE);
-      star.onclick = async () => {
-        currentRating = i;
-        ratingDiv.querySelectorAll(`.${CSS_CLASSES.RATING_STAR}`).forEach((s, idx) => {
-          if (idx + 1 <= i) s.addClass(CSS_CLASSES.RATING_STAR_ACTIVE);
-          else s.removeClass(CSS_CLASSES.RATING_STAR_ACTIVE);
-        });
-        // Обновляем локальный entries напрямую
-        entries.set(dateIso, i);
-        // Записываем в файл асинхронно
-        this.writeLogLine(file, dateIso, String(i)).catch(err => console.error("Tracker: ошибка записи", err));
-        showNoticeIfNotMobile(`⭐ Оценка: ${dateIso}: ${i}/${maxRating}`, 2000);
-        // Обновляем визуализации с локальными данными
-        await updateVisualizations(entries);
-      };
-    }
   }
 
   private async renderText(
     container: HTMLElement,
     file: TFile,
     dateIso: string,
+    fileOpts: TrackerFileOptions,
     entries: Map<string, string | number>,
     updateVisualizations: (entries?: Map<string, string | number>) => Promise<void>
   ): Promise<void> {
@@ -297,6 +279,8 @@ export class ControlsRenderer {
     const minValue = parseFloat(opts.minValue || fileOpts.minValue || "0");
     const maxValue = parseFloat(opts.maxValue || fileOpts.maxValue || "10");
     const step = parseFloat(opts.step || fileOpts.step || "1");
+    const minLimit = fileOpts.minLimit ? parseFloat(fileOpts.minLimit) : null;
+    const maxLimit = fileOpts.maxLimit ? parseFloat(fileOpts.maxLimit) : null;
     const current = await this.readValueForDate(file, dateIso);
     let currentValue = minValue;
     if (current != null && !isNaN(Number(current))) {
@@ -363,6 +347,15 @@ export class ControlsRenderer {
       progressBarInput.setAttribute("aria-label", String(value));
       progressBar.setAttribute("aria-valuenow", String(value));
       wrapper.setAttribute("data-internal-value", String(value));
+      
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
+      if (minLimit !== null || maxLimit !== null) {
+        const limitCheck = checkLimits(value, minLimit, maxLimit);
+        progressBar.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        if (limitCheck.status === 'error') {
+          progressBar.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        }
+      }
     };
     
     // Инициализация прогресс бара

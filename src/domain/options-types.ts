@@ -20,9 +20,6 @@ export interface TrackerBlockOptions {
   /** Number of days to show in charts/heatmaps */
   days?: string;
   
-  /** Maximum rating (for rating type) */
-  maxRating?: string;
-  
   /** Minimum value (for scale type) */
   minValue?: string;
   

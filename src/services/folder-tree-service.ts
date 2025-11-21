@@ -1,6 +1,7 @@
 import { App, TFile, TFolder } from "obsidian";
 import type { FolderNode } from "../domain/types";
 import { normalizePath } from "../utils/path";
+import { parseFilename } from "../utils/filename-parser";
 
 export class FolderTreeService {
   private readonly cache = new Map<string, FolderNode | null>();
@@ -57,7 +58,22 @@ export class FolderTreeService {
       }
     }
 
-    node.files.sort((a, b) => a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" }));
+    node.files.sort((a, b) => {
+      const aParsed = parseFilename(a.basename);
+      const bParsed = parseFilename(b.basename);
+      
+      // If both have prefixes, sort by prefix
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      
+      // Files with prefixes come before files without prefixes
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      
+      // If no prefixes, sort alphabetically
+      return a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" });
+    });
 
     if (currentLevel < maxDepth) {
       for (const child of folder.children) {
@@ -69,7 +85,22 @@ export class FolderTreeService {
         }
       }
 
-      node.children.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+      node.children.sort((a, b) => {
+        const aParsed = parseFilename(a.name);
+        const bParsed = parseFilename(b.name);
+        
+        // If both have prefixes, sort by prefix
+        if (aParsed.prefix !== null && bParsed.prefix !== null) {
+          return aParsed.prefix - bParsed.prefix;
+        }
+        
+        // Folders with prefixes come before folders without prefixes
+        if (aParsed.prefix !== null) return -1;
+        if (bParsed.prefix !== null) return 1;
+        
+        // If no prefixes, sort alphabetically
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      });
     }
 
     return node;

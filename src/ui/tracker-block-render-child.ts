@@ -9,6 +9,8 @@ import { parseOptions } from "../utils/options";
 import { resolveDateIso } from "../utils/date";
 import { DateService } from "../services/date-service";
 import { normalizePath } from "../utils/path";
+import { removePrefix, parseFilename } from "../utils/filename-parser";
+import { CSS_CLASSES } from "../constants";
 
 export class TrackerBlockRenderChild extends MarkdownRenderChild {
   private readonly plugin: TrackerPlugin;
@@ -250,7 +252,36 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       const folderHeader = nodeContainer.createDiv({
         cls: `tracker-notes__folder-header level-${node.level}`,
       });
-      folderHeader.setText(node.name);
+      
+      // Folder name
+      const folderNameEl = folderHeader.createSpan({ text: removePrefix(node.name) });
+      
+      // Order buttons (on the right side)
+      const orderBtnsContainer = folderHeader.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
+      
+      const upButton = orderBtnsContainer.createEl("button", {
+        text: "↑",
+        cls: CSS_CLASSES.ORDER_BTN_UP
+      });
+      upButton.title = "Переместить вверх";
+      upButton.onclick = async (e) => {
+        e.stopPropagation();
+        await this.plugin.moveFolderUp(node.path);
+      };
+      
+      const downButton = orderBtnsContainer.createEl("button", {
+        text: "↓",
+        cls: CSS_CLASSES.ORDER_BTN_DOWN
+      });
+      downButton.title = "Переместить вниз";
+      downButton.onclick = async (e) => {
+        e.stopPropagation();
+        await this.plugin.moveFolderDown(node.path);
+      };
+      
+      // Disable buttons if folder is first/last
+      // We need to check siblings, but we'll do it dynamically
+      // For now, buttons will be enabled - we can add logic later to disable them
     }
 
     if (node.files.length > 0) {

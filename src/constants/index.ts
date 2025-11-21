@@ -23,8 +23,6 @@ export const TrackerType = {
   SCALE: 'scale',
   PLUSMINUS: 'plusminus',
   TEXT: 'text',
-  CHECKBOX: 'checkbox',
-  RATING: 'rating',
 } as const;
 
 export type TrackerTypeValue = typeof TrackerType[keyof typeof TrackerType];
@@ -50,16 +48,14 @@ export const CSS_CLASSES = {
   TRACKER_TITLE: 'tracker-notes__tracker-title',
   TRACKER_CONTROLS: 'tracker-notes__controls',
   SETTINGS_BTN: 'tracker-notes__settings-btn',
+  ORDER_BTN_CONTAINER: 'tracker-notes__order-btns',
+  ORDER_BTN_UP: 'tracker-notes__order-btn-up',
+  ORDER_BTN_DOWN: 'tracker-notes__order-btn-down',
   
   // Controls
   ROW: 'tracker-notes__row',
   VALUE: 'tracker-notes__value',
   VALUE_UPDATED: 'updated',
-  
-  // Rating
-  RATING: 'tracker-notes__rating',
-  RATING_STAR: 'tracker-notes__rating-star',
-  RATING_STAR_ACTIVE: 'active',
   
   // Text input
   TEXT_INPUT: 'tracker-notes__text-input',
@@ -110,6 +106,9 @@ export const CSS_CLASSES = {
   // Messages
   ERROR: 'tracker-notes__error',
   SUCCESS: 'tracker-notes__success',
+  
+  // Limit indicators
+  LIMIT_ERROR: 'tracker-notes__limit-error',
 } as const;
 
 // CSS Variables (Obsidian theme)
@@ -202,13 +201,12 @@ export const SUCCESS_MESSAGES = {
   TRACKER_UPDATED: 'Трекер обновлен',
   TRACKER_DELETED: 'Трекер удален',
   VALUE_SAVED: '✓ Записано',
-  RATING_SAVED: '⭐ Оценка',
 } as const;
 
 // Input placeholders
 export const PLACEHOLDERS = {
   TRACKER_NAME: 'Например: Утренняя зарядка',
-  UNIT: 'Например: метры, минуты, кг',
+  UNIT: 'По умолчанию - нет',
   TEXT_INPUT: 'Введите текст...',
   NUMBER_INPUT: '0',
   LIMIT_NONE: 'По умолчанию - нет',
@@ -222,8 +220,6 @@ export const TRACKER_TYPE_LABELS = {
   [TrackerType.SCALE]: 'Шкала',
   [TrackerType.PLUSMINUS]: 'Счётчик (+/-)',
   [TrackerType.TEXT]: 'Текст',
-  [TrackerType.CHECKBOX]: 'Чекбокс',
-  [TrackerType.RATING]: 'Рейтинг',
 } as const;
 
 // Modal labels
@@ -256,7 +252,6 @@ export const DEFAULTS = {
   STEP: 1,
   MIN_VALUE: 0,
   MAX_VALUE: 10,
-  MAX_RATING: 5,
   TEXT_UNIT: 'слов',
 } as const;
 

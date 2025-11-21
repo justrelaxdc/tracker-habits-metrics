@@ -160,20 +160,12 @@ export class EditTrackerModal extends Modal {
     }
 
     const parametersHeader = contentEl.createEl("h3", { text: "Параметры" });
-    const parametersDescription = contentEl.createEl("p", {
-      text: "Единица измерения - не обязательное поле. Можно оставить пустым.",
-      cls: "tracker-notes__limits-description",
-    });
-    parametersDescription.style.fontSize = "0.9em";
-    parametersDescription.style.color = "var(--text-muted, #999999)";
-    parametersDescription.style.marginTop = "0.5em";
-    parametersDescription.style.marginBottom = "1em";
 
     const unitSetting = new Setting(contentEl)
       .setName("Единица измерения")
       .addText((text) => {
         const unitValue = currentType === "text" ? "слов" : currentUnit;
-        text.setPlaceholder("Например: метры, минуты, кг");
+        text.setPlaceholder("По умолчанию - нет");
         text.setValue(unitValue);
         text.inputEl.style.width = "100%";
         if (currentType === "text") {
@@ -226,7 +218,7 @@ export class EditTrackerModal extends Modal {
 
     const limitsHeader = contentEl.createEl("h3", { text: "Лимиты успешности" });
     const limitsDescription = contentEl.createEl("p", {
-      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения. Прим. "Не меньше 5000 шагов в день", "Не больше 3х шоколадок"',
+      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения, они будут отображены на графике. Если значение не будет попадать в заданный диапазон — вы увидите цветовой отклик.',
       cls: "tracker-notes__limits-description",
     });
     limitsDescription.style.fontSize = "0.9em";
@@ -256,13 +248,12 @@ export class EditTrackerModal extends Modal {
 
     const updateFieldsVisibility = () => {
       const isScale = typeDropdown.value === "scale";
-      const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(typeDropdown.value);
+      const isMetric = ["number", "plusminus", "text", "scale"].includes(typeDropdown.value);
       const isPlusminus = typeDropdown.value === "plusminus";
       const isText = typeDropdown.value === "text";
 
       if (isMetric) {
         parametersHeader.style.display = "";
-        parametersDescription.style.display = "";
         unitSetting.settingEl.style.display = "";
         if (isText) {
           if (unitInput) {
@@ -285,7 +276,6 @@ export class EditTrackerModal extends Modal {
         }
       } else {
         parametersHeader.style.display = "none";
-        parametersDescription.style.display = "none";
         unitSetting.settingEl.style.display = "none";
         plusminusStepSetting.settingEl.style.display = "none";
         minValueSetting.settingEl.style.display = "none";
@@ -388,7 +378,7 @@ export class EditTrackerModal extends Modal {
         const unitInputValue = unitSetting.controlEl.querySelector("input") as HTMLInputElement;
         const unitRaw = unitInputValue?.value.trim() || "";
         const unit = type === "text" ? "слов" : unitRaw;
-        const isMetric = ["number", "plusminus", "rating", "text", "scale"].includes(type);
+        const isMetric = ["number", "plusminus", "text", "scale"].includes(type);
 
         const startDateInput = startDateSetting.controlEl.querySelector("input") as HTMLInputElement;
         const startDate = startDateInput?.value || currentStartDate;
@@ -478,13 +468,8 @@ export class EditTrackerModal extends Modal {
                 
                 const renamedFile = await this.app.vault.rename(this.file, newPath);
                 
-                // Используем файл, который вернул rename, или исходный файл, если rename вернул null
-                // Но главное - проверяем изменение пути файла для определения успешности переименования
-                const fileToCheck = renamedFile || this.file;
-                
-                // Проверяем успешность переименования по изменению пути файла
-                // Это более надежный способ, чем проверка instanceof, так как vault.rename
-                // может вернуть тот же объект файла (обновленный) или null, даже если переименование успешно
+                // Проверяем успешность переименования по изменению пути файла, вне зависимости от возвращаемого значения rename (void/null/обновленный TFile)
+                const fileToCheck = this.file;
                 if (fileToCheck.path !== oldPath) {
                   // Путь изменился - переименование успешно
                   updatedFile = fileToCheck;

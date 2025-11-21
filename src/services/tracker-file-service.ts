@@ -163,8 +163,6 @@ export class TrackerFileService {
         const frontmatter = frontmatterMatch[1];
         const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
         fileOpts.mode = (typeMatch && typeMatch[1] ? typeMatch[1].trim() : TrackerType.GOOD_HABIT) as any;
-        const maxRatingMatch = frontmatter.match(/^maxRating:\s*(\d+)/m);
-        if (maxRatingMatch) fileOpts.maxRating = maxRatingMatch[1];
         const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
         if (minValueMatch) fileOpts.minValue = minValueMatch[1];
         const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);

@@ -3,6 +3,7 @@ import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { CSS_CLASSES, TrackerType, ViewMode } from "../constants";
 import type { ControlsRenderer } from "./controls-renderer";
 import type { HeatmapService } from "./heatmap-service";
+import { removePrefix } from "../utils/filename-parser";
 
 /**
  * Service for rendering tracker items
@@ -16,7 +17,9 @@ export class TrackerRenderer {
     private readonly renderChart?: (container: HTMLElement, file: TFile, dateIso?: string, daysToShow?: number, entries?: Map<string, string | number>) => Promise<void>,
     private readonly renderStats?: (container: HTMLElement, file: TFile, dateIso?: string, daysToShow?: number, trackerType?: string, entries?: Map<string, string | number>) => Promise<void>,
     private readonly isMobileDevice?: () => boolean,
-    private readonly onEditTracker?: (file: TFile) => void
+    private readonly onEditTracker?: (file: TFile) => void,
+    private readonly onMoveTrackerUp?: (file: TFile) => Promise<void>,
+    private readonly onMoveTrackerDown?: (file: TFile) => Promise<void>
   ) {}
 
   /**
@@ -59,7 +62,7 @@ export class TrackerRenderer {
     const header = trackerItem.createDiv({ cls: CSS_CLASSES.TRACKER_HEADER });
     // Получаем единицу измерения для отображения в названии
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
-    const baseName = file.basename;
+    const baseName = removePrefix(file.basename);
     const unit = fileOpts.unit || "";
     const displayName = unit ? `${baseName} (${unit})` : baseName;
     const titleLink = header.createEl("a", { 
@@ -68,6 +71,35 @@ export class TrackerRenderer {
       href: file.path
     });
     titleLink.setAttribute("data-href", file.path);
+    
+    // Кнопки сортировки (слева от кнопки настроек)
+    if (this.onMoveTrackerUp || this.onMoveTrackerDown) {
+      const orderBtnsContainer = header.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
+      
+      if (this.onMoveTrackerUp) {
+        const upButton = orderBtnsContainer.createEl("button", {
+          text: "↑",
+          cls: CSS_CLASSES.ORDER_BTN_UP
+        });
+        upButton.title = "Переместить вверх";
+        upButton.onclick = async (e) => {
+          e.stopPropagation();
+          await this.onMoveTrackerUp!(file);
+        };
+      }
+      
+      if (this.onMoveTrackerDown) {
+        const downButton = orderBtnsContainer.createEl("button", {
+          text: "↓",
+          cls: CSS_CLASSES.ORDER_BTN_DOWN
+        });
+        downButton.title = "Переместить вниз";
+        downButton.onclick = async (e) => {
+          e.stopPropagation();
+          await this.onMoveTrackerDown!(file);
+        };
+      }
+    }
     
     // Кнопка "Настройки" для редактирования параметров трекера
     if (this.onEditTracker) {

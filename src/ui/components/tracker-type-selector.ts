@@ -70,7 +70,6 @@ export function isMetricType(type: string): boolean {
   return [
     TrackerType.NUMBER,
     TrackerType.PLUSMINUS,
-    TrackerType.RATING,
     TrackerType.TEXT,
     TrackerType.SCALE,
   ].includes(type as TrackerTypeValue);

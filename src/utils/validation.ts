@@ -49,13 +49,6 @@ export function validateTrackerOptions(options: Record<string, string>): Tracker
     }
   }
   
-  if (options.maxRating) {
-    const maxRating = parseInt(options.maxRating);
-    if (!isNaN(maxRating) && maxRating > 0) {
-      validated.maxRating = String(maxRating);
-    }
-  }
-  
   // Float options
   if (options.minValue !== undefined) {
     const minValue = parseFloat(options.minValue);
