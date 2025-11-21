@@ -1266,6 +1266,24 @@ export default class TrackerPlugin extends Plugin {
     this.trackerState.delete(path);
   }
   
+  invalidateCacheForFolder(folderPath: string): void {
+    const normalizedPath = this.normalizePath(folderPath);
+    const folder = this.app.vault.getAbstractFileByPath(normalizedPath);
+    if (folder instanceof TFolder) {
+      this.clearCacheForFolder(folder);
+    }
+  }
+
+  private clearCacheForFolder(folder: TFolder): void {
+    for (const child of folder.children) {
+      if (child instanceof TFile && child.extension === 'md') {
+        this.clearTrackerState(child.path);
+      } else if (child instanceof TFolder) {
+        this.clearCacheForFolder(child);
+      }
+    }
+  }
+  
   private moveTrackerState(oldPath: string, newPath: string): void {
     if (oldPath === newPath) return;
     const state = this.trackerState.get(oldPath);

@@ -1,8 +1,7 @@
 import { Notice, TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
-import { CSS_CLASSES, ANIMATION_DURATION_MS, TrackerType } from "../constants";
+import { CSS_CLASSES, ANIMATION_DURATION_MS, TrackerType, DEBOUNCE_DELAY_MS } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
-import { showNoticeIfNotMobile } from "../utils/notifications";
 import type { HeatmapService } from "./heatmap-service";
 import { checkLimits } from "../utils/limit-checker";
 
@@ -131,14 +130,13 @@ export class ControlsRenderer {
       }
     }
     
-    const updateValue = async () => {
-      const val = Number(input.value);
-      if (input.value === "" || isNaN(val)) return;
+    // Debounce таймер для записи в файл
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    
+    // Обновление визуализаций и локального состояния (немедленно)
+    const updateVisualState = async (val: number) => {
       // Обновляем локальный entries напрямую
       entries.set(dateIso, val);
-      // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
-      showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${val}`, 2000);
       input.value = String(val);
       
       // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
@@ -157,14 +155,56 @@ export class ControlsRenderer {
       await updateVisualizations(entries);
     };
     
-    // Добавляем кнопку "Set" для фиксации значения
-    const setButton = wrap.createEl("button", { text: "Set" });
-    setButton.onclick = updateValue;
+    // Запись в файл (с debounce или немедленно)
+    const writeToFile = async (val: number, immediate = false) => {
+      if (immediate) {
+        // Отменяем debounce если есть
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+          debounceTimer = null;
+        }
+        // Немедленная запись
+        await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
+      } else {
+        // Debounce для записи в файл
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+        debounceTimer = setTimeout(async () => {
+          await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
+          debounceTimer = null;
+        }, DEBOUNCE_DELAY_MS);
+      }
+    };
     
-    input.onchange = updateValue;
+    // Полное обновление (визуализации + запись)
+    const updateValue = async (immediate = false) => {
+      const val = Number(input.value);
+      if (input.value === "" || isNaN(val)) return;
+      
+      await updateVisualState(val);
+      await writeToFile(val, immediate);
+    };
+    
+    // Обработчик ввода с debounce
+    input.oninput = () => {
+      const val = Number(input.value);
+      if (input.value === "" || isNaN(val)) return;
+      void updateValue(false);
+    };
+    
+    // Немедленная запись при нажатии Enter
     input.onkeypress = async (e) => {
       if (e.key === "Enter") {
-        await updateValue();
+        await updateValue(true);
+      }
+    };
+    
+    // Немедленная запись при потере фокуса
+    input.onblur = async () => {
+      const val = Number(input.value);
+      if (input.value !== "" && !isNaN(val)) {
+        await updateValue(true);
       }
     };
   }
@@ -258,7 +298,6 @@ export class ControlsRenderer {
       entries.set(dateIso, val);
       // Записываем в файл асинхронно
       this.writeLogLine(file, dateIso, val).catch(err => console.error("Tracker: ошибка записи", err));
-      showNoticeIfNotMobile(`✓ Записано: ${dateIso}`, 2000);
       // Визуальная обратная связь
       btn.style.transform = "scale(0.95)";
       setTimeout(() => btn.style.transform = "", ANIMATION_DURATION_MS);
@@ -395,7 +434,6 @@ export class ControlsRenderer {
           entries.set(dateIso, currentValue);
           // Записываем в файл асинхронно
           this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
-          showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${currentValue}`, 2000);
           // Обновляем визуализации с локальными данными
           await updateVisualizations(entries);
         }
@@ -420,7 +458,6 @@ export class ControlsRenderer {
       entries.set(dateIso, currentValue);
       // Записываем в файл асинхронно
       this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
-      showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${currentValue}`, 2000);
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
     };
@@ -453,7 +490,6 @@ export class ControlsRenderer {
         entries.set(dateIso, currentValue);
         // Записываем в файл асинхронно
         this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
-        showNoticeIfNotMobile(`✓ Записано: ${dateIso}: ${currentValue}`, 2000);
         // Обновляем визуализации с локальными данными
         await updateVisualizations(entries);
       }

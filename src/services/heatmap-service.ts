@@ -3,7 +3,6 @@ import type { TrackerSettings, TrackerEntries, TrackerFileOptions } from "../dom
 import { DateService } from "./date-service";
 import { CSS_CLASSES } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
-import { showNoticeIfNotMobile } from "../utils/notifications";
 
 /**
  * Service for rendering and updating tracker heatmaps
@@ -235,7 +234,6 @@ export class HeatmapService {
         
         // Записываем в файл асинхронно
         this.writeLogLine(file, dateStr, String(newValue)).catch(err => console.error("Tracker: ошибка записи", err));
-        showNoticeIfNotMobile(`✓ Записано: ${dateStr}: ${newValue}`, 2000);
         
         // Обновляем только визуальное состояние этого дня
         if (newValue === 1) {

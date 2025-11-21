@@ -34,6 +34,9 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
   }
 
   async render() {
+    // Инвалидируем кеш при инициализации трекера
+    this.plugin.invalidateCacheForFolder(this.folderPath);
+    
     // Создаем временный контейнер для off-screen рендеринга
     const tempContainer = document.createElement('div');
     tempContainer.className = this.containerEl.className;
