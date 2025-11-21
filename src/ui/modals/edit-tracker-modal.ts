@@ -3,6 +3,7 @@ import { TFile } from "obsidian";
 import { Modal, Notice, Setting } from "obsidian";
 import type TrackerPlugin from "../../core/tracker-plugin";
 import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants";
+import { DateService } from "../../services/date-service";
 
 export class EditTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
@@ -94,6 +95,69 @@ export class EditTrackerModal extends Modal {
         text.inputEl.type = "date";
         text.inputEl.style.width = "100%";
       });
+
+    // Элемент предупреждения о данных до новой даты
+    const warningEl = contentEl.createDiv({
+      cls: "tracker-notes__start-date-warning",
+      attr: { style: "display: none; margin-top: 0.5em; padding: 0.75em; background: var(--background-modifier-error); color: var(--text-error); border-radius: 4px; font-size: 0.9em;" }
+    });
+
+    // Обработчик изменения даты для проверки данных
+    const startDateInput = startDateSetting.controlEl.querySelector("input") as HTMLInputElement;
+    if (startDateInput) {
+      startDateInput.addEventListener("input", async () => {
+        const newStartDate = startDateInput.value;
+        if (!newStartDate || newStartDate === currentStartDate) {
+          warningEl.style.display = "none";
+          return;
+        }
+
+        try {
+          // Загружаем данные из файла
+          const content = await this.app.vault.read(this.file);
+          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          
+          let existingData: Record<string, string | number> = {};
+          if (frontmatterMatch) {
+            existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
+          }
+
+          // Проверяем наличие данных до новой даты
+          const newStartDateObj = DateService.parse(newStartDate, 'YYYY-MM-DD');
+          let datesToDeleteCount = 0;
+          
+          for (const [dateStr] of Object.entries(existingData)) {
+            try {
+              const dataDateObj = DateService.parseMultiple(dateStr, [
+                this.plugin.settings.dateFormat,
+                'YYYY-MM-DD',
+                'DD.MM.YYYY',
+                'MM/DD/YYYY'
+              ]);
+              
+              if (DateService.isBefore(dataDateObj, newStartDateObj)) {
+                datesToDeleteCount++;
+              }
+            } catch (e) {
+              // Если не удалось распарсить дату, пропускаем
+            }
+          }
+          
+          // Показываем или скрываем предупреждение
+          if (datesToDeleteCount > 0) {
+            const formattedDate = DateService.format(newStartDateObj, this.plugin.settings.dateFormat);
+            const recordsText = datesToDeleteCount === 1 ? 'запись' : datesToDeleteCount < 5 ? 'записи' : 'записей';
+            warningEl.textContent = `Внимание: найдено ${datesToDeleteCount} ${recordsText} ДО даты ${formattedDate}, которые будут удалены при сохранении.`;
+            warningEl.style.display = "block";
+          } else {
+            warningEl.style.display = "none";
+          }
+        } catch (error) {
+          console.error("Tracker: ошибка при проверке данных", error);
+          warningEl.style.display = "none";
+        }
+      });
+    }
 
     const parametersHeader = contentEl.createEl("h3", { text: "Параметры" });
     const parametersDescription = contentEl.createEl("p", {
@@ -338,6 +402,35 @@ export class EditTrackerModal extends Modal {
           let existingData: Record<string, string | number> = {};
           if (frontmatterMatch) {
             existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
+          }
+
+          // Удаление данных до новой даты начала отслеживания, если дата изменилась
+          if (startDate !== currentStartDate) {
+            const newStartDateObj = DateService.parse(startDate, 'YYYY-MM-DD');
+            const datesToDelete: string[] = [];
+            
+            // Находим все даты до новой даты начала отслеживания
+            for (const [dateStr] of Object.entries(existingData)) {
+              try {
+                const dataDateObj = DateService.parseMultiple(dateStr, [
+                  this.plugin.settings.dateFormat,
+                  'YYYY-MM-DD',
+                  'DD.MM.YYYY',
+                  'MM/DD/YYYY'
+                ]);
+                
+                if (DateService.isBefore(dataDateObj, newStartDateObj)) {
+                  datesToDelete.push(dateStr);
+                }
+              } catch (e) {
+                // Если не удалось распарсить дату, пропускаем
+              }
+            }
+            
+            // Удаляем данные до новой даты
+            for (const dateStr of datesToDelete) {
+              delete existingData[dateStr];
+            }
           }
 
           let newFrontmatter = `type: "${type}"\n`;

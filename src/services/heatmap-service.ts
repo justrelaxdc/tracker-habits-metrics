@@ -115,6 +115,36 @@ export class HeatmapService {
       } else {
         dayDiv.removeClass("start-day");
       }
+      
+      // Для плохих привычек: добавляем класс before-start для дней до start-day
+      if (trackerType === 'bad-habit' && startTrackingDateStr) {
+        try {
+          const dayDateObj = DateService.parseMultiple(dateStr, [
+            this.settings.dateFormat,
+            'YYYY-MM-DD',
+            'DD.MM.YYYY',
+            'MM/DD/YYYY'
+          ]);
+          const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+            this.settings.dateFormat,
+            'YYYY-MM-DD',
+            'DD.MM.YYYY',
+            'MM/DD/YYYY'
+          ]);
+          
+          if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+            dayDiv.addClass("before-start");
+          } else {
+            dayDiv.removeClass("before-start");
+          }
+        } catch (e) {
+          // Если не удалось распарсить дату, удаляем класс
+          dayDiv.removeClass("before-start");
+        }
+      } else {
+        // Для остальных типов трекеров удаляем класс
+        dayDiv.removeClass("before-start");
+      }
     }
     
     // Добавляем новые элементы одним батчем
