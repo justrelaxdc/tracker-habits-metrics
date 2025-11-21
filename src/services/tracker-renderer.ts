@@ -1,6 +1,6 @@
 import { TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
-import { CSS_CLASSES, TrackerType, ViewMode } from "../constants";
+import { CSS_CLASSES, TrackerType, ViewMode, MODAL_LABELS } from "../constants";
 import type { ControlsRenderer } from "./controls-renderer";
 import type { HeatmapService } from "./heatmap-service";
 import { removePrefix } from "../utils/filename-parser";
@@ -35,13 +35,13 @@ export class TrackerRenderer {
     opts: Record<string, string>,
     existingTracker?: HTMLElement,
   ): Promise<void> {
-    // Создаем trackerItem вне DOM если это новый трекер
+    // Create trackerItem outside DOM if it's a new tracker
     let trackerItem: HTMLElement;
     let isNewTracker = false;
     
     if (existingTracker) {
       trackerItem = existingTracker;
-      // Удаляем только содержимое, сохраняя dataset
+      // Remove only content, preserving dataset
       const header = trackerItem.querySelector(`.${CSS_CLASSES.TRACKER_HEADER}`);
       const controls = trackerItem.querySelector(`.${CSS_CLASSES.TRACKER_CONTROLS}`);
       const chart = trackerItem.querySelector(`.${CSS_CLASSES.CHART}`);
@@ -52,7 +52,7 @@ export class TrackerRenderer {
       chart?.remove();
       stats?.remove();
     } else {
-      // Создаем вне DOM
+      // Create outside DOM
       trackerItem = document.createElement('div');
       isNewTracker = true;
     }
@@ -60,25 +60,20 @@ export class TrackerRenderer {
     trackerItem.classList.add(CSS_CLASSES.TRACKER);
     trackerItem.dataset.filePath = file.path;
     
-    // Заголовок с названием трекера
+    // Header with tracker name
     const header = trackerItem.createDiv({ cls: CSS_CLASSES.TRACKER_HEADER });
-    // Получаем единицу измерения для отображения в названии
+    // Get unit for display in name
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
     const baseName = removePrefix(file.basename);
     const unit = fileOpts.unit || "";
     const displayName = unit ? `${baseName} (${unit})` : baseName;
     
     // Title container with icon
-    console.log("[TrackerRenderer] Rendering tracker:", file.basename, "path:", file.path);
     const titleContainer = header.createDiv({ cls: CSS_CLASSES.TRACKER_TITLE });
     // file.path is a file path, so isFile = true
     const trackerIcon = this.getIconForPath?.(file.path, true);
-    console.log("[TrackerRenderer] Tracker icon result:", trackerIcon, "has renderIcon:", !!this.renderIcon);
     if (trackerIcon && this.renderIcon) {
-      console.log("[TrackerRenderer] Rendering tracker icon");
       this.renderIcon(trackerIcon, titleContainer);
-    } else {
-      console.log("[TrackerRenderer] No tracker icon found or renderIcon not available");
     }
     const titleLink = titleContainer.createEl("a", { 
       text: displayName, 
@@ -87,7 +82,7 @@ export class TrackerRenderer {
     });
     titleLink.setAttribute("data-href", file.path);
     
-    // Кнопки сортировки (слева от кнопки настроек)
+    // Sort buttons (left of settings button)
     if (this.onMoveTrackerUp || this.onMoveTrackerDown) {
       const orderBtnsContainer = header.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
       
@@ -96,7 +91,7 @@ export class TrackerRenderer {
           text: "↑",
           cls: CSS_CLASSES.ORDER_BTN_UP
         });
-        upButton.title = "Переместить вверх";
+        upButton.title = MODAL_LABELS.MOVE_UP;
         upButton.onclick = async (e) => {
           e.stopPropagation();
           await this.onMoveTrackerUp!(file);
@@ -108,7 +103,7 @@ export class TrackerRenderer {
           text: "↓",
           cls: CSS_CLASSES.ORDER_BTN_DOWN
         });
-        downButton.title = "Переместить вниз";
+        downButton.title = MODAL_LABELS.MOVE_DOWN;
         downButton.onclick = async (e) => {
           e.stopPropagation();
           await this.onMoveTrackerDown!(file);
@@ -116,13 +111,13 @@ export class TrackerRenderer {
       }
     }
     
-    // Кнопка "Настройки" для редактирования параметров трекера
+    // Settings button for editing tracker parameters
     if (this.onEditTracker) {
       const settingsButton = header.createEl("button", {
         text: "⚙️",
         cls: CSS_CLASSES.SETTINGS_BTN
       });
-      settingsButton.title = "Настройки трекера";
+      settingsButton.title = MODAL_LABELS.TRACKER_SETTINGS;
       settingsButton.onclick = () => {
         this.onEditTracker!(file);
       };
@@ -134,11 +129,11 @@ export class TrackerRenderer {
       const value = await this.readValueForDate(file, dateIso);
       trackerItem.createEl("div", { text: `${dateIso}: ${value ?? "—"}` });
       
-      // Показываем дополнительные визуализации если запрошено
+      // Show additional visualizations if requested
       const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
       const trackerType = (fileOpts.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
       
-      // Используем настройки по умолчанию, если параметры не заданы напрямую
+      // Use default settings if parameters are not set directly
       const shouldShowChart = (opts.showChart === "true" || (opts.showChart === undefined && this.settings.showChartByDefault)) && 
                                !(this.isMobileDevice?.() && this.settings.hideChartOnMobile);
       const shouldShowStats = (opts.showStats === "true" || (opts.showStats === undefined && this.settings.showStatsByDefault)) && 
@@ -153,19 +148,19 @@ export class TrackerRenderer {
       return;
     }
 
-    // control view - рендерим контролы
-    // Всегда определяем тип из frontmatter (игнорируем mode из opts)
-    // Убираем mode из opts, чтобы использовать только из fileOpts
+    // control view - render controls
+    // Always determine type from frontmatter (ignore mode from opts)
+    // Remove mode from opts to use only from fileOpts
     const { mode, ...optsWithoutMode } = opts;
     const mergedOpts = { ...optsWithoutMode, ...fileOpts };
     
     await this.controlsRenderer.renderControlsForDate(controlsContainer, file, dateIso, mergedOpts);
 
-    // Показываем дополнительные визуализации если запрошено
+    // Show additional visualizations if requested
     const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
     const trackerType = (fileOpts.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
     
-    // Используем настройки по умолчанию, если параметры не заданы напрямую
+    // Use default settings if parameters are not set directly
     const shouldShowChart = (opts.showChart === "true" || (opts.showChart === undefined && this.settings.showChartByDefault)) && 
                              !(this.isMobileDevice?.() && this.settings.hideChartOnMobile);
     const shouldShowStats = (opts.showStats === "true" || (opts.showStats === undefined && this.settings.showStatsByDefault)) && 
@@ -178,7 +173,7 @@ export class TrackerRenderer {
       await this.renderStats(trackerItem, file, dateIso, daysToShow, trackerType);
     }
     
-    // Добавляем в DOM только если это новый трекер (одна операция)
+    // Add to DOM only if it's a new tracker (one operation)
     if (isNewTracker) {
       parentEl.appendChild(trackerItem);
     }

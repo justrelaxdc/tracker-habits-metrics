@@ -185,66 +185,83 @@ export const DATE_FORMATS = {
 
 // Error messages
 export const ERROR_MESSAGES = {
-  NO_TRACKERS: 'в папке не найдено трекеров',
-  NO_FRONTMATTER: 'Frontmatter не найден',
-  ENTER_NAME: 'Введите название',
-  CREATE_ERROR: 'Ошибка при создании трекера',
-  UPDATE_ERROR: 'Ошибка при обновлении трекера',
-  WRITE_ERROR: 'Ошибка записи',
-  READ_ERROR: 'Ошибка чтения',
-  RENDER_ERROR: 'ошибка при обработке блока',
+  NO_TRACKERS: 'no trackers found in folder',
+  NO_FRONTMATTER: 'Frontmatter not found',
+  ENTER_NAME: 'Enter name',
+  CREATE_ERROR: 'Error creating tracker',
+  UPDATE_ERROR: 'Error updating tracker',
+  WRITE_ERROR: 'Write error',
+  READ_ERROR: 'Read error',
+  RENDER_ERROR: 'error processing block',
 } as const;
 
 // Success messages
 export const SUCCESS_MESSAGES = {
-  TRACKER_CREATED: 'Создан трекер',
-  TRACKER_UPDATED: 'Трекер обновлен',
-  TRACKER_DELETED: 'Трекер удален',
-  VALUE_SAVED: '✓ Записано',
+  TRACKER_CREATED: 'Tracker created',
+  TRACKER_UPDATED: 'Tracker updated',
+  TRACKER_DELETED: 'Tracker deleted',
+  VALUE_SAVED: '✓ Saved',
 } as const;
 
 // Input placeholders
 export const PLACEHOLDERS = {
-  TRACKER_NAME: 'Например: Утренняя зарядка',
-  UNIT: 'По умолчанию - нет',
-  TEXT_INPUT: 'Введите текст...',
+  TRACKER_NAME: 'e.g., Morning workout',
+  UNIT: 'Default: none',
+  TEXT_INPUT: 'Enter text...',
   NUMBER_INPUT: '0',
-  LIMIT_NONE: 'По умолчанию - нет',
+  LIMIT_NONE: 'Default: none',
 } as const;
 
 // Tracker type labels
 export const TRACKER_TYPE_LABELS = {
-  [TrackerType.GOOD_HABIT]: 'Хорошая привычка',
-  [TrackerType.BAD_HABIT]: 'Плохая привычка',
-  [TrackerType.NUMBER]: 'Число',
-  [TrackerType.SCALE]: 'Шкала',
-  [TrackerType.PLUSMINUS]: 'Счётчик (+/-)',
-  [TrackerType.TEXT]: 'Текст',
+  [TrackerType.GOOD_HABIT]: 'Good habit',
+  [TrackerType.BAD_HABIT]: 'Bad habit',
+  [TrackerType.NUMBER]: 'Number',
+  [TrackerType.SCALE]: 'Scale',
+  [TrackerType.PLUSMINUS]: 'Counter (+/-)',
+  [TrackerType.TEXT]: 'Text',
 } as const;
 
 // Modal labels
 export const MODAL_LABELS = {
-  CREATE_TRACKER: 'Создать новый трекер',
-  EDIT_TRACKER: 'Редактировать трекер',
-  NAME: 'Название',
-  PATH: 'Путь',
-  TYPE: 'Тип',
-  PARAMETERS: 'Параметры',
-  UNIT: 'Единица измерения',
-  STEP: 'Шаг',
-  VALUE_FROM: 'Значение "от"',
-  VALUE_TO: 'Значение "до"',
-  LIMITS: 'Лимиты успешности',
-  LOWER_LIMIT: 'Нижняя граница',
-  UPPER_LIMIT: 'Верхняя граница',
-  CREATE: 'Создать',
-  SAVE: 'Сохранить',
-  DELETE: 'Удалить',
-  DELETE_CONFIRM_TITLE: 'Удалить трекер?',
-  DELETE_CONFIRM_MESSAGE: 'Вы уверены, что хотите удалить трекер "{name}"? Это действие нельзя отменить.',
-  CANCEL: 'Отмена',
-  HABITS_GROUP: 'Привычки',
-  METRICS_GROUP: 'Метрики',
+  CREATE_TRACKER: 'Create new tracker',
+  EDIT_TRACKER: 'Edit tracker',
+  NAME: 'Name',
+  PATH: 'Path',
+  TYPE: 'Type',
+  PARAMETERS: 'Parameters',
+  UNIT: 'Unit',
+  STEP: 'Step',
+  VALUE_FROM: 'Value "from"',
+  VALUE_TO: 'Value "to"',
+  LIMITS: 'Success limits',
+  LOWER_LIMIT: 'Lower limit',
+  UPPER_LIMIT: 'Upper limit',
+  CREATE: 'Create',
+  SAVE: 'Save',
+  DELETE: 'Delete',
+  DELETE_CONFIRM_TITLE: 'Delete tracker?',
+  DELETE_CONFIRM_MESSAGE: 'Are you sure you want to delete tracker "{name}"? This action cannot be undone.',
+  CANCEL: 'Cancel',
+  HABITS_GROUP: 'Habits',
+  METRICS_GROUP: 'Metrics',
+  START_DATE: 'Tracking start date',
+  LIMITS_DESCRIPTION: 'Optionally, you can make the metric limiting and set desired threshold values, they will be displayed on the chart. If the value does not fall within the specified range, you will see a color response.',
+  ROOT_FOLDER: '/ (root folder)',
+  NO_TRACKERS_FOUND: 'No trackers found',
+  SELECT_TRACKER: 'Select tracker',
+  YESTERDAY: 'Yesterday',
+  TOMORROW: 'Tomorrow',
+  UPDATING: 'Updating…',
+  MOVE_UP: 'Move up',
+  MOVE_DOWN: 'Move down',
+  TRACKER_SETTINGS: 'Tracker settings',
+  UPPER_LIMIT_MUST_BE_GREATER: 'Upper limit must be greater than lower limit',
+  ENTER_NAME: 'Enter name',
+  TRACKER_UPDATED: 'Tracker updated',
+  WARNING_RECORDS_BEFORE_DATE: 'Warning: found {count} {records} BEFORE date {date}, which will be deleted when saving.',
+  RECORD_SINGULAR: 'record',
+  RECORDS_PLURAL: 'records',
 } as const;
 
 // Default values
@@ -252,7 +269,7 @@ export const DEFAULTS = {
   STEP: 1,
   MIN_VALUE: 0,
   MAX_VALUE: 10,
-  TEXT_UNIT: 'слов',
+  TEXT_UNIT: 'words',
 } as const;
 
 // UI constants
@@ -263,18 +280,18 @@ export const UI_CONSTANTS = {
 
 // Statistics labels
 export const STATS_LABELS = {
-  TOTAL_RECORDS: "Всего записей",
-  LAST_DAYS: "Последние",
-  CURRENT_STREAK: "Текущий стрик",
-  DAYS_SINGULAR: "день",
-  DAYS_PLURAL_2_4: "дня",
-  DAYS_PLURAL_5_PLUS: "дней",
-  AVERAGE: "среднее",
-  MIN: "Мин",
-  MAX: "Макс",
-  MEDIAN: "Медиана",
-  COMPLETION_RATE: "Выполнено",
-  ACTIVE_DAYS: "Активных дней",
-  BEST_STREAK: "Лучший стрик",
+  TOTAL_RECORDS: "Total records",
+  LAST_DAYS: "Last",
+  CURRENT_STREAK: "Current streak",
+  DAYS_SINGULAR: "day",
+  DAYS_PLURAL_2_4: "days",
+  DAYS_PLURAL_5_PLUS: "days",
+  AVERAGE: "average",
+  MIN: "Min",
+  MAX: "Max",
+  MEDIAN: "Median",
+  COMPLETION_RATE: "Completed",
+  ACTIVE_DAYS: "Active days",
+  BEST_STREAK: "Best streak",
 } as const;
 

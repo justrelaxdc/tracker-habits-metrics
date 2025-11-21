@@ -233,7 +233,7 @@ export class HeatmapService {
         entries.set(dateStr, newValue);
         
         // Записываем в файл асинхронно
-        this.writeLogLine(file, dateStr, String(newValue)).catch(err => console.error("Tracker: ошибка записи", err));
+        this.writeLogLine(file, dateStr, String(newValue)).catch(err => console.error("Tracker: write error", err));
         
         // Обновляем только визуальное состояние этого дня
         if (newValue === 1) {

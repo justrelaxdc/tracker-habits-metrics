@@ -15,8 +15,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("Папка трекеров по умолчанию")
-      .setDesc("Можно переопределить параметром folder: `path`")
+      .setName("Default trackers folder")
+      .setDesc("Can be overridden with folder: `path` parameter")
       .addText((t) =>
         t
           .setPlaceholder("0. Files/Trackers")
@@ -28,8 +28,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Показывать график по умолчанию")
-      .setDesc("Можно переопределить параметром showChart: `true/false`")
+      .setName("Show chart by default")
+      .setDesc("Can be overridden with showChart: `true/false` parameter")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.showChartByDefault)
@@ -40,8 +40,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Показывать статистику по умолчанию")
-      .setDesc("Можно переопределить параметром showStats: `true/false`")
+      .setName("Show statistics by default")
+      .setDesc("Can be overridden with showStats: `true/false` parameter")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.showStatsByDefault)
@@ -52,7 +52,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Скрывать график на смартфоне")
+      .setName("Hide chart on mobile")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.hideChartOnMobile)
@@ -63,7 +63,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Скрывать статистику на смартфоне")
+      .setName("Hide statistics on mobile")
       .addToggle((t) =>
         t
           .setValue(this.plugin.settings.hideStatsOnMobile)
@@ -74,8 +74,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Количество дней")
-      .setDesc("Количество прошедших дней, которое отображается для графиков и привычек")
+      .setName("Number of days")
+      .setDesc("Number of past days displayed for charts and habits")
       .addText((t) =>
         t
           .setPlaceholder("30")

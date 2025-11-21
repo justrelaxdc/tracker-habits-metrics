@@ -10,7 +10,7 @@ import { resolveDateIso } from "../utils/date";
 import { DateService } from "../services/date-service";
 import { normalizePath } from "../utils/path";
 import { removePrefix, parseFilename } from "../utils/filename-parser";
-import { CSS_CLASSES } from "../constants";
+import { CSS_CLASSES, ERROR_MESSAGES, MODAL_LABELS } from "../constants";
 
 export class TrackerBlockRenderChild extends MarkdownRenderChild {
   private readonly plugin: TrackerPlugin;
@@ -34,10 +34,10 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
   }
 
   async render() {
-    // Инвалидируем кеш при инициализации трекера
+    // Invalidate cache on tracker initialization
     this.plugin.invalidateCacheForFolder(this.folderPath);
     
-    // Создаем временный контейнер для off-screen рендеринга
+    // Create temporary container for off-screen rendering
     const tempContainer = document.createElement('div');
     tempContainer.className = this.containerEl.className;
 
@@ -45,10 +45,10 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       const folderTree = this.plugin.getFolderTree(this.folderPath);
       if (!folderTree || (folderTree.files.length === 0 && folderTree.children.length === 0)) {
         tempContainer.createEl("div", {
-          text: `tracker: в папке ${this.folderPath} не найдено трекеров`,
+          text: `tracker: ${ERROR_MESSAGES.NO_TRACKERS} ${this.folderPath}`,
           cls: "tracker-notes__error",
         });
-        // Атомарная замена содержимого
+        // Atomic content replacement
         this.containerEl.empty();
         this.containerEl.appendChild(tempContainer);
         return;
@@ -190,7 +190,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left",
         }) as HTMLButtonElement;
         dayBackBtn.onclick = () => navigateDate(-1);
-        dayBackBtn.title = "Вчера";
+        dayBackBtn.title = MODAL_LABELS.YESTERDAY;
         dateNavButtons.push(dayBackBtn);
 
         dateInput = datePicker.createEl("input", {
@@ -205,18 +205,18 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right",
         }) as HTMLButtonElement;
         dayForwardBtn.onclick = () => navigateDate(1);
-        dayForwardBtn.title = "Завтра";
+        dayForwardBtn.title = MODAL_LABELS.TOMORROW;
         dateNavButtons.push(dayForwardBtn);
 
         loadingIndicator = blockHeader.createDiv({ cls: "tracker-notes__loading" });
         loadingIndicator.createDiv({ cls: "tracker-notes__loading-dot" });
-        loadingIndicator.createEl("span", { text: "Обновление…" });
+        loadingIndicator.createEl("span", { text: MODAL_LABELS.UPDATING });
       }
 
       const trackersContainer = mainContainer.createDiv({ cls: "tracker-notes__hierarchy" });
       await this.renderFolderNode(folderTree, trackersContainer, dateIso, view, this.opts);
       
-      // Атомарная замена: весь контент готов, заменяем за одну операцию
+      // Atomic replacement: all content ready, replace in one operation
       this.containerEl.empty();
       while (tempContainer.firstChild) {
         this.containerEl.appendChild(tempContainer.firstChild);
@@ -224,15 +224,15 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       tempContainer.createEl("div", {
-        text: `tracker: ошибка при обработке блока: ${errorMsg}`,
+        text: `tracker: ${ERROR_MESSAGES.RENDER_ERROR}: ${errorMsg}`,
         cls: "tracker-notes__error",
       });
-      // Атомарная замена даже при ошибке
+      // Atomic replacement even on error
       this.containerEl.empty();
       while (tempContainer.firstChild) {
         this.containerEl.appendChild(tempContainer.firstChild);
       }
-      console.error("Tracker: ошибка обработки блока", error);
+      console.error("Tracker: error processing block", error);
     }
   }
 
@@ -243,7 +243,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     view: string,
     opts: Record<string, string>,
   ): Promise<void> {
-    // Создаем контейнер узла
+    // Create node container
     const nodeContainer = document.createElement("div");
     nodeContainer.addClass("tracker-notes__folder-node");
     nodeContainer.addClass(`level-${node.level}`);
@@ -257,16 +257,11 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       });
       
       // Folder name with icon
-      console.log("[TrackerBlock] Rendering folder:", node.name, "path:", node.path);
       const folderNameEl = folderHeader.createSpan();
       // node.path is a folder path, so isFile = false
       const folderIcon = this.plugin.getIconForPath(node.path, false);
-      console.log("[TrackerBlock] Folder icon result:", folderIcon);
       if (folderIcon) {
-        console.log("[TrackerBlock] Rendering folder icon");
         this.plugin.renderIcon(folderIcon, folderNameEl);
-      } else {
-        console.log("[TrackerBlock] No folder icon found");
       }
       folderNameEl.createSpan({ text: removePrefix(node.name) });
       
@@ -277,7 +272,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         text: "↑",
         cls: CSS_CLASSES.ORDER_BTN_UP
       });
-      upButton.title = "Переместить вверх";
+      upButton.title = MODAL_LABELS.MOVE_UP;
       upButton.onclick = async (e) => {
         e.stopPropagation();
         await this.plugin.moveFolderUp(node.path);
@@ -287,7 +282,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         text: "↓",
         cls: CSS_CLASSES.ORDER_BTN_DOWN
       });
-      downButton.title = "Переместить вниз";
+      downButton.title = MODAL_LABELS.MOVE_DOWN;
       downButton.onclick = async (e) => {
         e.stopPropagation();
         await this.plugin.moveFolderDown(node.path);
@@ -302,24 +297,24 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       const trackersContainer = nodeContainer.createDiv({ cls: "tracker-notes__trackers" });
       trackersContainer.dataset.folderPath = normalizePath(node.path);
 
-      // Рендерим все трекеры параллельно
+      // Render all trackers in parallel
       const renderPromises = node.files.map(async (file) => {
         try {
           await this.plugin.readAllEntries(file);
           await this.plugin.trackerRenderer.renderTracker(trackersContainer, file, dateIso, view, opts);
         } catch (error) {
-          console.error("Tracker: ошибка рендера трекера", error);
+          console.error("Tracker: error rendering tracker", error);
         }
       });
       await Promise.all(renderPromises);
     }
 
-    // Рекурсивно рендерим дочерние узлы
+    // Recursively render child nodes
     for (const childNode of node.children) {
       await this.renderFolderNode(childNode, nodeContainer, dateIso, view, opts);
     }
     
-    // Добавляем готовый узел в родитель одной операцией
+    // Add ready node to parent in one operation
     parentEl.appendChild(nodeContainer);
   }
 

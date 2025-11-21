@@ -177,7 +177,7 @@ export class ChartService {
     if (unit) {
       chartLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
     } else {
-      chartLabel = metricType === TrackerType.TEXT ? "Кол-во слов" : "Значение";
+      chartLabel = metricType === TrackerType.TEXT ? "Word count" : "Value";
     }
     
     const config: any = {

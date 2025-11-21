@@ -31,7 +31,7 @@ export interface FolderNode {
 
 export interface TrackerFileOptions {
   mode?: TrackerTypeValue;
-  trackingStartDate?: string; // YYYY-MM-DD формат
+  trackingStartDate?: string; // YYYY-MM-DD format
   minValue?: string;
   maxValue?: string;
   step?: string;

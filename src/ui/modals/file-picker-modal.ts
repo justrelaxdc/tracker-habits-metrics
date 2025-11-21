@@ -1,5 +1,6 @@
 import { Modal, Notice } from "obsidian";
 import type { App, TFile } from "obsidian";
+import { MODAL_LABELS } from "../../constants";
 
 export class FilePickerModal extends Modal {
   private readonly files: TFile[];
@@ -16,12 +17,12 @@ export class FilePickerModal extends Modal {
     contentEl.empty();
 
     if (this.files.length === 0) {
-      new Notice("Нет трекеров");
+      new Notice(MODAL_LABELS.NO_TRACKERS_FOUND);
       this.close();
       return;
     }
 
-    contentEl.createEl("h3", { text: "Выберите трекер" });
+    contentEl.createEl("h3", { text: MODAL_LABELS.SELECT_TRACKER });
     this.files.slice(0, 200).forEach((file) => {
       const btn = contentEl.createEl("button", { text: file.path });
       btn.onclick = () => {

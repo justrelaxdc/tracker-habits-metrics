@@ -49,7 +49,7 @@ export class CreateTrackerModal extends Modal {
     }
 
     const startDateSetting = new Setting(contentEl)
-      .setName("Начало отслеживания")
+      .setName(MODAL_LABELS.START_DATE)
       .addText((text) => {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         text.setValue(today);
@@ -118,7 +118,7 @@ export class CreateTrackerModal extends Modal {
 
     const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
-      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения, они будут отображены на графике. Если значение не будет попадать в заданный диапазон — вы увидите цветовой отклик.',
+      text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description",
     });
     limitsDescription.style.fontSize = "0.9em";
@@ -236,12 +236,12 @@ export class CreateTrackerModal extends Modal {
         const minLimit = minLimitInput?.value.trim() || "";
         const maxLimit = maxLimitInput?.value.trim() || "";
 
-        // Валидация: верхняя граница должна быть больше нижней границы
+        // Validation: upper limit must be greater than lower limit
         if (minLimit && maxLimit) {
           const minLimitNum = parseFloat(minLimit);
           const maxLimitNum = parseFloat(maxLimit);
           if (!isNaN(minLimitNum) && !isNaN(maxLimitNum) && maxLimitNum <= minLimitNum) {
-            new Notice("Верхняя граница должна быть больше нижней границы");
+            new Notice(MODAL_LABELS.UPPER_LIMIT_MUST_BE_GREATER);
             return;
           }
         }
@@ -257,7 +257,7 @@ export class CreateTrackerModal extends Modal {
         const fileName = sanitizeFileName(name) + ".md";
         const folderInput = folderSetting.controlEl.querySelector("input") as HTMLInputElement;
         let inputFolder = folderInput?.value.trim() || "";
-        if (inputFolder === "/ (корневая папка)") {
+        if (inputFolder === MODAL_LABELS.ROOT_FOLDER) {
           inputFolder = "";
         }
         const targetFolder = inputFolder || this.plugin.settings.trackersFolder;
@@ -304,7 +304,7 @@ export class CreateTrackerModal extends Modal {
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           new Notice(`${ERROR_MESSAGES.CREATE_ERROR}: ${errorMsg}`);
-          console.error("Tracker: ошибка создания трекера", error);
+          console.error("Tracker: error creating tracker", error);
         }
       });
     });

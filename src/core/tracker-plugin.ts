@@ -21,7 +21,7 @@ import { TrackerRenderer } from "../services/tracker-renderer";
 import { VisualizationService } from "../services/visualization-service";
 import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
-import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS } from "../constants";
+import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { showNoticeIfNotMobile } from "../utils/notifications";
 import { removePrefix, parseFilename } from "../utils/filename-parser";
@@ -53,11 +53,11 @@ export default class TrackerPlugin extends Plugin {
     this.iconizeService = new IconizeService(this.app);
     
     // Load Iconize data asynchronously
-    this.iconizeService.loadIconizeData().catch(err => {
-      console.debug("Tracker: Failed to load Iconize data", err);
+    this.iconizeService.loadIconizeData().catch(() => {
+      // Silently fail if Iconize is not installed
     });
     
-    // Инициализируем сервисы рендеринга
+    // Initialize rendering services
     this.heatmapService = new HeatmapService(
       this.settings,
       (file: TFile) => this.readAllEntries(file),
@@ -153,12 +153,12 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async onunload() {
-    // Очищаем все активные блоки
+    // Clear all active blocks
     this.activeBlocks.forEach(block => block.unload());
     this.activeBlocks.clear();
   }
 
-  // ---- Код-блоки ------------------------------------------------------------
+  // ---- Code blocks ------------------------------------------------------------
 
   async processTrackerBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
     const block = new TrackerBlockRenderChild(this, source, el, ctx);
@@ -188,7 +188,7 @@ export default class TrackerPlugin extends Plugin {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: ошибка при обновлении блока", error);
+        console.error("Tracker: error updating block", error);
       }
     }
   }
@@ -215,13 +215,13 @@ export default class TrackerPlugin extends Plugin {
         
         refreshPromises.push(
           (async () => {
-            // Получаем frontmatter для проверки изменений
+            // Get frontmatter to check for changes
             const fileOpts = await this.getFileTypeFromFrontmatter(file);
             const baseName = removePrefix(file.basename);
             const unit = fileOpts.unit || "";
             const displayName = unit ? `${baseName} (${unit})` : baseName;
             
-            // Обновляем только название в header без полного пересоздания
+            // Update only name in header without full recreation
             const titleLink = trackerItem.querySelector('.tracker-notes__tracker-title') as HTMLElement;
             if (titleLink) {
               titleLink.textContent = displayName;
@@ -229,13 +229,13 @@ export default class TrackerPlugin extends Plugin {
               titleLink.setAttribute('data-href', file.path);
             }
             
-            // Обновляем dataset.filePath на случай переименования
+            // Update dataset.filePath in case of rename
             trackerItem.dataset.filePath = file.path;
             
-            // Читаем данные один раз
+            // Read data once
             const entries = await this.readAllEntries(file);
             
-            // Обновляем визуализации с актуальными данными
+            // Update visualizations with current data
             const daysToShow = parseInt(opts.days) || this.settings.daysToShow;
             const trackerType = (fileOpts.mode ?? "good-habit").toLowerCase();
             
@@ -249,15 +249,15 @@ export default class TrackerPlugin extends Plugin {
               await this.updateStats(statsDiv, file, activeDateIso, daysToShow, trackerType, entries);
             }
             
-            // Обновляем хитмап для трекеров привычек
+            // Update heatmap for habit trackers
             if (trackerType === "good-habit" || trackerType === "bad-habit") {
               const heatmapDiv = trackerItem.querySelector(".tracker-notes__heatmap") as HTMLElement;
               if (heatmapDiv) {
                 await this.heatmapService.updateTrackerHeatmap(heatmapDiv, file, activeDateIso, daysToShow, trackerType);
               }
             } else if (view === "control") {
-              // Для метрик пересоздаем контролы, чтобы они использовали актуальные настройки из frontmatter
-              // Это особенно важно для scale, где minValue/maxValue могут измениться
+              // For metrics recreate controls to use current settings from frontmatter
+              // This is especially important for scale, where minValue/maxValue may have changed
               const controlsContainer = trackerItem.querySelector(".tracker-notes__controls") as HTMLElement;
               if (controlsContainer) {
                 const { mode, ...optsWithoutMode } = opts;
@@ -265,14 +265,14 @@ export default class TrackerPlugin extends Plugin {
                 await this.controlsRenderer.renderControlsForDate(controlsContainer, file, activeDateIso, mergedOpts);
               }
             }
-            // Если имя изменилось, обновляем позицию трекера по алфавиту
+            // If name changed, update tracker position alphabetically
             const newBasename = removePrefix(file.basename);
             if (newBasename !== baseName) {
               const allTrackers = Array.from(parent.children).filter(
                 (el) => el.classList.contains('tracker-notes__tracker')
               ) as HTMLElement[];
               
-              // Находим правильную позицию для вставки
+              // Find correct position for insertion
               let correctInsertBefore: HTMLElement | null = null;
               for (const tracker of allTrackers) {
                 if (tracker === trackerItem) continue;
@@ -287,11 +287,11 @@ export default class TrackerPlugin extends Plugin {
                 }
               }
               
-              // Перемещаем трекер
+              // Move tracker
               if (correctInsertBefore && correctInsertBefore !== trackerItem) {
                 parent.insertBefore(trackerItem, correctInsertBefore);
               } else if (!correctInsertBefore) {
-                // Должен быть последним
+                // Should be last
                 parent.appendChild(trackerItem);
               }
             }
@@ -306,12 +306,12 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async refreshAllBlocks() {
-    // Сохраняем позицию скролла для всех возможных контейнеров
+    // Save scroll position for all possible containers
     const scrollPositions = new Map<HTMLElement, { top: number; left: number }>();
     
-    // Функция для поиска и сохранения скролла всех элементов с overflow
+    // Function to find and save scroll of all elements with overflow
     const findAndSaveScrollContainers = (root: HTMLElement) => {
-      // Проверяем сам элемент
+      // Check the element itself
       const style = window.getComputedStyle(root);
       if (style.overflow === 'auto' || style.overflow === 'scroll' || 
           style.overflowY === 'auto' || style.overflowY === 'scroll' ||
@@ -322,7 +322,7 @@ export default class TrackerPlugin extends Plugin {
         });
       }
       
-      // Проверяем все дочерние элементы
+      // Check all child elements
       const allElements = root.querySelectorAll('*');
       for (const el of Array.from(allElements) as HTMLElement[]) {
         const elStyle = window.getComputedStyle(el);
@@ -337,13 +337,13 @@ export default class TrackerPlugin extends Plugin {
       }
     };
     
-    // Сохраняем скролл для всех активных листьев
+    // Save scroll for all active leaves
     for (const leaf of this.app.workspace.getLeavesOfType('markdown')) {
       const view = leaf.view as any;
       if (view && view.containerEl) {
         findAndSaveScrollContainers(view.containerEl);
         
-        // Также проверяем специфичные контейнеры Obsidian
+        // Also check Obsidian-specific containers
         const cmScroller = view.containerEl.querySelector('.cm-scroller') as HTMLElement;
         if (cmScroller) {
           scrollPositions.set(cmScroller, {
@@ -362,25 +362,25 @@ export default class TrackerPlugin extends Plugin {
       }
     }
     
-    // Также сохраняем скролл window
+    // Also save window scroll
     const windowScroll = { top: window.scrollY, left: window.scrollX };
     
-    // Обновляем все блоки
+    // Update all blocks
     for (const block of Array.from(this.activeBlocks)) {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: ошибка при обновлении блока", error);
+        console.error("Tracker: error updating block", error);
       }
     }
     
-    // Восстанавливаем позицию скролла после обновления DOM
-    // Используем несколько requestAnimationFrame и небольшую задержку для гарантии, что DOM полностью обновлен
+    // Restore scroll position after DOM update
+    // Use multiple requestAnimationFrame and small delay to ensure DOM is fully updated
     const restoreScroll = () => {
-      // Восстанавливаем скролл window
+      // Restore window scroll
       window.scrollTo(windowScroll.left, windowScroll.top);
       
-      // Восстанавливаем скролл для всех контейнеров
+      // Restore scroll for all containers
       for (const [container, position] of scrollPositions.entries()) {
         if (container && container.isConnected) {
           try {
@@ -418,7 +418,7 @@ export default class TrackerPlugin extends Plugin {
       .replace(/\/$/, "");
   }
 
-  // Вспомогательная функция для получения типа из frontmatter файла
+  // Helper function to get type from frontmatter file
   async getFileTypeFromFrontmatter(file: TFile): Promise<TrackerFileOptions> {
     const state = await this.ensureTrackerState(file);
     return state.fileOpts;
@@ -473,7 +473,7 @@ export default class TrackerPlugin extends Plugin {
     }
   }
 
-  // ---- Визуализация ---------------------------------------------------------
+  // ---- Visualization ---------------------------------------------------------
 
 
 
@@ -566,7 +566,7 @@ export default class TrackerPlugin extends Plugin {
         label = m(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
-        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        const month = date.toDate().toLocaleDateString("en", { month: "short" });
         label = `${day} ${month}`;
       }
       labels.push(label);
@@ -670,13 +670,13 @@ export default class TrackerPlugin extends Plugin {
       gradient.addColorStop(1, colorToRgba(colors.accentColor, 0));
     }
     
-    // Определяем подпись для графика в зависимости от типа метрики и единицы измерения
+    // Determine chart label based on metric type and unit
     let chartLabel: string;
     if (unit) {
       // Делаем первую букву заглавной для единицы измерения
       chartLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
     } else {
-      chartLabel = metricType === "text" ? "Кол-во слов" : "Значение";
+      chartLabel = metricType === "text" ? "Word count" : "Value";
     }
     
     // Получаем цвет для вертикальной линии (используем accent цвет с прозрачностью)
@@ -1005,8 +1005,8 @@ export default class TrackerPlugin extends Plugin {
       (chartInstance as any).minLimit = minLimit;
       (chartInstance as any).maxLimit = maxLimit;
     } catch (error) {
-      console.error("Tracker: ошибка создания графика", error);
-      chartDiv.setText("Ошибка отображения графика");
+      console.error("Tracker: error creating chart", error);
+      chartDiv.setText("Chart display error");
     }
   }
 
@@ -1090,7 +1090,7 @@ export default class TrackerPlugin extends Plugin {
         label = m(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
-        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        const month = date.toDate().toLocaleDateString("en", { month: "short" });
         label = `${day} ${month}`;
       }
       labels.push(label);
@@ -1436,7 +1436,7 @@ export default class TrackerPlugin extends Plugin {
   }
 
 
-  // ---- Чтение/запись --------------------------------------------------------
+  // ---- Read/Write --------------------------------------------------------
 
   async ensureFileWithHeading(filePath: string, type: string = "good-habit"): Promise<TFile> {
     return this.trackerFileService.ensureFileWithHeading(filePath, type);
@@ -1465,17 +1465,17 @@ export default class TrackerPlugin extends Plugin {
       await this.trackerFileService.writeLogLine(file, dateIso, value);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      new Notice(`Ошибка записи: ${errorMsg}`);
-      console.error("Tracker: ошибка записи", error);
+      new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+      console.error("Tracker: write error", error);
       throw error;
     }
   }
 
-  // Простейший «пикер» файла: предлагает последние открытые/подходящие
+  // Simple file picker: suggests recently opened/suitable files
   async pickTrackerFile(): Promise<TFile | null> {
     const files = this.app.vault.getMarkdownFiles()
       .filter(f => f.path.startsWith(this.settings.trackersFolder + "/"));
-    if (files.length === 0) { new Notice("Нет трекеров"); return null; }
+    if (files.length === 0) { new Notice(MODAL_LABELS.NO_TRACKERS_FOUND); return null; }
     if (files.length === 1) return files[0];
 
     return new Promise(resolve => {
@@ -1617,7 +1617,7 @@ export default class TrackerPlugin extends Plugin {
     await this.refreshBlocksForFolder(parentFolderPath);
   }
 
-  // Методы для безопасной модификации файлов (игнорирование внутренних изменений)
+  // Methods for safe file modification (ignoring internal changes)
 
   /**
    * Gets icon for a path from Iconize plugin
@@ -1625,9 +1625,7 @@ export default class TrackerPlugin extends Plugin {
    * @param isFile - Whether the path is a file (true) or folder (false)
    */
   getIconForPath(path: string, isFile: boolean = false): string | null {
-    console.log("[TrackerPlugin] getIconForPath called for:", path, "isFile:", isFile);
     const icon = this.iconizeService.getIcon(path, isFile);
-    console.log("[TrackerPlugin] getIconForPath result:", icon);
     return icon;
   }
 
@@ -1635,7 +1633,6 @@ export default class TrackerPlugin extends Plugin {
    * Renders icon in a container element
    */
   renderIcon(icon: string | null, container: HTMLElement): void {
-    console.log("[TrackerPlugin] renderIcon called with icon:", icon);
     this.iconizeService.renderIcon(icon, container);
   }
 }

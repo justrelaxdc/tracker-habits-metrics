@@ -1,92 +1,92 @@
-# Tracker: habits and metrics - Плагин для отслеживания привычек и метрик в Obsidian
+# Tracker: habits and metrics - Plugin for tracking habits and metrics in Obsidian
 
-Плагин для Obsidian, который позволяет отслеживать ежедневные привычки и метрики (трекеры), сохраняя все данные в отдельные заметки в вашей файловой иерархии.
+Obsidian plugin that allows you to track daily habits and metrics (trackers), storing all data in separate notes in your file hierarchy.
 
-## ✨ Возможности
+## ✨ Features
 
-- 📝 **Отдельные заметки для каждого трекера** - каждый трекер (привычка или метрика) хранится в своей заметке
-- 🎯 **Разные типы трекеров**:
-  - **Хорошая привычка** (good-habit) - чекбокс для отслеживания выполнения привычки
-  - **Плохая привычка** (bad-habit) - чекбокс для отслеживания отсутствия плохой привычки
-  - **Число** (number) - числовое значение с автоматическим сохранением (debounce)
-  - **Счётчик** (plusminus) - увеличение/уменьшение значения кнопками +/-
-  - **Оценка звёздами** (rating) - оценка от 3 до 10 звёзд
-  - **Текст** (text) - текстовые заметки
-  - **Шкала** (scale) - ползунок с настраиваемым диапазоном значений
-- 📅 **Общая дата для блока** - один date picker для всех трекеров в блоке
-- 🎨 **Красивый дизайн** - все трекеры в одном общем контейнере, размещены в виде карточек в адаптивной сетке
-- 📊 **Расширенная визуализация**:
-  - Интерактивный график значений с поддержкой лимитов
-  - Детальная статистика:
-    - Всего записей
-    - Сумма и среднее значение за период
-    - Для привычек: процент выполнения, активных дней, текущий и лучший стрик
-    - Для метрик: минимум, максимум, медиана
-  - **Стрики** - отслеживание последовательных дней с записями 🔥
-  - **Лучший стрик** - максимальная последовательность успешных дней ⭐
-  - **Хитмап** - визуальный календарь активности
-  - **Выделение дня начала** - визуальное выделение дня, когда был начат трекер ✨
-- 🎯 **Оптимизированный хитмап** - оптимальный размер дней хитмапа для удобного просмотра
-- ⚡ **Оптимизированный рендеринг** - моментальная загрузка без провисаний даже с большим количеством дней
-- 🔧 **Гибкая настройка** - настраиваемая папка, форматы даты/времени, количество дней для отображения
-- 📁 **Иерархическое отображение** - поддержка вложенных папок с трекерами
-- 🔄 **Автоматическая инвалидация кеша** - данные обновляются при открытии заметки с трекером
-- 🎨 **Интеграция с Iconize** - автоматическое отображение иконок из плагина Iconize для папок и трекеров
-- 📱 **Адаптивный дизайн** - оптимизация для мобильных устройств
+- 📝 **Separate notes for each tracker** - each tracker (habit or metric) is stored in its own note
+- 🎯 **Different tracker types**:
+  - **Good habit** (good-habit) - checkbox to track habit completion
+  - **Bad habit** (bad-habit) - checkbox to track absence of bad habit
+  - **Number** (number) - numeric value with automatic saving (debounce)
+  - **Counter** (plusminus) - increase/decrease value with +/- buttons
+  - **Star rating** (rating) - rating from 3 to 10 stars
+  - **Text** (text) - text notes
+  - **Scale** (scale) - slider with customizable value range
+- 📅 **Common date for block** - one date picker for all trackers in the block
+- 🎨 **Beautiful design** - all trackers in one shared container, arranged as cards in an adaptive grid
+- 📊 **Advanced visualization**:
+  - Interactive value chart with limit support
+  - Detailed statistics:
+    - Total records
+    - Sum and average for the period
+    - For habits: completion percentage, active days, current and best streak
+    - For metrics: minimum, maximum, median
+  - **Streaks** - tracking consecutive days with records 🔥
+  - **Best streak** - maximum sequence of successful days ⭐
+  - **Heatmap** - visual activity calendar
+  - **Start day highlight** - visual highlighting of the day when the tracker was started ✨
+- 🎯 **Optimized heatmap** - optimal heatmap day size for convenient viewing
+- ⚡ **Optimized rendering** - instant loading without lags even with many days
+- 🔧 **Flexible configuration** - customizable folder, date/time formats, number of days to display
+- 📁 **Hierarchical display** - support for nested folders with trackers
+- 🔄 **Automatic cache invalidation** - data updates when opening a note with a tracker
+- 🎨 **Iconize integration** - automatic display of icons from Iconize plugin for folders and trackers
+- 📱 **Responsive design** - optimization for mobile devices
 
-## 📦 Установка
+## 📦 Installation
 
-### Ручная установка
+### Manual installation
 
-1. Скачайте последнюю версию плагина
-2. Распакуйте архив в папку `.obsidian/plugins/obsidian-habit-notes/` вашего хранилища
-3. Перезапустите Obsidian
-4. Включите плагин в настройках (Settings → Community plugins)
+1. Download the latest version of the plugin
+2. Extract the archive to `.obsidian/plugins/obsidian-habit-notes/` folder of your vault
+3. Restart Obsidian
+4. Enable the plugin in settings (Settings → Community plugins)
 
-### Через BRAT (рекомендуется для разработки)
+### Via BRAT (recommended for development)
 
-1. Установите плагин [BRAT](https://obsidian.md/plugins?id=obsidian42-brat)
-2. Добавьте репозиторий: `VladRoss/obsidian-habit-notes`
-3. Включите плагин в настройках
+1. Install the [BRAT](https://obsidian.md/plugins?id=obsidian42-brat) plugin
+2. Add repository: `VladRoss/obsidian-habit-notes`
+3. Enable the plugin in settings
 
-## 🚀 Использование
+## 🚀 Usage
 
-### Создание нового трекера
+### Creating a new tracker
 
-1. Используйте команду `Create new tracker` (Ctrl+P)
-2. Введите название трекера
-3. Выберите тип трекера
-4. Настройте параметры (для шкалы: min/max/step, для метрик: единицы измерения, лимиты)
-5. Установите дату начала отслеживания (опционально)
-6. Нажмите "Создать"
+1. Use the `Create new tracker` command (Ctrl+P)
+2. Enter tracker name
+3. Select tracker type
+4. Configure parameters (for scale: min/max/step, for metrics: units, limits)
+5. Set tracking start date (optional)
+6. Click "Create"
 
-### Использование в заметках
+### Using in notes
 
-#### Отображение одного трекера
+#### Displaying a single tracker
 
-В любой заметке добавьте код-блок для отображения и управления трекером:
+In any note, add a code block to display and manage a tracker:
 
 ````markdown
 ```tracker
-file: 0. Files/Trackers/01-Привычки/Утренняя зарядка.md
+file: 0. Files/Trackers/01-Habits/Morning workout.md
 ```
 ````
 
-#### Отображение всех трекеров в папке
+#### Displaying all trackers in a folder
 
-Для отображения всех трекеров в папке используйте блок `habit`:
+To display all trackers in a folder, use the `habit` block:
 
 ````markdown
 ```habit
-folder: 0. Files/Trackers/01-Привычки
+folder: 0. Files/Trackers/01-Habits
 ```
 ````
 
-Или с дополнительными параметрами:
+Or with additional parameters:
 
 ````markdown
 ```habit
-folder: 0. Files/Trackers/01-Привычки
+folder: 0. Files/Trackers/01-Habits
 date: 2025-01-15
 days: 30
 showChart: true
@@ -94,150 +94,150 @@ showStats: true
 ```
 ````
 
-#### Параметры код-блока `tracker`:
+#### `tracker` code block parameters:
 
-- `file` (обязательный) - путь к файлу трекера
-- `mode` - тип отображения: `good-habit`, `bad-habit`, `number`, `plusminus`, `rating`, `text`, `scale` (по умолчанию определяется из frontmatter файла)
-- `view` - режим просмотра: `control` (по умолчанию) или `display` (только просмотр)
-- `date` - дата (по умолчанию "today")
-- `days` - количество дней для отображения в графике и статистике (по умолчанию из настроек)
-- `showChart` - показать график (`true`/`false`, по умолчанию из настроек)
-- `showStats` - показать статистику (`true`/`false`, по умолчанию из настроек)
+- `file` (required) - path to tracker file
+- `mode` - display type: `good-habit`, `bad-habit`, `number`, `plusminus`, `rating`, `text`, `scale` (default is determined from file frontmatter)
+- `view` - view mode: `control` (default) or `display` (view only)
+- `date` - date (default "today")
+- `days` - number of days to display in chart and statistics (default from settings)
+- `showChart` - show chart (`true`/`false`, default from settings)
+- `showStats` - show statistics (`true`/`false`, default from settings)
 
-#### Параметры код-блока `habit`:
+#### `habit` code block parameters:
 
-- `folder` (обязательный) - путь к папке с трекерами
-- `date` - дата (по умолчанию "today")
-- `days` - количество дней для отображения в графике и статистике (по умолчанию из настроек)
-- `view` - режим просмотра: `control` (по умолчанию) или `display` (только просмотр)
-- `showChart` - показать график для всех трекеров (`true`/`false`, по умолчанию из настроек)
-- `showStats` - показать статистику для всех трекеров (`true`/`false`, по умолчанию из настроек)
+- `folder` (required) - path to folder with trackers
+- `date` - date (default "today")
+- `days` - number of days to display in chart and statistics (default from settings)
+- `view` - view mode: `control` (default) or `display` (view only)
+- `showChart` - show chart for all trackers (`true`/`false`, default from settings)
+- `showStats` - show statistics for all trackers (`true`/`false`, default from settings)
 
-#### Примеры:
+#### Examples:
 
-**Хорошая привычка:**
+**Good habit:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/01-Привычки/Утренняя зарядка.md
+file: 0. Files/Trackers/01-Habits/Morning workout.md
 mode: good-habit
 showStats: true
 ```
 ````
 
-**Плохая привычка:**
+**Bad habit:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/01-Привычки/Курение.md
+file: 0. Files/Trackers/01-Habits/Smoking.md
 mode: bad-habit
 showStats: true
 ```
 ````
 
-**Число с автоматическим сохранением:**
+**Number with automatic saving:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Вес.md
+file: 0. Files/Trackers/02-Metrics/Weight.md
 mode: number
 showChart: true
 showStats: true
 ```
 ````
 
-**Счётчик с визуализацией:**
+**Counter with visualization:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Шаги.md
+file: 0. Files/Trackers/02-Metrics/Steps.md
 mode: plusminus
 showChart: true
 showStats: true
 ```
 ````
 
-**Оценка звёздами:**
+**Star rating:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Настроение.md
+file: 0. Files/Trackers/02-Metrics/Mood.md
 mode: rating
 maxRating: 10
 showChart: true
 ```
 ````
 
-**Текстовая заметка:**
+**Text note:**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Дневник.md
+file: 0. Files/Trackers/02-Metrics/Journal.md
 mode: text
 ```
 ````
 
-**Шкала (ползунок):**
+**Scale (slider):**
 ````markdown
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Уровень энергии.md
+file: 0. Files/Trackers/02-Metrics/Energy level.md
 mode: scale
 showChart: true
 showStats: true
 ```
 ````
 
-**Все трекеры в папке:**
+**All trackers in folder:**
 ````markdown
 ```habit
-folder: 0. Files/Trackers/01-Привычки
+folder: 0. Files/Trackers/01-Habits
 showChart: true
 showStats: true
 ```
 ````
 
-### Быстрые команды
+### Quick commands
 
-- `Create new tracker` - создать новый трекер
-- `Edit tracker` - редактировать существующий трекер
+- `Create new tracker` - create a new tracker
+- `Edit tracker` - edit an existing tracker
 
-## ⚙️ Настройки
+## ⚙️ Settings
 
-В настройках плагина можно изменить:
+In the plugin settings you can change:
 
-- **Папка трекеров** - где хранятся файлы трекеров (по умолчанию: `0. Files/Trackers`)
-- **Формат даты** - формат даты (по умолчанию: `YYYY-MM-DD`)
-- **Количество дней для графиков** - количество дней для отображения в графиках и статистике (по умолчанию: `30`)
-- **Показывать график по умолчанию** - автоматически показывать график для всех трекеров
-- **Показывать статистику по умолчанию** - автоматически показывать статистику для всех трекеров
-- **Скрывать график на мобильных** - скрывать график на мобильных устройствах
-- **Скрывать статистику на мобильных** - скрывать статистику на мобильных устройствах
+- **Trackers folder** - where tracker files are stored (default: `0. Files/Trackers`)
+- **Date format** - date format (default: `YYYY-MM-DD`)
+- **Number of days for charts** - number of days to display in charts and statistics (default: `30`)
+- **Show chart by default** - automatically show chart for all trackers
+- **Show statistics by default** - automatically show statistics for all trackers
+- **Hide chart on mobile** - hide chart on mobile devices
+- **Hide statistics on mobile** - hide statistics on mobile devices
 
-## 🎨 Интеграция с Iconize
+## 🎨 Iconize Integration
 
-Плагин автоматически интегрируется с плагином [Iconize](https://obsidian.md/plugins?id=obsidian-icon-folder) для отображения иконок папок и трекеров.
+The plugin automatically integrates with the [Iconize](https://obsidian.md/plugins?id=obsidian-icon-folder) plugin to display icons for folders and trackers.
 
-### Как это работает:
+### How it works:
 
-1. Установите плагин Iconize (если еще не установлен)
-2. Настройте иконки для ваших папок и файлов в Iconize
-3. Плагин Tracker автоматически отобразит эти иконки перед названиями папок и трекеров
+1. Install the Iconize plugin (if not already installed)
+2. Configure icons for your folders and files in Iconize
+3. The Tracker plugin will automatically display these icons before folder and tracker names
 
-### Особенности:
+### Features:
 
-- Иконки отображаются только для тех путей, для которых они явно заданы в Iconize
-- Иконки не наследуются от родительских папок
-- Поддерживаются как эмодзи, так и Lucide иконки
-- Если плагин Iconize не установлен, плагин работает без иконок (без ошибок)
+- Icons are displayed only for paths where they are explicitly set in Iconize
+- Icons are not inherited from parent folders
+- Both emoji and Lucide icons are supported
+- If Iconize plugin is not installed, the plugin works without icons (no errors)
 
-## 📁 Структура файлов трекеров
+## 📁 Tracker file structure
 
-Каждый трекер хранится в отдельном файле Markdown со следующей структурой:
+Each tracker is stored in a separate Markdown file with the following structure:
 
 ```markdown
 ---
-type: good-habit  # или bad-habit, number, plusminus, rating, text, scale
-trackingStartDate: "2025-01-01"  # дата начала отслеживания (опционально)
-minValue: 0  # только для типа scale
-maxValue: 10  # только для типа scale
-step: 1  # только для типа scale и plusminus
-minLimit: 0  # минимальное допустимое значение (опционально)
-maxLimit: 100  # максимальное допустимое значение (опционально)
-unit: "кг"  # единица измерения (опционально)
+type: good-habit  # or bad-habit, number, plusminus, rating, text, scale
+trackingStartDate: "2025-01-01"  # tracking start date (optional)
+minValue: 0  # only for scale type
+maxValue: 10  # only for scale type
+step: 1  # only for scale and plusminus types
+minLimit: 0  # minimum allowed value (optional)
+maxLimit: 100  # maximum allowed value (optional)
+unit: "kg"  # unit of measurement (optional)
 data:
   "2025-01-01": 1
   "2025-01-02": 1
@@ -245,79 +245,79 @@ data:
 ---
 ```
 
-**Имя трекера** определяется именем файла (без расширения .md).
+**Tracker name** is determined by the file name (without .md extension).
 
-Все записи хранятся в секции `data` frontmatter в формате `"YYYY-MM-DD": значение`.
+All records are stored in the `data` section of frontmatter in the format `"YYYY-MM-DD": value`.
 
-### Типы значений:
+### Value types:
 
-- **good-habit / bad-habit**: `1` (выполнено) или `0` (не выполнено)
-- **number**: числовое значение
-- **plusminus**: числовое значение (может быть отрицательным)
-- **rating**: число от 3 до 10 (или другое значение maxRating)
-- **text**: строка текста
-- **scale**: число в диапазоне от minValue до maxValue
+- **good-habit / bad-habit**: `1` (completed) or `0` (not completed)
+- **number**: numeric value
+- **plusminus**: numeric value (can be negative)
+- **rating**: number from 3 to 10 (or other maxRating value)
+- **text**: text string
+- **scale**: number in the range from minValue to maxValue
 
-## 📊 Статистика
+## 📊 Statistics
 
-Плагин предоставляет детальную статистику для каждого трекера:
+The plugin provides detailed statistics for each tracker:
 
-### Для привычек (good-habit / bad-habit):
+### For habits (good-habit / bad-habit):
 
-- **Всего записей** - общее количество записей
-- **Последние N дней** - сумма и среднее значение за период
-- **Выполнено** - процент выполнения и количество активных дней
-- **Текущий стрик** 🔥 - последовательность дней с записями до текущей даты
-- **Лучший стрик** ⭐ - максимальная последовательность успешных дней за все время
+- **Total records** - total number of records
+- **Last N days** - sum and average for the period
+- **Completed** - completion percentage and number of active days
+- **Current streak** 🔥 - sequence of days with records up to the current date
+- **Best streak** ⭐ - maximum sequence of successful days of all time
 
-### Для метрик (number, plusminus, rating, scale, text):
+### For metrics (number, plusminus, rating, scale, text):
 
-- **Всего записей** - общее количество записей
-- **Последние N дней** - сумма за период
-- **Среднее** - среднее значение за период
-- **Мин / Макс** - минимальное и максимальное значение за период
-- **Медиана** - медианное значение за период
-- **Текущий стрик** 🔥 - последовательность дней с записями до текущей даты
+- **Total records** - total number of records
+- **Last N days** - sum for the period
+- **Average** - average value for the period
+- **Min / Max** - minimum and maximum value for the period
+- **Median** - median value for the period
+- **Current streak** 🔥 - sequence of days with records up to the current date
 
-**Важно:** Статистика учитывает дату начала отслеживания (`trackingStartDate`), если она указана в frontmatter файла.
+**Important:** Statistics take into account the tracking start date (`trackingStartDate`) if it is specified in the file frontmatter.
 
-## 🎯 Примеры использования
+## 🎯 Usage examples
 
-### Ежедневный дашборд
+### Daily dashboard
 
-Создайте заметку `Ежедневный дашборд.md` и добавьте все ваши трекеры:
+Create a note `Daily dashboard.md` and add all your trackers:
 
 ````markdown
-# Ежедневный дашборд
+# Daily dashboard
 
-## Здоровье
+## Health
 
 ```habit
-folder: 0. Files/Trackers/01-Привычки
+folder: 0. Files/Trackers/01-Habits
 showChart: true
 showStats: true
 ```
 
-## Метрики
+## Metrics
 
 ```habit
-folder: 0. Files/Trackers/02-Метрики
+folder: 0. Files/Trackers/02-Metrics
 showChart: true
 showStats: true
 ```
 ````
 
-### Еженедельный обзор
+### Weekly review
 
-Создайте заметку для еженедельного обзора с трекерами в режиме просмотра:
+Create a note for weekly review with trackers in display mode:
 
 ````markdown
-# Неделя 15-21 января
+# Week January 15-21
 
-## Прогресс
+## Progress
 
 ```habit
-folder: 0. Files/Trackers/01-Привычки
+folder: 0. Files/Trackers/01-Habits
 view: display
 showStats: true
 date: 2025-01-21
@@ -325,13 +325,13 @@ days: 7
 ```
 ````
 
-### Отслеживание конкретной метрики
+### Tracking a specific metric
 
 ````markdown
-# Отслеживание веса
+# Weight tracking
 
 ```tracker
-file: 0. Files/Trackers/02-Метрики/Вес.md
+file: 0. Files/Trackers/02-Metrics/Weight.md
 mode: number
 showChart: true
 showStats: true
@@ -339,54 +339,53 @@ days: 90
 ```
 ````
 
-## 🔧 Разработка
+## 🔧 Development
 
-### Сборка
+### Build
 
 ```bash
 npm install
 npm run build
 ```
 
-Команда `npm run build` использует `esbuild` и автоматически бандлит `src/main.ts` вместе со всеми зависимостями и стилями из `src/styles/tracker.css`. Для разработки можно запустить `npm run dev` — сборщик будет слушать изменения и моментально пересобирать `main.js`.
+The `npm run build` command uses `esbuild` and automatically bundles `src/main.ts` together with all dependencies and styles from `src/styles/tracker.css`. For development, you can run `npm run dev` - the builder will watch for changes and instantly rebuild `main.js`.
 
-### Структура проекта
+### Project structure
 
-- `src/main.ts` — точка входа, экспортирует плагин Obsidian.
-- `src/core` — основная логика плагина (`tracker-plugin.ts`).
-- `src/domain` — типы и значения по умолчанию.
-- `src/services` — работа с файловой системой и вспомогательные сервисы:
-  - `iconize-service.ts` — интеграция с плагином Iconize
-  - `tracker-file-service.ts` — работа с файлами трекеров
-  - `controls-renderer.ts` — рендеринг элементов управления
-  - `visualization-service.ts` — расчет и отображение статистики
-  - `heatmap-service.ts` — рендеринг хитмапа
-  - `chart-service.ts` — рендеринг графиков
-- `src/ui` — элементы интерфейса: блоки, настройки, модалки, подсказки.
-- `src/utils` — утилиты для дат, опций и пр.
-- `src/styles/tracker.css` — единый источник пользовательских стилей трекера.
-- `main.css` — стили uPlot, которые нужно положить рядом с `main.js` в Obsidian.
-- `manifest.json` и `package.json` — метаданные и зависимости.
+- `src/main.ts` — entry point, exports Obsidian plugin.
+- `src/core` — main plugin logic (`tracker-plugin.ts`).
+- `src/domain` — types and default values.
+- `src/services` — file system work and helper services:
+  - `iconize-service.ts` — Iconize plugin integration
+  - `tracker-file-service.ts` — tracker file work
+  - `controls-renderer.ts` — control elements rendering
+  - `visualization-service.ts` — statistics calculation and display
+  - `heatmap-service.ts` — heatmap rendering
+  - `chart-service.ts` — chart rendering
+- `src/ui` — interface elements: blocks, settings, modals, suggestions.
+- `src/utils` — utilities for dates, options, etc.
+- `src/styles/tracker.css` — single source of custom tracker styles.
+- `main.css` — uPlot styles that need to be placed next to `main.js` in Obsidian.
+- `manifest.json` and `package.json` — metadata and dependencies.
 
-## 📝 Лицензия
+## 📝 License
 
-MIT License © 2025 Владислав (Vlad Ross)
+MIT License © 2025 Vladislav (Vlad Ross)
 
-## 🙏 Благодарности
+## 🙏 Acknowledgments
 
-Вдохновлено плагином [Habit Tracker 21](https://github.com/benjaminwoskin/obsidian-habit-tracker-21).
+Inspired by the [Habit Tracker 21](https://github.com/benjaminwoskin/obsidian-habit-tracker-21) plugin.
 
-## 💡 Идеи для будущих версий
+## 💡 Ideas for future versions
 
-- [ ] Экспорт данных в CSV/JSON
-- [ ] Импорт данных
-- [ ] Напоминания
-- [ ] Темы оформления
-- [ ] Цели (target values) для трекеров
-- [ ] Группировка трекеров по категориям
-- [ ] Сравнение периодов
+- [ ] Export data to CSV/JSON
+- [ ] Import data
+- [ ] Reminders
+- [ ] Themes
+- [ ] Goals (target values) for trackers
+- [ ] Grouping trackers by categories
+- [ ] Period comparison
 
 ---
 
-**Наслаждайтесь отслеживанием своих привычек и метрик! 📊✨**
-
+**Enjoy tracking your habits and metrics! 📊✨**

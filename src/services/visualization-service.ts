@@ -33,17 +33,17 @@ export class VisualizationService {
     const endDate = DateService.parse(dateIso, settings.dateFormat);
     const startDate = endDate.clone().subtract(daysToShow - 1, 'days');
     
-    // Определяем реальную начальную дату с учетом даты начала отслеживания
+    // Determine actual start date considering tracking start date
     let actualStartDate = startDate;
     if (startTrackingDateStr) {
-      // Парсим дату начала отслеживания с поддержкой разных форматов
+      // Parse tracking start date with support for different formats
       const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
         settings.dateFormat,
         'YYYY-MM-DD',
         'YYYY/MM/DD',
         'DD.MM.YYYY'
       ]);
-      // Используем более позднюю дату из двух
+      // Use the later date of the two
       if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
         actualStartDate = trackingStartDate;
       }
@@ -54,7 +54,7 @@ export class VisualizationService {
     const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
     let actualDaysCount = 0;
     
-    // Проходим по всем дням от actualStartDate до endDate
+    // Iterate through all days from actualStartDate to endDate
     let currentDate = actualStartDate.clone();
     while (!DateService.isAfter(currentDate, endDate)) {
       const dateStr = DateService.format(currentDate, settings.dateFormat);
@@ -162,18 +162,18 @@ export class VisualizationService {
       return "var(--text-error, var(--text-normal))";
     };
     
-    // Общее
+    // General
     const generalSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
     generalSection.createEl("div", { 
       text: `📊 ${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}`,
       cls: "tracker-notes__stats-item"
     });
     
-    // Период
+    // Period
     const periodSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
     
     if (isHabit) {
-      // Для привычек: процент выполнения и активных дней
+      // For habits: completion rate and active days
       if (stats.completionRate !== null) {
         const completionEl = periodSection.createEl("div", { 
           cls: "tracker-notes__stats-item"
@@ -191,7 +191,7 @@ export class VisualizationService {
         cls: "tracker-notes__stats-item"
       });
     } else {
-      // Для метрик: сумма, среднее, минимум, максимум, медиана
+      // For metrics: sum, average, minimum, maximum, median
       const daysLabel = stats.actualDaysCount === 1 ? STATS_LABELS.DAYS_SINGULAR : stats.actualDaysCount < 5 ? STATS_LABELS.DAYS_PLURAL_2_4 : STATS_LABELS.DAYS_PLURAL_5_PLUS;
       periodSection.createEl("div", { 
         text: `📈 ${STATS_LABELS.LAST_DAYS} ${stats.actualDaysCount} ${daysLabel}: ${formatValue(stats.sum)}`,
@@ -218,7 +218,7 @@ export class VisualizationService {
       }
     }
     
-    // Рекорды
+    // Records
     if (currentStreak > 0 || bestStreak) {
       const recordsSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
       

@@ -2,7 +2,7 @@ import type { App } from "obsidian";
 import { TFile } from "obsidian";
 import { Modal, Notice, Setting } from "obsidian";
 import type TrackerPlugin from "../../core/tracker-plugin";
-import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants";
+import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES, TRACKER_TYPE_LABELS, PLACEHOLDERS, DEFAULTS } from "../../constants";
 import { DateService } from "../../services/date-service";
 
 export class EditTrackerModal extends Modal {
@@ -18,7 +18,7 @@ export class EditTrackerModal extends Modal {
   async onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "Редактировать трекер" });
+    contentEl.createEl("h2", { text: MODAL_LABELS.EDIT_TRACKER });
 
     const fileOpts = await this.plugin.getFileTypeFromFrontmatter(this.file);
     const currentType = fileOpts.mode || "good-habit";
@@ -31,19 +31,19 @@ export class EditTrackerModal extends Modal {
     const currentMaxLimit = fileOpts.maxLimit || "";
     const currentStartDate = fileOpts.trackingStartDate || new Date().toISOString().split('T')[0];
 
-    const nameSetting = new Setting(contentEl).setName("Название").addText((text) => {
-      text.setPlaceholder("Например: Утренняя зарядка");
+    const nameSetting = new Setting(contentEl).setName(MODAL_LABELS.NAME).addText((text) => {
+      text.setPlaceholder(PLACEHOLDERS.TRACKER_NAME);
       text.setValue(currentName);
       text.inputEl.style.width = "100%";
     });
 
-    const typeSetting = new Setting(contentEl).setName("Тип").addDropdown((dropdown) => {
-      dropdown.addOption("good-habit", "Хорошая привычка");
-      dropdown.addOption("bad-habit", "Плохая привычка");
-      dropdown.addOption("number", "Число");
-      dropdown.addOption("scale", "Шкала");
-      dropdown.addOption("plusminus", "Счётчик (+/-)");
-      dropdown.addOption("text", "Текст");
+    const typeSetting = new Setting(contentEl).setName(MODAL_LABELS.TYPE).addDropdown((dropdown) => {
+      dropdown.addOption("good-habit", TRACKER_TYPE_LABELS["good-habit"]);
+      dropdown.addOption("bad-habit", TRACKER_TYPE_LABELS["bad-habit"]);
+      dropdown.addOption("number", TRACKER_TYPE_LABELS["number"]);
+      dropdown.addOption("scale", TRACKER_TYPE_LABELS["scale"]);
+      dropdown.addOption("plusminus", TRACKER_TYPE_LABELS["plusminus"]);
+      dropdown.addOption("text", TRACKER_TYPE_LABELS["text"]);
       dropdown.setValue(currentType);
       dropdown.selectEl.disabled = true;
     });
@@ -53,34 +53,34 @@ export class EditTrackerModal extends Modal {
       typeDropdown.innerHTML = "";
 
       const habitsGroup = document.createElement("optgroup");
-      habitsGroup.label = "Привычки";
+      habitsGroup.label = MODAL_LABELS.HABITS_GROUP;
       const goodHabitOption = document.createElement("option");
       goodHabitOption.value = "good-habit";
-      goodHabitOption.textContent = "Хорошая привычка";
+      goodHabitOption.textContent = TRACKER_TYPE_LABELS["good-habit"];
       habitsGroup.appendChild(goodHabitOption);
       const badHabitOption = document.createElement("option");
       badHabitOption.value = "bad-habit";
-      badHabitOption.textContent = "Плохая привычка";
+      badHabitOption.textContent = TRACKER_TYPE_LABELS["bad-habit"];
       habitsGroup.appendChild(badHabitOption);
       typeDropdown.appendChild(habitsGroup);
 
       const metricsGroup = document.createElement("optgroup");
-      metricsGroup.label = "Метрики";
+      metricsGroup.label = MODAL_LABELS.METRICS_GROUP;
       const numberOption = document.createElement("option");
       numberOption.value = "number";
-      numberOption.textContent = "Число";
+      numberOption.textContent = TRACKER_TYPE_LABELS["number"];
       metricsGroup.appendChild(numberOption);
       const scaleOption = document.createElement("option");
       scaleOption.value = "scale";
-      scaleOption.textContent = "Шкала";
+      scaleOption.textContent = TRACKER_TYPE_LABELS["scale"];
       metricsGroup.appendChild(scaleOption);
       const plusminusOption = document.createElement("option");
       plusminusOption.value = "plusminus";
-      plusminusOption.textContent = "Счётчик (+/-)";
+      plusminusOption.textContent = TRACKER_TYPE_LABELS["plusminus"];
       metricsGroup.appendChild(plusminusOption);
       const textOption = document.createElement("option");
       textOption.value = "text";
-      textOption.textContent = "Текст";
+      textOption.textContent = TRACKER_TYPE_LABELS["text"];
       metricsGroup.appendChild(textOption);
       typeDropdown.appendChild(metricsGroup);
 
@@ -89,20 +89,20 @@ export class EditTrackerModal extends Modal {
     }
 
     const startDateSetting = new Setting(contentEl)
-      .setName("Начало отслеживания")
+      .setName(MODAL_LABELS.START_DATE)
       .addText((text) => {
         text.setValue(currentStartDate);
         text.inputEl.type = "date";
         text.inputEl.style.width = "100%";
       });
 
-    // Элемент предупреждения о данных до новой даты
+    // Warning element about data before new date
     const warningEl = contentEl.createDiv({
       cls: "tracker-notes__start-date-warning",
       attr: { style: "display: none; margin-top: 0.5em; padding: 0.75em; background: var(--background-modifier-error); color: var(--text-error); border-radius: 4px; font-size: 0.9em;" }
     });
 
-    // Обработчик изменения даты для проверки данных
+    // Date change handler for data validation
     const startDateInput = startDateSetting.controlEl.querySelector("input") as HTMLInputElement;
     if (startDateInput) {
       startDateInput.addEventListener("input", async () => {
@@ -113,7 +113,7 @@ export class EditTrackerModal extends Modal {
         }
 
         try {
-          // Загружаем данные из файла
+          // Load data from file
           const content = await this.app.vault.read(this.file);
           const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
           
@@ -122,7 +122,7 @@ export class EditTrackerModal extends Modal {
             existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
           }
 
-          // Проверяем наличие данных до новой даты
+          // Check for data before new date
           const newStartDateObj = DateService.parse(newStartDate, 'YYYY-MM-DD');
           let datesToDeleteCount = 0;
           
@@ -139,33 +139,36 @@ export class EditTrackerModal extends Modal {
                 datesToDeleteCount++;
               }
             } catch (e) {
-              // Если не удалось распарсить дату, пропускаем
+              // If date parsing failed, skip
             }
           }
           
-          // Показываем или скрываем предупреждение
+          // Show or hide warning
           if (datesToDeleteCount > 0) {
             const formattedDate = DateService.format(newStartDateObj, this.plugin.settings.dateFormat);
-            const recordsText = datesToDeleteCount === 1 ? 'запись' : datesToDeleteCount < 5 ? 'записи' : 'записей';
-            warningEl.textContent = `Внимание: найдено ${datesToDeleteCount} ${recordsText} ДО даты ${formattedDate}, которые будут удалены при сохранении.`;
+            const recordsText = datesToDeleteCount === 1 ? MODAL_LABELS.RECORD_SINGULAR : MODAL_LABELS.RECORDS_PLURAL;
+            warningEl.textContent = MODAL_LABELS.WARNING_RECORDS_BEFORE_DATE
+              .replace('{count}', String(datesToDeleteCount))
+              .replace('{records}', recordsText)
+              .replace('{date}', formattedDate);
             warningEl.style.display = "block";
           } else {
             warningEl.style.display = "none";
           }
         } catch (error) {
-          console.error("Tracker: ошибка при проверке данных", error);
+          console.error("Tracker: error checking data", error);
           warningEl.style.display = "none";
         }
       });
     }
 
-    const parametersHeader = contentEl.createEl("h3", { text: "Параметры" });
+    const parametersHeader = contentEl.createEl("h3", { text: MODAL_LABELS.PARAMETERS });
 
     const unitSetting = new Setting(contentEl)
-      .setName("Единица измерения")
+      .setName(MODAL_LABELS.UNIT)
       .addText((text) => {
-        const unitValue = currentType === "text" ? "слов" : currentUnit;
-        text.setPlaceholder("По умолчанию - нет");
+        const unitValue = currentType === "text" ? DEFAULTS.TEXT_UNIT : currentUnit;
+        text.setPlaceholder(PLACEHOLDERS.UNIT);
         text.setValue(unitValue);
         text.inputEl.style.width = "100%";
         if (currentType === "text") {
@@ -175,72 +178,72 @@ export class EditTrackerModal extends Modal {
     const unitInput = unitSetting.controlEl.querySelector("input") as HTMLInputElement;
 
     const plusminusStepSetting = new Setting(contentEl)
-      .setName("Шаг")
+      .setName(MODAL_LABELS.STEP)
       .addText((text) => {
         text
-          .setPlaceholder("1")
-          .setValue(currentStep || "1")
+          .setPlaceholder(String(DEFAULTS.STEP))
+          .setValue(currentStep || String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
         text.inputEl.style.width = "100%";
       });
 
     const minValueSetting = new Setting(contentEl)
-      .setName("Значение \"от\"")
+      .setName(MODAL_LABELS.VALUE_FROM)
       .addText((text) => {
         text
-          .setPlaceholder("0")
-          .setValue(currentMinValue || "0")
+          .setPlaceholder(String(DEFAULTS.MIN_VALUE))
+          .setValue(currentMinValue || String(DEFAULTS.MIN_VALUE))
           .inputEl.type = "number";
         text.inputEl.style.width = "100%";
       });
 
     const maxValueSetting = new Setting(contentEl)
-      .setName("Значение \"до\"")
+      .setName(MODAL_LABELS.VALUE_TO)
       .addText((text) => {
         text
-          .setPlaceholder("10")
-          .setValue(currentMaxValue || "10")
+          .setPlaceholder(String(DEFAULTS.MAX_VALUE))
+          .setValue(currentMaxValue || String(DEFAULTS.MAX_VALUE))
           .inputEl.type = "number";
         text.inputEl.style.width = "100%";
       });
 
     const stepSetting = new Setting(contentEl)
-      .setName("Шаг")
+      .setName(MODAL_LABELS.STEP)
       .addText((text) => {
         text
-          .setPlaceholder("1")
-          .setValue(currentStep || "1")
+          .setPlaceholder(String(DEFAULTS.STEP))
+          .setValue(currentStep || String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
         text.inputEl.style.width = "100%";
       });
 
-    const limitsHeader = contentEl.createEl("h3", { text: "Лимиты успешности" });
+    const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
-      text: 'Опционально вы можете сделать метрику лимитирующей и задать желаемые пороговые значения, они будут отображены на графике. Если значение не будет попадать в заданный диапазон — вы увидите цветовой отклик.',
+      text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description",
     });
     limitsDescription.style.fontSize = "0.9em";
     limitsDescription.style.color = "var(--text-muted, #999999)";
     limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1ем";
+    limitsDescription.style.marginBottom = "1em";
 
     const maxLimitSetting = new Setting(contentEl)
-      .setName("Верхняя граница")
+      .setName(MODAL_LABELS.UPPER_LIMIT)
       .addText((text) => {
         text
-          .setPlaceholder("По умолчанию - нет")
+          .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue(currentMaxLimit)
           .inputEl.type = "number";
         text.inputEl.style.width = "100%";
       });
 
     const minLimitSetting = new Setting(contentEl)
-      .setName("Нижняя граница")
+      .setName(MODAL_LABELS.LOWER_LIMIT)
       .addText((text) => {
         text
-          .setPlaceholder("По умолчанию - нет")
+          .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue(currentMinLimit)
           .inputEl.type = "number";
         text.inputEl.style.width = "100%";
@@ -257,7 +260,7 @@ export class EditTrackerModal extends Modal {
         unitSetting.settingEl.style.display = "";
         if (isText) {
           if (unitInput) {
-            unitInput.value = "слов";
+            unitInput.value = DEFAULTS.TEXT_UNIT;
             unitInput.disabled = true;
           }
         } else if (unitInput) {
@@ -301,24 +304,24 @@ export class EditTrackerModal extends Modal {
       typeDropdown.onchange = updateFieldsVisibility;
     }
 
-    // Создаем контейнер для кнопок по краям
+    // Create container for buttons on edges
     const buttonsWrapper = contentEl.createDiv({ cls: "tracker-modal-buttons" });
     
-    // Кнопка "Удалить" (слева)
+    // Delete button (left)
     const deleteBtn = buttonsWrapper.createEl("button", { 
       text: MODAL_LABELS.DELETE,
       cls: "mod-warning"
     });
     deleteBtn.addEventListener("click", async () => {
       try {
-        // Сохраняем путь файла до удаления
+        // Save file path before deletion
         const filePath = this.file.path;
         const fileName = this.file.basename;
         
-        // Удаляем трекер из UI динамически ДО удаления файла
+        // Remove tracker from UI dynamically BEFORE file deletion
         await this.plugin.onTrackerDeleted(filePath);
         
-        // Удаляем файл
+        // Delete file
         await this.app.vault.delete(this.file);
         
         new Notice(`${SUCCESS_MESSAGES.TRACKER_DELETED}: ${fileName}`);
@@ -327,11 +330,11 @@ export class EditTrackerModal extends Modal {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
-        console.error("Tracker: ошибка удаления трекера", error);
+        console.error("Tracker: error deleting tracker", error);
       }
     });
     
-    // Кнопка "Сохранить" (справа)
+    // Save button (right)
     const saveBtn = buttonsWrapper.createEl("button", { 
       text: MODAL_LABELS.SAVE,
       cls: "mod-cta"
@@ -340,7 +343,7 @@ export class EditTrackerModal extends Modal {
         const nameInput = nameSetting.controlEl.querySelector("input") as HTMLInputElement;
         const name = nameInput.value.trim();
         if (!name) {
-          new Notice("Введите название");
+          new Notice(ERROR_MESSAGES.ENTER_NAME);
           return;
         }
 
@@ -365,19 +368,19 @@ export class EditTrackerModal extends Modal {
         const minLimit = minLimitInput?.value.trim() || "";
         const maxLimit = maxLimitInput?.value.trim() || "";
 
-        // Валидация: верхняя граница должна быть больше нижней границы
+        // Validation: upper limit must be greater than lower limit
         if (minLimit && maxLimit) {
           const minLimitNum = parseFloat(minLimit);
           const maxLimitNum = parseFloat(maxLimit);
           if (!isNaN(minLimitNum) && !isNaN(maxLimitNum) && maxLimitNum <= minLimitNum) {
-            new Notice("Верхняя граница должна быть больше нижней границы");
+            new Notice(MODAL_LABELS.UPPER_LIMIT_MUST_BE_GREATER);
             return;
           }
         }
 
         const unitInputValue = unitSetting.controlEl.querySelector("input") as HTMLInputElement;
         const unitRaw = unitInputValue?.value.trim() || "";
-        const unit = type === "text" ? "слов" : unitRaw;
+        const unit = type === "text" ? DEFAULTS.TEXT_UNIT : unitRaw;
         const isMetric = ["number", "plusminus", "text", "scale"].includes(type);
 
         const startDateInput = startDateSetting.controlEl.querySelector("input") as HTMLInputElement;
@@ -394,12 +397,12 @@ export class EditTrackerModal extends Modal {
             existingData = this.plugin.parseFrontmatterData(frontmatterMatch[1]);
           }
 
-          // Удаление данных до новой даты начала отслеживания, если дата изменилась
+          // Delete data before new tracking start date if date changed
           if (startDate !== currentStartDate) {
             const newStartDateObj = DateService.parse(startDate, 'YYYY-MM-DD');
             const datesToDelete: string[] = [];
             
-            // Находим все даты до новой даты начала отслеживания
+            // Find all dates before new tracking start date
             for (const [dateStr] of Object.entries(existingData)) {
               try {
                 const dataDateObj = DateService.parseMultiple(dateStr, [
@@ -413,11 +416,11 @@ export class EditTrackerModal extends Modal {
                   datesToDelete.push(dateStr);
                 }
               } catch (e) {
-                // Если не удалось распарсить дату, пропускаем
+                // If date parsing failed, skip
               }
             }
             
-            // Удаляем данные до новой даты
+            // Delete data before new date
             for (const dateStr of datesToDelete) {
               delete existingData[dateStr];
             }
@@ -448,55 +451,55 @@ export class EditTrackerModal extends Modal {
           const newContent = `---\n${newFrontmatter}---${body ? `\n\n${body}` : ""}`;
 
           try {
-            // Сохраняем старый путь ДО модификации файла
+            // Save old path BEFORE file modification
             const oldPath = this.file.path;
             const oldBasename = this.file.basename;
             
-            // Модифицируем содержимое
+            // Modify content
             await this.app.vault.modify(this.file, newContent);
 
             let updatedFile: TFile = this.file;
             
-            // Переименовываем если нужно
+            // Rename if needed
             if (name !== oldBasename) {
               try {
                 const newFileName = name.replace(/[<>:"/\\|?*]/g, "_") + ".md";
                 
-                // Более надежный способ формирования пути: получаем директорию и объединяем с новым именем
+                // More reliable way to form path: get directory and combine with new name
                 const folderPath = this.file.parent?.path || "";
                 const newPath = folderPath ? `${folderPath}/${newFileName}` : newFileName;
                 
                 const renamedFile = await this.app.vault.rename(this.file, newPath);
                 
-                // Проверяем успешность переименования по изменению пути файла, вне зависимости от возвращаемого значения rename (void/null/обновленный TFile)
+                // Check rename success by file path change, regardless of rename return value (void/null/updated TFile)
                 const fileToCheck = this.file;
                 if (fileToCheck.path !== oldPath) {
-                  // Путь изменился - переименование успешно
+                  // Path changed - rename successful
                   updatedFile = fileToCheck;
                   this.plugin.handleTrackerRenamed(oldPath, updatedFile);
                 }
               } catch (renameError) {
-                // Если переименование выбросило исключение, логируем и используем исходный файл
+                // If rename threw exception, log and use original file
                 const errorMsg = renameError instanceof Error ? renameError.message : String(renameError);
-                console.error("Tracker: ошибка при переименовании файла", {
+                console.error("Tracker: error renaming file", {
                   oldPath,
                   newFileName: name.replace(/[<>:"/\\|?*]/g, "_") + ".md",
                   error: errorMsg,
                   renameError
                 });
-                // Продолжаем работу с исходным файлом
+                // Continue with original file
               }
             }
 
-            new Notice(`Трекер обновлен: ${name}`);
+            new Notice(`${SUCCESS_MESSAGES.TRACKER_UPDATED}: ${name}`);
             
-            // Инвалидируем кеш для файла, чтобы новые данные frontmatter были прочитаны
+            // Invalidate cache for file so new frontmatter data is read
             this.plugin.invalidateCacheForFile(updatedFile);
             
-            // Обновляем визуализации трекеров с новым файлом
-            // Если файл был переименован, обновляем dataset.filePath у всех трекеров
+            // Update tracker visualizations with new file
+            // If file was renamed, update dataset.filePath for all trackers
             if (oldPath !== updatedFile.path) {
-              // Находим все трекеры со старым путем и обновляем их
+              // Find all trackers with old path and update them
               for (const block of Array.from(this.plugin.activeBlocks)) {
                 const trackers = block.containerEl.querySelectorAll<HTMLElement>(
                   `.tracker-notes__tracker[data-file-path="${oldPath}"]`
@@ -512,13 +515,13 @@ export class EditTrackerModal extends Modal {
             this.close();
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            new Notice(`Ошибка при обновлении трекера: ${errorMsg}`);
-            console.error("Tracker: ошибка обновления трекера", error);
+            new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
+            console.error("Tracker: error updating tracker", error);
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          new Notice(`Ошибка при обновлении трекера: ${errorMsg}`);
-          console.error("Tracker: ошибка обновления трекера", error);
+          new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
+          console.error("Tracker: error updating tracker", error);
         }
     });
   }

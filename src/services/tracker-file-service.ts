@@ -101,7 +101,7 @@ export class TrackerFileService {
         entries.set(date, value);
       });
     } catch (error) {
-      console.error("Tracker: ошибка чтения всех записей", error);
+      console.error("Tracker: error reading all entries", error);
     }
 
     return entries;
@@ -149,7 +149,7 @@ export class TrackerFileService {
       await this.app.vault.modify(file, newContent);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error("Tracker: ошибка записи", error);
+      console.error("Tracker: write error", error);
       throw new Error(errorMsg);
     }
   }
@@ -185,7 +185,7 @@ export class TrackerFileService {
         fileOpts.mode = TrackerType.GOOD_HABIT;
       }
     } catch (error) {
-      console.error("Tracker: ошибка чтения frontmatter", error);
+      console.error("Tracker: error reading frontmatter", error);
       fileOpts.mode = TrackerType.GOOD_HABIT;
     }
     return fileOpts;

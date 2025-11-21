@@ -1,5 +1,6 @@
 import type { App, TFolder } from "obsidian";
 import { AbstractInputSuggest } from "obsidian";
+import { MODAL_LABELS } from "../../constants";
 
 export class FolderSuggest extends AbstractInputSuggest<TFolder> {
   private readonly folders: TFolder[];
@@ -25,7 +26,7 @@ export class FolderSuggest extends AbstractInputSuggest<TFolder> {
 
   renderSuggestion(folder: TFolder, el: HTMLElement): void {
     const path = folder.path || "";
-    el.textContent = path || "/ (корневая папка)";
+    el.textContent = path || MODAL_LABELS.ROOT_FOLDER;
   }
 
   selectSuggestion(folder: TFolder): void {

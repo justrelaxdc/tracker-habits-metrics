@@ -114,7 +114,7 @@
       .tracker-notes__folder-header.level-2 { font-size: 1.15em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }
       .tracker-notes__folder-header.level-3 { font-size: 1em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }
       
-      /* Медиа-запросы для мобильных устройств */
+      /* Media queries for mobile devices */
       @media (max-width: 768px) {
         .tracker-notes { padding: 0.5em; margin: 0.5em 0; border-radius: 8px; }
         .tracker-notes__header { margin: 0.5em 0; margin-bottom: 0.25em; gap: 0.5em; }
@@ -236,13 +236,13 @@
         border-color: var(--interactive-accent-hover);
       }
       
-      /* Скрытие кнопок в режиме просмотра */
+      /* Hide buttons in preview mode */
       .markdown-preview-view .tracker-notes__settings-btn,
       .markdown-preview-view .tracker-notes__order-btns {
         display: none !important;
       }
       
-      /* Явное отображение в режиме редактирования */
+      /* Explicit display in edit mode */
       .markdown-source-view .tracker-notes__settings-btn,
       .markdown-source-view .tracker-notes__order-btns {
         display: flex;

@@ -1,6 +1,6 @@
 import { Notice, TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
-import { CSS_CLASSES, ANIMATION_DURATION_MS, TrackerType, DEBOUNCE_DELAY_MS } from "../constants";
+import { CSS_CLASSES, ANIMATION_DURATION_MS, TrackerType, DEBOUNCE_DELAY_MS, PLACEHOLDERS, MODAL_LABELS } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
 import type { HeatmapService } from "./heatmap-service";
 import { checkLimits } from "../utils/limit-checker";
@@ -100,7 +100,7 @@ export class ControlsRenderer {
       await this.renderScale(container, file, dateIso, opts, fileOpts, entries, updateVisualizations);
     } else {
       container.createEl("div", { 
-        text: `Неизвестный mode: ${mode}. Доступны: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.TEXT}, ${TrackerType.SCALE}` 
+        text: `Unknown mode: ${mode}. Available: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.TEXT}, ${TrackerType.SCALE}` 
       });
     }
   }
@@ -164,14 +164,14 @@ export class ControlsRenderer {
           debounceTimer = null;
         }
         // Немедленная запись
-        await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
+        await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: write error", err));
       } else {
         // Debounce для записи в файл
         if (debounceTimer) {
           clearTimeout(debounceTimer);
         }
         debounceTimer = setTimeout(async () => {
-          await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: ошибка записи", err));
+          await this.writeLogLine(file, dateIso, String(val)).catch(err => console.error("Tracker: write error", err));
           debounceTimer = null;
         }, DEBOUNCE_DELAY_MS);
       }
@@ -258,7 +258,7 @@ export class ControlsRenderer {
       // Обновляем локальный entries напрямую
       entries.set(dateIso, current);
       // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: ошибка записи", err));
+      this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: write error", err));
       setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
@@ -269,7 +269,7 @@ export class ControlsRenderer {
       // Обновляем локальный entries напрямую
       entries.set(dateIso, current);
       // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: ошибка записи", err));
+      this.writeLogLine(file, dateIso, String(current)).catch(err => console.error("Tracker: write error", err));
       setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
@@ -287,17 +287,17 @@ export class ControlsRenderer {
     const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
     const input = wrap.createEl("textarea", { 
       cls: CSS_CLASSES.TEXT_INPUT,
-      placeholder: "Введите текст..."
+      placeholder: PLACEHOLDERS.TEXT_INPUT
     }) as HTMLTextAreaElement;
     const current = await this.readValueForDate(file, dateIso);
     if (current != null && typeof current === "string") input.value = current;
-    const btn = wrap.createEl("button", { text: "Сохранить" });
+    const btn = wrap.createEl("button", { text: MODAL_LABELS.SAVE });
     btn.onclick = async () => {
       const val = input.value.trim();
       // Обновляем локальный entries напрямую
       entries.set(dateIso, val);
       // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, val).catch(err => console.error("Tracker: ошибка записи", err));
+      this.writeLogLine(file, dateIso, val).catch(err => console.error("Tracker: write error", err));
       // Визуальная обратная связь
       btn.style.transform = "scale(0.95)";
       setTimeout(() => btn.style.transform = "", ANIMATION_DURATION_MS);
@@ -433,7 +433,7 @@ export class ControlsRenderer {
           // Обновляем локальный entries напрямую
           entries.set(dateIso, currentValue);
           // Записываем в файл асинхронно
-          this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
+          this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: write error", err));
           // Обновляем визуализации с локальными данными
           await updateVisualizations(entries);
         }
@@ -457,7 +457,7 @@ export class ControlsRenderer {
       // Обновляем локальный entries напрямую
       entries.set(dateIso, currentValue);
       // Записываем в файл асинхронно
-      this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
+      this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: write error", err));
       // Обновляем визуализации с локальными данными
       await updateVisualizations(entries);
     };
@@ -489,7 +489,7 @@ export class ControlsRenderer {
         // Обновляем локальный entries напрямую
         entries.set(dateIso, currentValue);
         // Записываем в файл асинхронно
-        this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: ошибка записи", err));
+        this.writeLogLine(file, dateIso, String(currentValue)).catch(err => console.error("Tracker: write error", err));
         // Обновляем визуализации с локальными данными
         await updateVisualizations(entries);
       }

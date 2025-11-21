@@ -14956,83 +14956,100 @@ var CHART_CONFIG = {
   LINE_WIDTH: 2
 };
 var ERROR_MESSAGES = {
-  NO_TRACKERS: "\u0432 \u043F\u0430\u043F\u043A\u0435 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432",
-  NO_FRONTMATTER: "Frontmatter \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D",
-  ENTER_NAME: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435",
-  CREATE_ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430",
-  UPDATE_ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430",
-  WRITE_ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438",
-  READ_ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F",
-  RENDER_ERROR: "\u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0435 \u0431\u043B\u043E\u043A\u0430"
+  NO_TRACKERS: "no trackers found in folder",
+  NO_FRONTMATTER: "Frontmatter not found",
+  ENTER_NAME: "Enter name",
+  CREATE_ERROR: "Error creating tracker",
+  UPDATE_ERROR: "Error updating tracker",
+  WRITE_ERROR: "Write error",
+  READ_ERROR: "Read error",
+  RENDER_ERROR: "error processing block"
 };
 var SUCCESS_MESSAGES = {
-  TRACKER_CREATED: "\u0421\u043E\u0437\u0434\u0430\u043D \u0442\u0440\u0435\u043A\u0435\u0440",
-  TRACKER_UPDATED: "\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D",
-  TRACKER_DELETED: "\u0422\u0440\u0435\u043A\u0435\u0440 \u0443\u0434\u0430\u043B\u0435\u043D",
-  VALUE_SAVED: "\u2713 \u0417\u0430\u043F\u0438\u0441\u0430\u043D\u043E"
+  TRACKER_CREATED: "Tracker created",
+  TRACKER_UPDATED: "Tracker updated",
+  TRACKER_DELETED: "Tracker deleted",
+  VALUE_SAVED: "\u2713 Saved"
 };
 var PLACEHOLDERS = {
-  TRACKER_NAME: "\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430",
-  UNIT: "\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442",
-  TEXT_INPUT: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0442\u0435\u043A\u0441\u0442...",
+  TRACKER_NAME: "e.g., Morning workout",
+  UNIT: "Default: none",
+  TEXT_INPUT: "Enter text...",
   NUMBER_INPUT: "0",
-  LIMIT_NONE: "\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442"
+  LIMIT_NONE: "Default: none"
 };
 var TRACKER_TYPE_LABELS = {
-  [TrackerType.GOOD_HABIT]: "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430",
-  [TrackerType.BAD_HABIT]: "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430",
-  [TrackerType.NUMBER]: "\u0427\u0438\u0441\u043B\u043E",
-  [TrackerType.SCALE]: "\u0428\u043A\u0430\u043B\u0430",
-  [TrackerType.PLUSMINUS]: "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)",
-  [TrackerType.TEXT]: "\u0422\u0435\u043A\u0441\u0442"
+  [TrackerType.GOOD_HABIT]: "Good habit",
+  [TrackerType.BAD_HABIT]: "Bad habit",
+  [TrackerType.NUMBER]: "Number",
+  [TrackerType.SCALE]: "Scale",
+  [TrackerType.PLUSMINUS]: "Counter (+/-)",
+  [TrackerType.TEXT]: "Text"
 };
 var MODAL_LABELS = {
-  CREATE_TRACKER: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u043D\u043E\u0432\u044B\u0439 \u0442\u0440\u0435\u043A\u0435\u0440",
-  EDIT_TRACKER: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440",
-  NAME: "\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435",
-  PATH: "\u041F\u0443\u0442\u044C",
-  TYPE: "\u0422\u0438\u043F",
-  PARAMETERS: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B",
-  UNIT: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F",
-  STEP: "\u0428\u0430\u0433",
-  VALUE_FROM: '\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"',
-  VALUE_TO: '\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"',
-  LIMITS: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438",
-  LOWER_LIMIT: "\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430",
-  UPPER_LIMIT: "\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430",
-  CREATE: "\u0421\u043E\u0437\u0434\u0430\u0442\u044C",
-  SAVE: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C",
-  DELETE: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C",
-  DELETE_CONFIRM_TITLE: "\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440?",
-  DELETE_CONFIRM_MESSAGE: '\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0443\u0434\u0430\u043B\u0438\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440 "{name}"? \u042D\u0442\u043E \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u043B\u044C\u0437\u044F \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u044C.',
-  CANCEL: "\u041E\u0442\u043C\u0435\u043D\u0430",
-  HABITS_GROUP: "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438",
-  METRICS_GROUP: "\u041C\u0435\u0442\u0440\u0438\u043A\u0438"
+  CREATE_TRACKER: "Create new tracker",
+  EDIT_TRACKER: "Edit tracker",
+  NAME: "Name",
+  PATH: "Path",
+  TYPE: "Type",
+  PARAMETERS: "Parameters",
+  UNIT: "Unit",
+  STEP: "Step",
+  VALUE_FROM: 'Value "from"',
+  VALUE_TO: 'Value "to"',
+  LIMITS: "Success limits",
+  LOWER_LIMIT: "Lower limit",
+  UPPER_LIMIT: "Upper limit",
+  CREATE: "Create",
+  SAVE: "Save",
+  DELETE: "Delete",
+  DELETE_CONFIRM_TITLE: "Delete tracker?",
+  DELETE_CONFIRM_MESSAGE: 'Are you sure you want to delete tracker "{name}"? This action cannot be undone.',
+  CANCEL: "Cancel",
+  HABITS_GROUP: "Habits",
+  METRICS_GROUP: "Metrics",
+  START_DATE: "Tracking start date",
+  LIMITS_DESCRIPTION: "Optionally, you can make the metric limiting and set desired threshold values, they will be displayed on the chart. If the value does not fall within the specified range, you will see a color response.",
+  ROOT_FOLDER: "/ (root folder)",
+  NO_TRACKERS_FOUND: "No trackers found",
+  SELECT_TRACKER: "Select tracker",
+  YESTERDAY: "Yesterday",
+  TOMORROW: "Tomorrow",
+  UPDATING: "Updating\u2026",
+  MOVE_UP: "Move up",
+  MOVE_DOWN: "Move down",
+  TRACKER_SETTINGS: "Tracker settings",
+  UPPER_LIMIT_MUST_BE_GREATER: "Upper limit must be greater than lower limit",
+  ENTER_NAME: "Enter name",
+  TRACKER_UPDATED: "Tracker updated",
+  WARNING_RECORDS_BEFORE_DATE: "Warning: found {count} {records} BEFORE date {date}, which will be deleted when saving.",
+  RECORD_SINGULAR: "record",
+  RECORDS_PLURAL: "records"
 };
 var DEFAULTS = {
   STEP: 1,
   MIN_VALUE: 0,
   MAX_VALUE: 10,
-  TEXT_UNIT: "\u0441\u043B\u043E\u0432"
+  TEXT_UNIT: "words"
 };
 var UI_CONSTANTS = {
   FONT_WEIGHT_BOLD: "600",
   TRANSITION_OPACITY_DURATION_MS: 200
 };
 var STATS_LABELS = {
-  TOTAL_RECORDS: "\u0412\u0441\u0435\u0433\u043E \u0437\u0430\u043F\u0438\u0441\u0435\u0439",
-  LAST_DAYS: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435",
-  CURRENT_STREAK: "\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0441\u0442\u0440\u0438\u043A",
-  DAYS_SINGULAR: "\u0434\u0435\u043D\u044C",
-  DAYS_PLURAL_2_4: "\u0434\u043D\u044F",
-  DAYS_PLURAL_5_PLUS: "\u0434\u043D\u0435\u0439",
-  AVERAGE: "\u0441\u0440\u0435\u0434\u043D\u0435\u0435",
-  MIN: "\u041C\u0438\u043D",
-  MAX: "\u041C\u0430\u043A\u0441",
-  MEDIAN: "\u041C\u0435\u0434\u0438\u0430\u043D\u0430",
-  COMPLETION_RATE: "\u0412\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043E",
-  ACTIVE_DAYS: "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0434\u043D\u0435\u0439",
-  BEST_STREAK: "\u041B\u0443\u0447\u0448\u0438\u0439 \u0441\u0442\u0440\u0438\u043A"
+  TOTAL_RECORDS: "Total records",
+  LAST_DAYS: "Last",
+  CURRENT_STREAK: "Current streak",
+  DAYS_SINGULAR: "day",
+  DAYS_PLURAL_2_4: "days",
+  DAYS_PLURAL_5_PLUS: "days",
+  AVERAGE: "average",
+  MIN: "Min",
+  MAX: "Max",
+  MEDIAN: "Median",
+  COMPLETION_RATE: "Completed",
+  ACTIVE_DAYS: "Active days",
+  BEST_STREAK: "Best streak"
 };
 
 // src/ui/tracker-block-render-child.ts
@@ -15053,7 +15070,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       const folderTree = this.plugin.getFolderTree(this.folderPath);
       if (!folderTree || folderTree.files.length === 0 && folderTree.children.length === 0) {
         tempContainer.createEl("div", {
-          text: `tracker: \u0432 \u043F\u0430\u043F\u043A\u0435 ${this.folderPath} \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432`,
+          text: `tracker: ${ERROR_MESSAGES.NO_TRACKERS} ${this.folderPath}`,
           cls: "tracker-notes__error"
         });
         this.containerEl.empty();
@@ -15182,7 +15199,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left"
         });
         dayBackBtn.onclick = () => navigateDate(-1);
-        dayBackBtn.title = "\u0412\u0447\u0435\u0440\u0430";
+        dayBackBtn.title = MODAL_LABELS.YESTERDAY;
         dateNavButtons.push(dayBackBtn);
         dateInput = datePicker.createEl("input", {
           type: "date",
@@ -15195,11 +15212,11 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right"
         });
         dayForwardBtn.onclick = () => navigateDate(1);
-        dayForwardBtn.title = "\u0417\u0430\u0432\u0442\u0440\u0430";
+        dayForwardBtn.title = MODAL_LABELS.TOMORROW;
         dateNavButtons.push(dayForwardBtn);
         loadingIndicator = blockHeader.createDiv({ cls: "tracker-notes__loading" });
         loadingIndicator.createDiv({ cls: "tracker-notes__loading-dot" });
-        loadingIndicator.createEl("span", { text: "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435\u2026" });
+        loadingIndicator.createEl("span", { text: MODAL_LABELS.UPDATING });
       }
       const trackersContainer = mainContainer.createDiv({ cls: "tracker-notes__hierarchy" });
       await this.renderFolderNode(folderTree, trackersContainer, dateIso, view, this.opts);
@@ -15210,14 +15227,14 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       tempContainer.createEl("div", {
-        text: `tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0435 \u0431\u043B\u043E\u043A\u0430: ${errorMsg}`,
+        text: `tracker: ${ERROR_MESSAGES.RENDER_ERROR}: ${errorMsg}`,
         cls: "tracker-notes__error"
       });
       this.containerEl.empty();
       while (tempContainer.firstChild) {
         this.containerEl.appendChild(tempContainer.firstChild);
       }
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0438 \u0431\u043B\u043E\u043A\u0430", error);
+      console.error("Tracker: error processing block", error);
     }
   }
   async renderFolderNode(node, parentEl, dateIso, view, opts) {
@@ -15229,15 +15246,10 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       const folderHeader = nodeContainer.createDiv({
         cls: `tracker-notes__folder-header level-${node.level}`
       });
-      console.log("[TrackerBlock] Rendering folder:", node.name, "path:", node.path);
       const folderNameEl = folderHeader.createSpan();
       const folderIcon = this.plugin.getIconForPath(node.path, false);
-      console.log("[TrackerBlock] Folder icon result:", folderIcon);
       if (folderIcon) {
-        console.log("[TrackerBlock] Rendering folder icon");
         this.plugin.renderIcon(folderIcon, folderNameEl);
-      } else {
-        console.log("[TrackerBlock] No folder icon found");
       }
       folderNameEl.createSpan({ text: removePrefix(node.name) });
       const orderBtnsContainer = folderHeader.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
@@ -15245,7 +15257,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
         text: "\u2191",
         cls: CSS_CLASSES.ORDER_BTN_UP
       });
-      upButton.title = "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0432\u0432\u0435\u0440\u0445";
+      upButton.title = MODAL_LABELS.MOVE_UP;
       upButton.onclick = async (e) => {
         e.stopPropagation();
         await this.plugin.moveFolderUp(node.path);
@@ -15254,7 +15266,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
         text: "\u2193",
         cls: CSS_CLASSES.ORDER_BTN_DOWN
       });
-      downButton.title = "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0432\u043D\u0438\u0437";
+      downButton.title = MODAL_LABELS.MOVE_DOWN;
       downButton.onclick = async (e) => {
         e.stopPropagation();
         await this.plugin.moveFolderDown(node.path);
@@ -15268,7 +15280,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
           await this.plugin.readAllEntries(file);
           await this.plugin.trackerRenderer.renderTracker(trackersContainer, file, dateIso, view, opts);
         } catch (error) {
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0440\u0435\u043D\u0434\u0435\u0440\u0430 \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+          console.error("Tracker: error rendering tracker", error);
         }
       });
       await Promise.all(renderPromises);
@@ -15516,7 +15528,7 @@ data: {}
         entries.set(date, value);
       });
     } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0432\u0441\u0435\u0445 \u0437\u0430\u043F\u0438\u0441\u0435\u0439", error);
+      console.error("Tracker: error reading all entries", error);
     }
     return entries;
   }
@@ -15555,7 +15567,7 @@ ${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", error);
+      console.error("Tracker: write error", error);
       throw new Error(errorMsg);
     }
   }
@@ -15590,7 +15602,7 @@ ${newFrontmatter}---${body}`;
         fileOpts.mode = TrackerType.GOOD_HABIT;
       }
     } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F frontmatter", error);
+      console.error("Tracker: error reading frontmatter", error);
       fileOpts.mode = TrackerType.GOOD_HABIT;
     }
     return fileOpts;
@@ -15705,37 +15717,37 @@ var TrackerSettingsTab = class extends import_obsidian4.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian4.Setting(containerEl).setName("\u041F\u0430\u043F\u043A\u0430 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C folder: `path`").addText(
+    new import_obsidian4.Setting(containerEl).setName("Default trackers folder").setDesc("Can be overridden with folder: `path` parameter").addText(
       (t) => t.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v) => {
         this.plugin.settings.trackersFolder = v.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showChart: `true/false`").addToggle(
+    new import_obsidian4.Setting(containerEl).setName("Show chart by default").setDesc("Can be overridden with showChart: `true/false` parameter").addToggle(
       (t) => t.setValue(this.plugin.settings.showChartByDefault).onChange(async (v) => {
         this.plugin.settings.showChartByDefault = v;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E").setDesc("\u041C\u043E\u0436\u043D\u043E \u043F\u0435\u0440\u0435\u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u043E\u043C showStats: `true/false`").addToggle(
+    new import_obsidian4.Setting(containerEl).setName("Show statistics by default").setDesc("Can be overridden with showStats: `true/false` parameter").addToggle(
       (t) => t.setValue(this.plugin.settings.showStatsByDefault).onChange(async (v) => {
         this.plugin.settings.showStatsByDefault = v;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0433\u0440\u0430\u0444\u0438\u043A \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle(
+    new import_obsidian4.Setting(containerEl).setName("Hide chart on mobile").addToggle(
       (t) => t.setValue(this.plugin.settings.hideChartOnMobile).onChange(async (v) => {
         this.plugin.settings.hideChartOnMobile = v;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("\u0421\u043A\u0440\u044B\u0432\u0430\u0442\u044C \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0443 \u043D\u0430 \u0441\u043C\u0430\u0440\u0442\u0444\u043E\u043D\u0435").addToggle(
+    new import_obsidian4.Setting(containerEl).setName("Hide statistics on mobile").addToggle(
       (t) => t.setValue(this.plugin.settings.hideStatsOnMobile).onChange(async (v) => {
         this.plugin.settings.hideStatsOnMobile = v;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0434\u043D\u0435\u0439").setDesc("\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043F\u0440\u043E\u0448\u0435\u0434\u0448\u0438\u0445 \u0434\u043D\u0435\u0439, \u043A\u043E\u0442\u043E\u0440\u043E\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u043E\u0432 \u0438 \u043F\u0440\u0438\u0432\u044B\u0447\u0435\u043A").addText(
+    new import_obsidian4.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits").addText(
       (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
         const num = parseInt(v.trim());
         if (!isNaN(num) && num > 0) {
@@ -15769,7 +15781,7 @@ var FolderSuggest = class extends import_obsidian5.AbstractInputSuggest {
   }
   renderSuggestion(folder, el) {
     const path = folder.path || "";
-    el.textContent = path || "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)";
+    el.textContent = path || MODAL_LABELS.ROOT_FOLDER;
   }
   selectSuggestion(folder) {
     const path = folder.path || "";
@@ -15851,7 +15863,7 @@ var CreateTrackerModal = class extends import_obsidian6.Modal {
     if (typeDropdown) {
       populateTrackerTypeSelector(typeDropdown, TrackerType.GOOD_HABIT);
     }
-    const startDateSetting = new import_obsidian6.Setting(contentEl).setName("\u041D\u0430\u0447\u0430\u043B\u043E \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u044F").addText((text) => {
+    const startDateSetting = new import_obsidian6.Setting(contentEl).setName(MODAL_LABELS.START_DATE).addText((text) => {
       const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
       text.setValue(today);
       text.inputEl.type = "date";
@@ -15889,7 +15901,7 @@ var CreateTrackerModal = class extends import_obsidian6.Modal {
     stepSetting.settingEl.style.display = "none";
     const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
-      text: "\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F, \u043E\u043D\u0438 \u0431\u0443\u0434\u0443\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u044B \u043D\u0430 \u0433\u0440\u0430\u0444\u0438\u043A\u0435. \u0415\u0441\u043B\u0438 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043D\u0435 \u0431\u0443\u0434\u0435\u0442 \u043F\u043E\u043F\u0430\u0434\u0430\u0442\u044C \u0432 \u0437\u0430\u0434\u0430\u043D\u043D\u044B\u0439 \u0434\u0438\u0430\u043F\u0430\u0437\u043E\u043D \u2014 \u0432\u044B \u0443\u0432\u0438\u0434\u0438\u0442\u0435 \u0446\u0432\u0435\u0442\u043E\u0432\u043E\u0439 \u043E\u0442\u043A\u043B\u0438\u043A.",
+      text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description"
     });
     limitsDescription.style.fontSize = "0.9em";
@@ -15979,7 +15991,7 @@ var CreateTrackerModal = class extends import_obsidian6.Modal {
           const minLimitNum = parseFloat(minLimit);
           const maxLimitNum = parseFloat(maxLimit);
           if (!isNaN(minLimitNum) && !isNaN(maxLimitNum) && maxLimitNum <= minLimitNum) {
-            new import_obsidian6.Notice("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0438\u0436\u043D\u0435\u0439 \u0433\u0440\u0430\u043D\u0438\u0446\u044B");
+            new import_obsidian6.Notice(MODAL_LABELS.UPPER_LIMIT_MUST_BE_GREATER);
             return;
           }
         }
@@ -15992,7 +16004,7 @@ var CreateTrackerModal = class extends import_obsidian6.Modal {
         const fileName = sanitizeFileName(name) + ".md";
         const folderInput = folderSetting.controlEl.querySelector("input");
         let inputFolder = folderInput?.value.trim() || "";
-        if (inputFolder === "/ (\u043A\u043E\u0440\u043D\u0435\u0432\u0430\u044F \u043F\u0430\u043F\u043A\u0430)") {
+        if (inputFolder === MODAL_LABELS.ROOT_FOLDER) {
           inputFolder = "";
         }
         const targetFolder = inputFolder || this.plugin.settings.trackersFolder;
@@ -16044,7 +16056,7 @@ ${body}` : ""}`;
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           new import_obsidian6.Notice(`${ERROR_MESSAGES.CREATE_ERROR}: ${errorMsg}`);
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+          console.error("Tracker: error creating tracker", error);
         }
       });
     });
@@ -16065,7 +16077,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
   async onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u0440\u0435\u043A\u0435\u0440" });
+    contentEl.createEl("h2", { text: MODAL_LABELS.EDIT_TRACKER });
     const fileOpts = await this.plugin.getFileTypeFromFrontmatter(this.file);
     const currentType = fileOpts.mode || "good-habit";
     const currentName = this.file.basename;
@@ -16076,18 +16088,18 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
     const currentMinLimit = fileOpts.minLimit || "";
     const currentMaxLimit = fileOpts.maxLimit || "";
     const currentStartDate = fileOpts.trackingStartDate || (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-    const nameSetting = new import_obsidian7.Setting(contentEl).setName("\u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435").addText((text) => {
-      text.setPlaceholder("\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0423\u0442\u0440\u0435\u043D\u043D\u044F\u044F \u0437\u0430\u0440\u044F\u0434\u043A\u0430");
+    const nameSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.NAME).addText((text) => {
+      text.setPlaceholder(PLACEHOLDERS.TRACKER_NAME);
       text.setValue(currentName);
       text.inputEl.style.width = "100%";
     });
-    const typeSetting = new import_obsidian7.Setting(contentEl).setName("\u0422\u0438\u043F").addDropdown((dropdown) => {
-      dropdown.addOption("good-habit", "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("bad-habit", "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430");
-      dropdown.addOption("number", "\u0427\u0438\u0441\u043B\u043E");
-      dropdown.addOption("scale", "\u0428\u043A\u0430\u043B\u0430");
-      dropdown.addOption("plusminus", "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)");
-      dropdown.addOption("text", "\u0422\u0435\u043A\u0441\u0442");
+    const typeSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.TYPE).addDropdown((dropdown) => {
+      dropdown.addOption("good-habit", TRACKER_TYPE_LABELS["good-habit"]);
+      dropdown.addOption("bad-habit", TRACKER_TYPE_LABELS["bad-habit"]);
+      dropdown.addOption("number", TRACKER_TYPE_LABELS["number"]);
+      dropdown.addOption("scale", TRACKER_TYPE_LABELS["scale"]);
+      dropdown.addOption("plusminus", TRACKER_TYPE_LABELS["plusminus"]);
+      dropdown.addOption("text", TRACKER_TYPE_LABELS["text"]);
       dropdown.setValue(currentType);
       dropdown.selectEl.disabled = true;
     });
@@ -16095,39 +16107,39 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
     if (typeDropdown) {
       typeDropdown.innerHTML = "";
       const habitsGroup = document.createElement("optgroup");
-      habitsGroup.label = "\u041F\u0440\u0438\u0432\u044B\u0447\u043A\u0438";
+      habitsGroup.label = MODAL_LABELS.HABITS_GROUP;
       const goodHabitOption = document.createElement("option");
       goodHabitOption.value = "good-habit";
-      goodHabitOption.textContent = "\u0425\u043E\u0440\u043E\u0448\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      goodHabitOption.textContent = TRACKER_TYPE_LABELS["good-habit"];
       habitsGroup.appendChild(goodHabitOption);
       const badHabitOption = document.createElement("option");
       badHabitOption.value = "bad-habit";
-      badHabitOption.textContent = "\u041F\u043B\u043E\u0445\u0430\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430";
+      badHabitOption.textContent = TRACKER_TYPE_LABELS["bad-habit"];
       habitsGroup.appendChild(badHabitOption);
       typeDropdown.appendChild(habitsGroup);
       const metricsGroup = document.createElement("optgroup");
-      metricsGroup.label = "\u041C\u0435\u0442\u0440\u0438\u043A\u0438";
+      metricsGroup.label = MODAL_LABELS.METRICS_GROUP;
       const numberOption = document.createElement("option");
       numberOption.value = "number";
-      numberOption.textContent = "\u0427\u0438\u0441\u043B\u043E";
+      numberOption.textContent = TRACKER_TYPE_LABELS["number"];
       metricsGroup.appendChild(numberOption);
       const scaleOption = document.createElement("option");
       scaleOption.value = "scale";
-      scaleOption.textContent = "\u0428\u043A\u0430\u043B\u0430";
+      scaleOption.textContent = TRACKER_TYPE_LABELS["scale"];
       metricsGroup.appendChild(scaleOption);
       const plusminusOption = document.createElement("option");
       plusminusOption.value = "plusminus";
-      plusminusOption.textContent = "\u0421\u0447\u0451\u0442\u0447\u0438\u043A (+/-)";
+      plusminusOption.textContent = TRACKER_TYPE_LABELS["plusminus"];
       metricsGroup.appendChild(plusminusOption);
       const textOption = document.createElement("option");
       textOption.value = "text";
-      textOption.textContent = "\u0422\u0435\u043A\u0441\u0442";
+      textOption.textContent = TRACKER_TYPE_LABELS["text"];
       metricsGroup.appendChild(textOption);
       typeDropdown.appendChild(metricsGroup);
       typeDropdown.value = currentType;
       typeDropdown.disabled = true;
     }
-    const startDateSetting = new import_obsidian7.Setting(contentEl).setName("\u041D\u0430\u0447\u0430\u043B\u043E \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u044F").addText((text) => {
+    const startDateSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.START_DATE).addText((text) => {
       text.setValue(currentStartDate);
       text.inputEl.type = "date";
       text.inputEl.style.width = "100%";
@@ -16169,22 +16181,22 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
           }
           if (datesToDeleteCount > 0) {
             const formattedDate = DateService.format(newStartDateObj, this.plugin.settings.dateFormat);
-            const recordsText = datesToDeleteCount === 1 ? "\u0437\u0430\u043F\u0438\u0441\u044C" : datesToDeleteCount < 5 ? "\u0437\u0430\u043F\u0438\u0441\u0438" : "\u0437\u0430\u043F\u0438\u0441\u0435\u0439";
-            warningEl.textContent = `\u0412\u043D\u0438\u043C\u0430\u043D\u0438\u0435: \u043D\u0430\u0439\u0434\u0435\u043D\u043E ${datesToDeleteCount} ${recordsText} \u0414\u041E \u0434\u0430\u0442\u044B ${formattedDate}, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0431\u0443\u0434\u0443\u0442 \u0443\u0434\u0430\u043B\u0435\u043D\u044B \u043F\u0440\u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0438.`;
+            const recordsText = datesToDeleteCount === 1 ? MODAL_LABELS.RECORD_SINGULAR : MODAL_LABELS.RECORDS_PLURAL;
+            warningEl.textContent = MODAL_LABELS.WARNING_RECORDS_BEFORE_DATE.replace("{count}", String(datesToDeleteCount)).replace("{records}", recordsText).replace("{date}", formattedDate);
             warningEl.style.display = "block";
           } else {
             warningEl.style.display = "none";
           }
         } catch (error) {
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0435 \u0434\u0430\u043D\u043D\u044B\u0445", error);
+          console.error("Tracker: error checking data", error);
           warningEl.style.display = "none";
         }
       });
     }
-    const parametersHeader = contentEl.createEl("h3", { text: "\u041F\u0430\u0440\u0430\u043C\u0435\u0442\u0440\u044B" });
-    const unitSetting = new import_obsidian7.Setting(contentEl).setName("\u0415\u0434\u0438\u043D\u0438\u0446\u0430 \u0438\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F").addText((text) => {
-      const unitValue = currentType === "text" ? "\u0441\u043B\u043E\u0432" : currentUnit;
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442");
+    const parametersHeader = contentEl.createEl("h3", { text: MODAL_LABELS.PARAMETERS });
+    const unitSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.UNIT).addText((text) => {
+      const unitValue = currentType === "text" ? DEFAULTS.TEXT_UNIT : currentUnit;
+      text.setPlaceholder(PLACEHOLDERS.UNIT);
       text.setValue(unitValue);
       text.inputEl.style.width = "100%";
       if (currentType === "text") {
@@ -16192,39 +16204,39 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
       }
     });
     const unitInput = unitSetting.controlEl.querySelector("input");
-    const plusminusStepSetting = new import_obsidian7.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
+    const plusminusStepSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.STEP).addText((text) => {
+      text.setPlaceholder(String(DEFAULTS.STEP)).setValue(currentStep || String(DEFAULTS.STEP)).inputEl.type = "number";
       text.inputEl.step = "any";
       text.inputEl.style.width = "100%";
     });
-    const minValueSetting = new import_obsidian7.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u043E\u0442"').addText((text) => {
-      text.setPlaceholder("0").setValue(currentMinValue || "0").inputEl.type = "number";
+    const minValueSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.VALUE_FROM).addText((text) => {
+      text.setPlaceholder(String(DEFAULTS.MIN_VALUE)).setValue(currentMinValue || String(DEFAULTS.MIN_VALUE)).inputEl.type = "number";
       text.inputEl.style.width = "100%";
     });
-    const maxValueSetting = new import_obsidian7.Setting(contentEl).setName('\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 "\u0434\u043E"').addText((text) => {
-      text.setPlaceholder("10").setValue(currentMaxValue || "10").inputEl.type = "number";
+    const maxValueSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.VALUE_TO).addText((text) => {
+      text.setPlaceholder(String(DEFAULTS.MAX_VALUE)).setValue(currentMaxValue || String(DEFAULTS.MAX_VALUE)).inputEl.type = "number";
       text.inputEl.style.width = "100%";
     });
-    const stepSetting = new import_obsidian7.Setting(contentEl).setName("\u0428\u0430\u0433").addText((text) => {
-      text.setPlaceholder("1").setValue(currentStep || "1").inputEl.type = "number";
+    const stepSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.STEP).addText((text) => {
+      text.setPlaceholder(String(DEFAULTS.STEP)).setValue(currentStep || String(DEFAULTS.STEP)).inputEl.type = "number";
       text.inputEl.step = "any";
       text.inputEl.style.width = "100%";
     });
-    const limitsHeader = contentEl.createEl("h3", { text: "\u041B\u0438\u043C\u0438\u0442\u044B \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0441\u0442\u0438" });
+    const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
-      text: "\u041E\u043F\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E \u0432\u044B \u043C\u043E\u0436\u0435\u0442\u0435 \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043C\u0435\u0442\u0440\u0438\u043A\u0443 \u043B\u0438\u043C\u0438\u0442\u0438\u0440\u0443\u044E\u0449\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0442\u044C \u0436\u0435\u043B\u0430\u0435\u043C\u044B\u0435 \u043F\u043E\u0440\u043E\u0433\u043E\u0432\u044B\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F, \u043E\u043D\u0438 \u0431\u0443\u0434\u0443\u0442 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u044B \u043D\u0430 \u0433\u0440\u0430\u0444\u0438\u043A\u0435. \u0415\u0441\u043B\u0438 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043D\u0435 \u0431\u0443\u0434\u0435\u0442 \u043F\u043E\u043F\u0430\u0434\u0430\u0442\u044C \u0432 \u0437\u0430\u0434\u0430\u043D\u043D\u044B\u0439 \u0434\u0438\u0430\u043F\u0430\u0437\u043E\u043D \u2014 \u0432\u044B \u0443\u0432\u0438\u0434\u0438\u0442\u0435 \u0446\u0432\u0435\u0442\u043E\u0432\u043E\u0439 \u043E\u0442\u043A\u043B\u0438\u043A.",
+      text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description"
     });
     limitsDescription.style.fontSize = "0.9em";
     limitsDescription.style.color = "var(--text-muted, #999999)";
     limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1\u0435\u043C";
-    const maxLimitSetting = new import_obsidian7.Setting(contentEl).setName("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMaxLimit).inputEl.type = "number";
+    limitsDescription.style.marginBottom = "1em";
+    const maxLimitSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.UPPER_LIMIT).addText((text) => {
+      text.setPlaceholder(PLACEHOLDERS.LIMIT_NONE).setValue(currentMaxLimit).inputEl.type = "number";
       text.inputEl.style.width = "100%";
     });
-    const minLimitSetting = new import_obsidian7.Setting(contentEl).setName("\u041D\u0438\u0436\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430").addText((text) => {
-      text.setPlaceholder("\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E - \u043D\u0435\u0442").setValue(currentMinLimit).inputEl.type = "number";
+    const minLimitSetting = new import_obsidian7.Setting(contentEl).setName(MODAL_LABELS.LOWER_LIMIT).addText((text) => {
+      text.setPlaceholder(PLACEHOLDERS.LIMIT_NONE).setValue(currentMinLimit).inputEl.type = "number";
       text.inputEl.style.width = "100%";
     });
     const updateFieldsVisibility = () => {
@@ -16237,7 +16249,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
         unitSetting.settingEl.style.display = "";
         if (isText) {
           if (unitInput) {
-            unitInput.value = "\u0441\u043B\u043E\u0432";
+            unitInput.value = DEFAULTS.TEXT_UNIT;
             unitInput.disabled = true;
           }
         } else if (unitInput) {
@@ -16294,7 +16306,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         new import_obsidian7.Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
-        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0443\u0434\u0430\u043B\u0435\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+        console.error("Tracker: error deleting tracker", error);
       }
     });
     const saveBtn = buttonsWrapper.createEl("button", {
@@ -16305,7 +16317,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
       const nameInput = nameSetting.controlEl.querySelector("input");
       const name = nameInput.value.trim();
       if (!name) {
-        new import_obsidian7.Notice("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435");
+        new import_obsidian7.Notice(ERROR_MESSAGES.ENTER_NAME);
         return;
       }
       const type = typeDropdown ? typeDropdown.value : currentType;
@@ -16320,13 +16332,13 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
         const minLimitNum = parseFloat(minLimit);
         const maxLimitNum = parseFloat(maxLimit);
         if (!isNaN(minLimitNum) && !isNaN(maxLimitNum) && maxLimitNum <= minLimitNum) {
-          new import_obsidian7.Notice("\u0412\u0435\u0440\u0445\u043D\u044F\u044F \u0433\u0440\u0430\u043D\u0438\u0446\u0430 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0438\u0436\u043D\u0435\u0439 \u0433\u0440\u0430\u043D\u0438\u0446\u044B");
+          new import_obsidian7.Notice(MODAL_LABELS.UPPER_LIMIT_MUST_BE_GREATER);
           return;
         }
       }
       const unitInputValue = unitSetting.controlEl.querySelector("input");
       const unitRaw = unitInputValue?.value.trim() || "";
-      const unit = type === "text" ? "\u0441\u043B\u043E\u0432" : unitRaw;
+      const unit = type === "text" ? DEFAULTS.TEXT_UNIT : unitRaw;
       const isMetric = ["number", "plusminus", "text", "scale"].includes(type);
       const startDateInput2 = startDateSetting.controlEl.querySelector("input");
       const startDate = startDateInput2?.value || currentStartDate;
@@ -16411,7 +16423,7 @@ ${body}` : ""}`;
               }
             } catch (renameError) {
               const errorMsg = renameError instanceof Error ? renameError.message : String(renameError);
-              console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u043D\u0438\u0438 \u0444\u0430\u0439\u043B\u0430", {
+              console.error("Tracker: error renaming file", {
                 oldPath,
                 newFileName: name.replace(/[<>:"/\\|?*]/g, "_") + ".md",
                 error: errorMsg,
@@ -16419,7 +16431,7 @@ ${body}` : ""}`;
               });
             }
           }
-          new import_obsidian7.Notice(`\u0422\u0440\u0435\u043A\u0435\u0440 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D: ${name}`);
+          new import_obsidian7.Notice(`${SUCCESS_MESSAGES.TRACKER_UPDATED}: ${name}`);
           this.plugin.invalidateCacheForFile(updatedFile);
           if (oldPath !== updatedFile.path) {
             for (const block of Array.from(this.plugin.activeBlocks)) {
@@ -16435,13 +16447,13 @@ ${body}` : ""}`;
           this.close();
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          new import_obsidian7.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
-          console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+          new import_obsidian7.Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
+          console.error("Tracker: error updating tracker", error);
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        new import_obsidian7.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430: ${errorMsg}`);
-        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F \u0442\u0440\u0435\u043A\u0435\u0440\u0430", error);
+        new import_obsidian7.Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
+        console.error("Tracker: error updating tracker", error);
       }
     });
   }
@@ -16462,11 +16474,11 @@ var FilePickerModal = class extends import_obsidian8.Modal {
     const { contentEl } = this;
     contentEl.empty();
     if (this.files.length === 0) {
-      new import_obsidian8.Notice("\u041D\u0435\u0442 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432");
+      new import_obsidian8.Notice(MODAL_LABELS.NO_TRACKERS_FOUND);
       this.close();
       return;
     }
-    contentEl.createEl("h3", { text: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0440\u0435\u043A\u0435\u0440" });
+    contentEl.createEl("h3", { text: MODAL_LABELS.SELECT_TRACKER });
     this.files.slice(0, 200).forEach((file) => {
       const btn = contentEl.createEl("button", { text: file.path });
       btn.onclick = () => {
@@ -16482,7 +16494,7 @@ var FilePickerModal = class extends import_obsidian8.Modal {
 };
 
 // src/styles/tracker.css
-var tracker_default = '.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-habit:hover,\r\n.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-tracker:hover { box-shadow: none; cursor: default; }\r\n.tracker-notes { margin: 1em 0; padding: 1em; border-radius: 10px; background: var(--background-secondary); border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__header { display: flex; flex-direction: column; gap: 0.75em; margin: 1em 0; margin-bottom: 0.5em; box-sizing: border-box; align-items: center; }\r\n      .tracker-notes__header-title { display: flex; align-items: center; gap: 0.5em; font-weight: 700; font-size: 1.15em; color: var(--text-normal); }\r\n      .tracker-notes__header-icon { font-size: 1.3em; }\r\n      .tracker-notes__header-label { }\r\n      .tracker-notes__date-picker-container { width: 100%; display: flex; justify-content: center; }\r\n      .tracker-notes__trackers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1em; }\r\n      .tracker-notes__tracker { padding: 1em; border-radius: 8px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__tracker-header { margin-bottom: 0.75em; padding-bottom: 0.5em; border-bottom: 1px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__tracker-title { font-weight: 600; font-size: 1em; color: var(--text-normal); margin: 0; word-wrap: break-word; overflow-wrap: break-word; text-decoration: none !important; flex: 1; }\r\n      .tracker-notes__settings-btn { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; flex-grow: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__settings-btn:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__settings-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__order-btns { display: flex; gap: 0.25em; align-items: center; flex-shrink: 0; }\r\n      .tracker-notes__order-btn-up, .tracker-notes__order-btn-down { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__order-btn-up:hover, .tracker-notes__order-btn-down:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__order-btn-up:active, .tracker-notes__order-btn-down:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__order-btn-up:disabled, .tracker-notes__order-btn-down:disabled { opacity: 0.3; cursor: not-allowed; }\r\n      .tracker-notes__order-btn-up:disabled:hover, .tracker-notes__order-btn-down:disabled:hover { background: var(--interactive-normal); border-color: var(--background-modifier-border); transform: none; box-shadow: none; }\r\n      .tracker-notes__row { display: flex; align-items: center; gap: 0.6em; padding: 0.4em 0; flex-wrap: wrap; }\r\n      .tracker-notes__value { min-width: 2.5em; text-align: center; font-weight: 600; font-size: 1em; color: var(--text-normal); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes__value.updated { animation: pulse 0.3s ease; }\r\n      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }\r\n      .tracker-notes input { outline: none !important; }\r\n      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; }\r\n      .tracker-notes input[type="number"]:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes input[type="range"], .tracker-notes__slider { flex: 1 1 auto; min-width: 0; height: 6px; border-radius: 3px; background: var(--background-modifier-border); outline: none; -webkit-appearance: none; cursor: pointer; }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb, .tracker-notes__slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb:hover, .tracker-notes__slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb, .tracker-notes__slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; border: none; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb:hover, .tracker-notes__slider::-moz-range-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes__progress-bar-wrapper { display: inline; white-space: normal; width: 100%; }\r\n      .tracker-notes__progress-bar-input { height: var(--input-height, 2.5em); width: 100%; border-radius: var(--input-radius, 4px); border: var(--border-width, 1px) solid var(--background-modifier-border); position: relative; cursor: col-resize; background: var(--background-modifier-form-field, var(--background-secondary-alt)); user-select: none; box-sizing: border-box; outline: none; overflow: hidden; }\r\n      .tracker-notes__progress-bar-input:hover { border-color: var(--background-modifier-border-hover, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-input:focus-visible { box-shadow: 0 0 0 3px var(--background-modifier-border-focus, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-progress { height: 100%; background: var(--color-accent, var(--interactive-accent)); border-radius: var(--input-radius, 4px); pointer-events: none; position: absolute; left: 0; top: 0; z-index: 3; }\r\n      .tracker-notes__progress-bar-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--font-ui-small, 0.9em); font-weight: 600; color: var(--text-normal); pointer-events: none; z-index: 4; white-space: nowrap; }\r\n      .tracker-notes__progress-bar-label-left { position: absolute; top: 50%; transform: translate(0, -50%); left: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes__progress-bar-label-right { position: absolute; top: 50%; transform: translate(0, -50%); right: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes button { padding: 0.4em 0.8em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; }\r\n      .tracker-notes button:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes button:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__text-input { width: 100%; max-width: 100%; padding: 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--background-primary); color: var(--text-normal); font-family: inherit; font-size: 0.9em; transition: border-color 0.2s ease; resize: vertical; min-height: 60px; box-sizing: border-box; }\r\n      .tracker-notes__text-input:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes__stats { margin-top: 0.75em; margin-bottom: 0.5em; padding-top: 0.75em; padding-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); font-size: 0.85em; color: var(--text-muted); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__stats > div { margin: 0.3em 0; }\r\n      .tracker-notes__stats-section { margin: 0.5em 0; padding: 0.4em 0; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__stats-section:last-child { border-bottom: none; }\r\n      .tracker-notes__stats-item { margin: 0.25em 0; padding: 0.2em 0; }\r\n      .tracker-notes__stats-streak { font-size: 1em; }\r\n      .tracker-notes__calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3em; margin-top: 0.75em; max-width: 100%; }\r\n      .tracker-notes__calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.8em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: default; min-width: 0; }\r\n      .tracker-notes__calendar-day.has-value { background: var(--interactive-accent); color: var(--text-on-accent); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }\r\n      .tracker-notes__calendar-day:hover { transform: scale(1.1); }\r\n      .tracker-notes__chart { margin-top: 0.75em; margin-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); padding-top: 0.75em; width: 100%; max-width: 100%; position: relative; height: 200px; box-sizing: border-box; overflow: hidden; }\r\n      .tracker-notes__chart canvas { max-width: 100% !important; height: 180px !important; }\r\n      .tracker-notes__date-picker { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; justify-content: center; }\r\n      .tracker-notes__loading { display: none; align-items: center; gap: 0.4em; font-size: 0.85em; color: var(--text-muted); margin-top: 0.3em; }\r\n      .tracker-notes__loading.is-active { display: flex; }\r\n      .tracker-notes__loading-dot { width: 0.8em; height: 0.8em; border-radius: 50%; border: 2px solid var(--interactive-accent); border-top-color: transparent; animation: tracker-loading-spin 0.8s linear infinite; }\r\n      @keyframes tracker-loading-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }\r\n      .tracker-notes__date-nav-btn { padding: 0.5em 0.75em; font-size: 1em; min-width: 2.5em; height: 2.5em; border: none; border-radius: var(--input-radius, 5px); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; transition: all 0.2s ease; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\r\n      .tracker-notes__date-nav-btn:hover { background: var(--interactive-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__date-nav-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__date-input { padding: 0.5em 0.75em; border: none !important; border-radius: var(--input-radius, 5px); background: var(--background-primary); color: var(--text-normal); font-size: 1em !important; transition: all 0.2s ease; height: 2.5em; width: 160px; box-sizing: border-box; font-weight: 600; text-align: center; flex-shrink: 0; }\r\n      .tracker-notes__date-input.is-updating { opacity: 0.65; cursor: progress; }\r\n      .tracker-notes__date-input:focus { outline: none !important; box-shadow: none !important; }\r\n      .tracker-notes__date-btn { padding: 0.5em 1em; font-size: 0.9em; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--interactive-accent); border-radius: var(--input-radius, 5px); background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); cursor: pointer; transition: all 0.2s ease; font-weight: 600; height: 2.5em; }\r\n      .tracker-notes__date-btn:hover { background: var(--interactive-accent-hover, var(--interactive-accent)); border-color: var(--interactive-accent-hover, var(--interactive-accent)); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }\r\n      .tracker-notes__date-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__error { color: var(--text-on-accent, #ffffff); padding: 0.75em 1em; background: var(--text-error, #d32f2f); border: 1px solid var(--text-error, #d32f2f); border-radius: 5px; margin: 0.5em 0; font-size: 0.9em; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__success { color: var(--text-success, var(--text-normal)); padding: 0.4em 0.6em; background: var(--background-modifier-success, var(--background-modifier-border)); border-radius: 5px; margin: 0.4em 0; font-size: 0.85em; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__heatmap { display: flex; flex-direction: row-reverse; gap: 0.3em; overflow-x: auto; padding: 0.5em 0; margin-top: 0.5em; min-height: 2.5em; max-width: 100%; box-sizing: border-box; touch-action: pan-x pan-y; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar { height: 6px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-track { background: var(--background-modifier-border); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }\r\n      .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }\r\n      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r\n      .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }\r\n      .tracker-notes__heatmap-day.start-day { \r\n        flex-direction: column;\r\n        justify-content: center;\r\n        align-items: center;\r\n        line-height: 1;\r\n      }\r\n      .tracker-notes__heatmap-day.start-day::after {\r\n        content: "START";\r\n        font-size: 0.5em;\r\n        line-height: 1;\r\n        margin-top: 0.1em;\r\n        opacity: 0.7;\r\n        font-weight: 600;\r\n      }\r\n      .tracker-notes__calendar-day.start-day { position: relative; box-shadow: 0 0 0 2px var(--text-accent, var(--interactive-accent)) !important; opacity: 0.9; }\r\n      .tracker-notes__stats > div { transition: opacity 0.2s ease; }\r\n      .tracker-notes__calendar-day { transition: background-color 0.2s ease, color 0.2s ease; }\r\n      .tracker-notes__heatmap { transition: opacity 0.15s ease; }\r\n      .tracker-notes__chart { transition: opacity 0.15s ease; }\r\n      .tracker-notes__hierarchy { display: flex; flex-direction: column; gap: 1.5em; }\r\n      .tracker-notes__folder-node { display: flex; flex-direction: column; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 1.5em; }\r\n      .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 1em; margin-bottom: 1.25em; }\r\n      .tracker-notes__folder-node.level-2 { padding-left: 1em; margin-top: 0.75em; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-3 { padding-left: 0.5em; margin-top: 0.5em; margin-bottom: 0.75em; }\r\n      .tracker-notes__folder-header { font-weight: 700; color: var(--text-normal); margin-bottom: 0.75em; margin-top: 0.5em; padding-bottom: 0.5em; border-bottom: 2px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__folder-header.level-0 { font-size: 1.4em; margin-top: 0; }\r\n      .tracker-notes__folder-header.level-1 { font-size: 1.35em; margin-top: 0.25em; }\r\n      .tracker-notes__folder-header.level-2 { font-size: 1.15em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-3 { font-size: 1em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      \r\n      /* \u041C\u0435\u0434\u0438\u0430-\u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0434\u043B\u044F \u043C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0445 \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432 */\r\n      @media (max-width: 768px) {\r\n        .tracker-notes { padding: 0.5em; margin: 0.5em 0; border-radius: 8px; }\r\n        .tracker-notes__header { margin: 0.5em 0; margin-bottom: 0.25em; gap: 0.5em; }\r\n        .tracker-notes__header-title { font-size: 1em; }\r\n        .tracker-notes__trackers { grid-template-columns: 1fr !important; gap: 0.5em; }\r\n        .tracker-notes__tracker { padding: 0.5em; border-radius: 6px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.5em; padding-bottom: 0.4em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.9em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker-container { padding: 0; }\r\n        .tracker-notes__date-picker { gap: 0.3em; flex-wrap: wrap; }\r\n        .tracker-notes__date-nav-btn { padding: 0.4em 0.6em; font-size: 0.9em; min-width: 2em; height: 2.2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; flex-shrink: 0; }\r\n        .tracker-notes__date-input { padding: 0.4em 0.6em; font-size: 0.9em !important; height: 2.2em; min-width: 140px; max-width: 100%; flex-shrink: 0; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.4em; padding: 0.3em 0; }\r\n        .tracker-notes__value { font-size: 0.9em; min-width: 2em; }\r\n        .tracker-notes input[type="number"] { width: 100%; padding: 0.3em 0.5em; font-size: 0.85em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.3em 0.6em; font-size: 0.85em; width: 100%; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__text-input { padding: 0.4em; font-size: 0.85em; min-height: 50px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; padding-bottom: 0.4em; font-size: 0.8em; }\r\n        .tracker-notes__heatmap { gap: 0.2em; padding: 0.4em 0; margin-top: 0.4em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 4px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.5em; max-width: 2.8em; font-size: 0.8em; }\r\n        .tracker-notes__calendar { gap: 0.15em; margin-top: 0.5em; }\r\n        .tracker-notes__calendar-day { font-size: 0.65em; }\r\n        .tracker-notes__chart { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; height: 160px; }\r\n        .tracker-notes__chart canvas { height: 140px !important; }\r\n        .tracker-notes__hierarchy { gap: 1em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 1em; }\r\n        .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 0.75em; margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-2 { padding-left: 0; margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-3 { padding-left: 0; margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.5em; margin-top: 0.25em; padding-bottom: 0.4em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.15em; margin-top: 0; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1.1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.95em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.9em; }\r\n      }\r\n      \r\n      @media (max-width: 480px) {\r\n        .tracker-notes { padding: 0.4em; margin: 0.4em 0; border-radius: 6px; }\r\n        .tracker-notes__header { margin: 0.4em 0; margin-bottom: 0.2em; gap: 0.4em; }\r\n        .tracker-notes__header-title { font-size: 0.95em; }\r\n        .tracker-notes__trackers { gap: 0.4em; }\r\n        .tracker-notes__tracker { padding: 0.4em; border-radius: 5px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.4em; padding-bottom: 0.3em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.85em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker { gap: 0.25em; }\r\n        .tracker-notes__date-nav-btn { padding: 0.35em 0.5em; font-size: 0.85em; min-width: 1.8em; height: 2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; flex-shrink: 0; }\r\n        .tracker-notes__date-input { padding: 0.35em 0.5em; font-size: 0.85em !important; height: 2em; min-width: 120px; max-width: 100%; flex-shrink: 0; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.3em; padding: 0.25em 0; }\r\n        .tracker-notes__value { font-size: 0.85em; min-width: 1.8em; }\r\n        .tracker-notes input[type="number"] { padding: 0.25em 0.4em; font-size: 0.8em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.25em 0.5em; font-size: 0.8em; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__text-input { padding: 0.35em; font-size: 0.8em; min-height: 45px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; padding-bottom: 0.3em; font-size: 0.75em; }\r\n        .tracker-notes__heatmap { gap: 0.15em; padding: 0.3em 0; margin-top: 0.3em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 3px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.8em; max-width: 3em; font-size: 0.85em; }\r\n        .tracker-notes__heatmap-day.start-day::after { font-size: 0.4em; }\r\n        .tracker-notes__calendar { gap: 0.1em; margin-top: 0.4em; }\r\n        .tracker-notes__calendar-day { font-size: 0.6em; }\r\n        .tracker-notes__chart { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; height: 140px; }\r\n        .tracker-notes__chart canvas { height: 120px !important; }\r\n        .tracker-notes__hierarchy { gap: 0.75em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-1 { margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-2 { margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-node.level-3 { margin-top: 0.3em; margin-bottom: 0.3em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.4em; margin-top: 0.2em; padding-bottom: 0.3em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.05em; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.9em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.85em; }\r\n      }\r\n      \r\n      /* Modal buttons (Delete and Save) */\r\n      .tracker-modal-buttons {\r\n        display: flex;\r\n        justify-content: space-between;\r\n        margin-top: 1.5em;\r\n      }\r\n      \r\n      .tracker-modal-buttons button {\r\n        padding: 0.5em 1em;\r\n        border-radius: 5px;\r\n        cursor: pointer;\r\n        border: 1px solid var(--background-modifier-border);\r\n        transition: all 0.2s ease;\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-warning {\r\n        background: var(--interactive-normal);\r\n        color: var(--text-normal);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-warning:hover {\r\n        background: var(--text-error);\r\n        border-color: var(--text-error);\r\n        color: var(--text-on-accent);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-cta {\r\n        background: var(--interactive-accent);\r\n        color: var(--text-on-accent);\r\n        border-color: var(--interactive-accent);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-cta:hover {\r\n        background: var(--interactive-accent-hover);\r\n        border-color: var(--interactive-accent-hover);\r\n      }\r\n      \r\n      /* \u0421\u043A\u0440\u044B\u0442\u0438\u0435 \u043A\u043D\u043E\u043F\u043E\u043A \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0430 */\r\n      .markdown-preview-view .tracker-notes__settings-btn,\r\n      .markdown-preview-view .tracker-notes__order-btns {\r\n        display: none !important;\r\n      }\r\n      \r\n      /* \u042F\u0432\u043D\u043E\u0435 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u0432 \u0440\u0435\u0436\u0438\u043C\u0435 \u0440\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F */\r\n      .markdown-source-view .tracker-notes__settings-btn,\r\n      .markdown-source-view .tracker-notes__order-btns {\r\n        display: flex;\r\n      }\r\n      \r\n      /* Limit indicators - only error state */\r\n      .tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Progress bar with limits */\r\n      .tracker-notes__progress-bar-progress.tracker-notes__limit-error {\r\n        background: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Number input with limits */\r\n      .tracker-notes input[type="number"].tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Text input with limits */\r\n      .tracker-notes__text-input.tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Value display with limits (for PLUSMINUS) */\r\n      .tracker-notes__value.tracker-notes__limit-error {\r\n        color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Iconize integration styles */\r\n      .tracker-notes__folder-header .iconize-icon,\r\n      .tracker-notes__tracker-title .iconize-icon {\r\n        display: inline-block;\r\n        vertical-align: middle;\r\n        line-height: 1;\r\n      }\r\n      \r\n      .tracker-notes__folder-header .lucide-icon,\r\n      .tracker-notes__tracker-title .lucide-icon {\r\n        /* Iconize will handle Lucide icon rendering via its own CSS */\r\n        /* This is a fallback for when Iconize CSS is not loaded */\r\n        font-size: 0.9em;\r\n        opacity: 0.8;\r\n      }';
+var tracker_default = '.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-habit:hover,\r\n.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-tracker:hover { box-shadow: none; cursor: default; }\r\n.tracker-notes { margin: 1em 0; padding: 1em; border-radius: 10px; background: var(--background-secondary); border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__header { display: flex; flex-direction: column; gap: 0.75em; margin: 1em 0; margin-bottom: 0.5em; box-sizing: border-box; align-items: center; }\r\n      .tracker-notes__header-title { display: flex; align-items: center; gap: 0.5em; font-weight: 700; font-size: 1.15em; color: var(--text-normal); }\r\n      .tracker-notes__header-icon { font-size: 1.3em; }\r\n      .tracker-notes__header-label { }\r\n      .tracker-notes__date-picker-container { width: 100%; display: flex; justify-content: center; }\r\n      .tracker-notes__trackers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1em; }\r\n      .tracker-notes__tracker { padding: 1em; border-radius: 8px; background: var(--background-primary); border: 1px solid var(--background-modifier-border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease; box-sizing: border-box; max-width: 100%; overflow-x: hidden; }\r\n      .tracker-notes__tracker-header { margin-bottom: 0.75em; padding-bottom: 0.5em; border-bottom: 1px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__tracker-title { font-weight: 600; font-size: 1em; color: var(--text-normal); margin: 0; word-wrap: break-word; overflow-wrap: break-word; text-decoration: none !important; flex: 1; }\r\n      .tracker-notes__settings-btn { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; flex-grow: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__settings-btn:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__settings-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__order-btns { display: flex; gap: 0.25em; align-items: center; flex-shrink: 0; }\r\n      .tracker-notes__order-btn-up, .tracker-notes__order-btn-down { padding: 0em 0.4em 0.1em 0.4em !important; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; width: auto; min-width: 2em; max-width: 2.5em; height: 2em; display: flex; align-items: center; justify-content: center; opacity: 0.7; }\r\n      .tracker-notes__order-btn-up:hover, .tracker-notes__order-btn-down:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 1; }\r\n      .tracker-notes__order-btn-up:active, .tracker-notes__order-btn-down:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__order-btn-up:disabled, .tracker-notes__order-btn-down:disabled { opacity: 0.3; cursor: not-allowed; }\r\n      .tracker-notes__order-btn-up:disabled:hover, .tracker-notes__order-btn-down:disabled:hover { background: var(--interactive-normal); border-color: var(--background-modifier-border); transform: none; box-shadow: none; }\r\n      .tracker-notes__row { display: flex; align-items: center; gap: 0.6em; padding: 0.4em 0; flex-wrap: wrap; }\r\n      .tracker-notes__value { min-width: 2.5em; text-align: center; font-weight: 600; font-size: 1em; color: var(--text-normal); transition: transform 0.2s ease; flex-shrink: 0; }\r\n      .tracker-notes__value.updated { animation: pulse 0.3s ease; }\r\n      @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }\r\n      .tracker-notes input { outline: none !important; }\r\n      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; }\r\n      .tracker-notes input[type="number"]:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes input[type="range"], .tracker-notes__slider { flex: 1 1 auto; min-width: 0; height: 6px; border-radius: 3px; background: var(--background-modifier-border); outline: none; -webkit-appearance: none; cursor: pointer; }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb, .tracker-notes__slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-webkit-slider-thumb:hover, .tracker-notes__slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb, .tracker-notes__slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; border: none; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\r\n      .tracker-notes input[type="range"]::-moz-range-thumb:hover, .tracker-notes__slider::-moz-range-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }\r\n      .tracker-notes__progress-bar-wrapper { display: inline; white-space: normal; width: 100%; }\r\n      .tracker-notes__progress-bar-input { height: var(--input-height, 2.5em); width: 100%; border-radius: var(--input-radius, 4px); border: var(--border-width, 1px) solid var(--background-modifier-border); position: relative; cursor: col-resize; background: var(--background-modifier-form-field, var(--background-secondary-alt)); user-select: none; box-sizing: border-box; outline: none; overflow: hidden; }\r\n      .tracker-notes__progress-bar-input:hover { border-color: var(--background-modifier-border-hover, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-input:focus-visible { box-shadow: 0 0 0 3px var(--background-modifier-border-focus, var(--interactive-accent)); }\r\n      .tracker-notes__progress-bar-progress { height: 100%; background: var(--color-accent, var(--interactive-accent)); border-radius: var(--input-radius, 4px); pointer-events: none; position: absolute; left: 0; top: 0; z-index: 3; }\r\n      .tracker-notes__progress-bar-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--font-ui-small, 0.9em); font-weight: 600; color: var(--text-normal); pointer-events: none; z-index: 4; white-space: nowrap; }\r\n      .tracker-notes__progress-bar-label-left { position: absolute; top: 50%; transform: translate(0, -50%); left: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes__progress-bar-label-right { position: absolute; top: 50%; transform: translate(0, -50%); right: var(--size-4-2, 0.5em); font-size: var(--font-ui-small, 0.85em); color: var(--color-accent, var(--interactive-accent)); font-weight: 600; pointer-events: none; z-index: 1; }\r\n      .tracker-notes button { padding: 0.4em 0.8em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; font-size: 0.9em; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0; }\r\n      .tracker-notes button:hover { background: var(--interactive-hover); border-color: var(--interactive-accent); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes button:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__text-input { width: 100%; max-width: 100%; padding: 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 5px; background: var(--background-primary); color: var(--text-normal); font-family: inherit; font-size: 0.9em; transition: border-color 0.2s ease; resize: vertical; min-height: 60px; box-sizing: border-box; }\r\n      .tracker-notes__text-input:focus { outline: none !important; border-color: var(--interactive-accent); }\r\n      .tracker-notes__stats { margin-top: 0.75em; margin-bottom: 0.5em; padding-top: 0.75em; padding-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); font-size: 0.85em; color: var(--text-muted); line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__stats > div { margin: 0.3em 0; }\r\n      .tracker-notes__stats-section { margin: 0.5em 0; padding: 0.4em 0; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__stats-section:last-child { border-bottom: none; }\r\n      .tracker-notes__stats-item { margin: 0.25em 0; padding: 0.2em 0; }\r\n      .tracker-notes__stats-streak { font-size: 1em; }\r\n      .tracker-notes__calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3em; margin-top: 0.75em; max-width: 100%; }\r\n      .tracker-notes__calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.8em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: default; min-width: 0; }\r\n      .tracker-notes__calendar-day.has-value { background: var(--interactive-accent); color: var(--text-on-accent); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }\r\n      .tracker-notes__calendar-day:hover { transform: scale(1.1); }\r\n      .tracker-notes__chart { margin-top: 0.75em; margin-bottom: 0.5em; border-top: 1px solid var(--background-modifier-border); padding-top: 0.75em; width: 100%; max-width: 100%; position: relative; height: 200px; box-sizing: border-box; overflow: hidden; }\r\n      .tracker-notes__chart canvas { max-width: 100% !important; height: 180px !important; }\r\n      .tracker-notes__date-picker { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; justify-content: center; }\r\n      .tracker-notes__loading { display: none; align-items: center; gap: 0.4em; font-size: 0.85em; color: var(--text-muted); margin-top: 0.3em; }\r\n      .tracker-notes__loading.is-active { display: flex; }\r\n      .tracker-notes__loading-dot { width: 0.8em; height: 0.8em; border-radius: 50%; border: 2px solid var(--interactive-accent); border-top-color: transparent; animation: tracker-loading-spin 0.8s linear infinite; }\r\n      @keyframes tracker-loading-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }\r\n      .tracker-notes__date-nav-btn { padding: 0.5em 0.75em; font-size: 1em; min-width: 2.5em; height: 2.5em; border: none; border-radius: var(--input-radius, 5px); background: var(--interactive-normal); color: var(--text-normal); cursor: pointer; transition: all 0.2s ease; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }\r\n      .tracker-notes__date-nav-btn:hover { background: var(--interactive-hover); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__date-nav-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__date-input { padding: 0.5em 0.75em; border: none !important; border-radius: var(--input-radius, 5px); background: var(--background-primary); color: var(--text-normal); font-size: 1em !important; transition: all 0.2s ease; height: 2.5em; width: 160px; box-sizing: border-box; font-weight: 600; text-align: center; flex-shrink: 0; }\r\n      .tracker-notes__date-input.is-updating { opacity: 0.65; cursor: progress; }\r\n      .tracker-notes__date-input:focus { outline: none !important; box-shadow: none !important; }\r\n      .tracker-notes__date-btn { padding: 0.5em 1em; font-size: 0.9em; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--interactive-accent); border-radius: var(--input-radius, 5px); background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); cursor: pointer; transition: all 0.2s ease; font-weight: 600; height: 2.5em; }\r\n      .tracker-notes__date-btn:hover { background: var(--interactive-accent-hover, var(--interactive-accent)); border-color: var(--interactive-accent-hover, var(--interactive-accent)); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }\r\n      .tracker-notes__date-btn:active { transform: scale(0.95) translateY(0); }\r\n      .tracker-notes__error { color: var(--text-on-accent, #ffffff); padding: 0.75em 1em; background: var(--text-error, #d32f2f); border: 1px solid var(--text-error, #d32f2f); border-radius: 5px; margin: 0.5em 0; font-size: 0.9em; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; line-height: 1.5; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\r\n      .tracker-notes__success { color: var(--text-success, var(--text-normal)); padding: 0.4em 0.6em; background: var(--background-modifier-success, var(--background-modifier-border)); border-radius: 5px; margin: 0.4em 0; font-size: 0.85em; word-wrap: break-word; overflow-wrap: break-word; }\r\n      .tracker-notes__heatmap { display: flex; flex-direction: row-reverse; gap: 0.3em; overflow-x: auto; padding: 0.5em 0; margin-top: 0.5em; min-height: 2.5em; max-width: 100%; box-sizing: border-box; touch-action: pan-x pan-y; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar { height: 6px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-track { background: var(--background-modifier-border); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }\r\n      .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }\r\n      .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }\r\n      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r\n      .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r\n      .tracker-notes__heatmap-day.bad-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }\r\n      .tracker-notes__heatmap-day.start-day { \r\n        flex-direction: column;\r\n        justify-content: center;\r\n        align-items: center;\r\n        line-height: 1;\r\n      }\r\n      .tracker-notes__heatmap-day.start-day::after {\r\n        content: "START";\r\n        font-size: 0.5em;\r\n        line-height: 1;\r\n        margin-top: 0.1em;\r\n        opacity: 0.7;\r\n        font-weight: 600;\r\n      }\r\n      .tracker-notes__calendar-day.start-day { position: relative; box-shadow: 0 0 0 2px var(--text-accent, var(--interactive-accent)) !important; opacity: 0.9; }\r\n      .tracker-notes__stats > div { transition: opacity 0.2s ease; }\r\n      .tracker-notes__calendar-day { transition: background-color 0.2s ease, color 0.2s ease; }\r\n      .tracker-notes__heatmap { transition: opacity 0.15s ease; }\r\n      .tracker-notes__chart { transition: opacity 0.15s ease; }\r\n      .tracker-notes__hierarchy { display: flex; flex-direction: column; gap: 1.5em; }\r\n      .tracker-notes__folder-node { display: flex; flex-direction: column; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 1.5em; }\r\n      .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 1em; margin-bottom: 1.25em; }\r\n      .tracker-notes__folder-node.level-2 { padding-left: 1em; margin-top: 0.75em; margin-bottom: 1em; }\r\n      .tracker-notes__folder-node.level-3 { padding-left: 0.5em; margin-top: 0.5em; margin-bottom: 0.75em; }\r\n      .tracker-notes__folder-header { font-weight: 700; color: var(--text-normal); margin-bottom: 0.75em; margin-top: 0.5em; padding-bottom: 0.5em; border-bottom: 2px solid var(--background-modifier-border); display: flex; align-items: center; justify-content: space-between; gap: 0.5em; }\r\n      .tracker-notes__folder-header.level-0 { font-size: 1.4em; margin-top: 0; }\r\n      .tracker-notes__folder-header.level-1 { font-size: 1.35em; margin-top: 0.25em; }\r\n      .tracker-notes__folder-header.level-2 { font-size: 1.15em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      .tracker-notes__folder-header.level-3 { font-size: 1em; margin-top: 0.25em; border-bottom: 1px solid var(--background-modifier-border); }\r\n      \r\n      /* Media queries for mobile devices */\r\n      @media (max-width: 768px) {\r\n        .tracker-notes { padding: 0.5em; margin: 0.5em 0; border-radius: 8px; }\r\n        .tracker-notes__header { margin: 0.5em 0; margin-bottom: 0.25em; gap: 0.5em; }\r\n        .tracker-notes__header-title { font-size: 1em; }\r\n        .tracker-notes__trackers { grid-template-columns: 1fr !important; gap: 0.5em; }\r\n        .tracker-notes__tracker { padding: 0.5em; border-radius: 6px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.5em; padding-bottom: 0.4em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.9em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker-container { padding: 0; }\r\n        .tracker-notes__date-picker { gap: 0.3em; flex-wrap: wrap; }\r\n        .tracker-notes__date-nav-btn { padding: 0.4em 0.6em; font-size: 0.9em; min-width: 2em; height: 2.2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; flex-shrink: 0; }\r\n        .tracker-notes__date-input { padding: 0.4em 0.6em; font-size: 0.9em !important; height: 2.2em; min-width: 140px; max-width: 100%; flex-shrink: 0; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.4em; padding: 0.3em 0; }\r\n        .tracker-notes__value { font-size: 0.9em; min-width: 2em; }\r\n        .tracker-notes input[type="number"] { width: 100%; padding: 0.3em 0.5em; font-size: 0.85em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.3em 0.6em; font-size: 0.85em; width: 100%; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__text-input { padding: 0.4em; font-size: 0.85em; min-height: 50px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; padding-bottom: 0.4em; font-size: 0.8em; }\r\n        .tracker-notes__heatmap { gap: 0.2em; padding: 0.4em 0; margin-top: 0.4em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 4px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.5em; max-width: 2.8em; font-size: 0.8em; }\r\n        .tracker-notes__calendar { gap: 0.15em; margin-top: 0.5em; }\r\n        .tracker-notes__calendar-day { font-size: 0.65em; }\r\n        .tracker-notes__chart { margin-top: 0.5em; margin-bottom: 0.4em; padding-top: 0.5em; height: 160px; }\r\n        .tracker-notes__chart canvas { height: 140px !important; }\r\n        .tracker-notes__hierarchy { gap: 1em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 1em; }\r\n        .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 0.75em; margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-2 { padding-left: 0; margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-3 { padding-left: 0; margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.5em; margin-top: 0.25em; padding-bottom: 0.4em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.15em; margin-top: 0; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1.1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.95em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.9em; }\r\n      }\r\n      \r\n      @media (max-width: 480px) {\r\n        .tracker-notes { padding: 0.4em; margin: 0.4em 0; border-radius: 6px; }\r\n        .tracker-notes__header { margin: 0.4em 0; margin-bottom: 0.2em; gap: 0.4em; }\r\n        .tracker-notes__header-title { font-size: 0.95em; }\r\n        .tracker-notes__trackers { gap: 0.4em; }\r\n        .tracker-notes__tracker { padding: 0.4em; border-radius: 5px; }\r\n        .tracker-notes__tracker-header { margin-bottom: 0.4em; padding-bottom: 0.3em; overflow: hidden; }\r\n        .tracker-notes__tracker-title { font-size: 0.85em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r\n        .tracker-notes__settings-btn { flex-shrink: 0; flex-grow: 0; width: 2em; min-width: 2em; max-width: 2em; height: 2em; padding: 0 !important; display: flex; align-items: center; justify-content: center; }\r\n        .tracker-notes__date-picker { gap: 0.25em; }\r\n        .tracker-notes__date-nav-btn { padding: 0.35em 0.5em; font-size: 0.85em; min-width: 1.8em; height: 2em; background: var(--interactive-normal) !important; border: none !important; color: var(--text-normal) !important; flex-shrink: 0; }\r\n        .tracker-notes__date-input { padding: 0.35em 0.5em; font-size: 0.85em !important; height: 2em; min-width: 120px; max-width: 100%; flex-shrink: 0; background: var(--background-primary) !important; border: none !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__row { gap: 0.3em; padding: 0.25em 0; }\r\n        .tracker-notes__value { font-size: 0.85em; min-width: 1.8em; }\r\n        .tracker-notes input[type="number"] { padding: 0.25em 0.4em; font-size: 0.8em; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes button { padding: 0.25em 0.5em; font-size: 0.8em; background: var(--interactive-normal) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__text-input { padding: 0.35em; font-size: 0.8em; min-height: 45px; background: var(--background-primary) !important; border: 1px solid var(--background-modifier-border) !important; color: var(--text-normal) !important; }\r\n        .tracker-notes__stats { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; padding-bottom: 0.3em; font-size: 0.75em; }\r\n        .tracker-notes__heatmap { gap: 0.15em; padding: 0.3em 0; margin-top: 0.3em; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar { height: 3px !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-track { background: transparent !important; border-radius: 0 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted) !important; border-radius: 2px !important; opacity: 0.5 !important; }\r\n        .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal) !important; opacity: 0.8 !important; }\r\n        .tracker-notes__heatmap-day { min-width: 2.8em; max-width: 3em; font-size: 0.85em; }\r\n        .tracker-notes__heatmap-day.start-day::after { font-size: 0.4em; }\r\n        .tracker-notes__calendar { gap: 0.1em; margin-top: 0.4em; }\r\n        .tracker-notes__calendar-day { font-size: 0.6em; }\r\n        .tracker-notes__chart { margin-top: 0.4em; margin-bottom: 0.3em; padding-top: 0.4em; height: 140px; }\r\n        .tracker-notes__chart canvas { height: 120px !important; }\r\n        .tracker-notes__hierarchy { gap: 0.75em; }\r\n        .tracker-notes__folder-node { margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-0 { margin-bottom: 0.75em; }\r\n        .tracker-notes__folder-node.level-1 { margin-top: 0.5em; margin-bottom: 0.5em; }\r\n        .tracker-notes__folder-node.level-2 { margin-top: 0.4em; margin-bottom: 0.4em; }\r\n        .tracker-notes__folder-node.level-3 { margin-top: 0.3em; margin-bottom: 0.3em; }\r\n        .tracker-notes__folder-header { margin-bottom: 0.4em; margin-top: 0.2em; padding-bottom: 0.3em; }\r\n        .tracker-notes__folder-header.level-0 { font-size: 1.05em; }\r\n        .tracker-notes__folder-header.level-1 { font-size: 1em; }\r\n        .tracker-notes__folder-header.level-2 { font-size: 0.9em; }\r\n        .tracker-notes__folder-header.level-3 { font-size: 0.85em; }\r\n      }\r\n      \r\n      /* Modal buttons (Delete and Save) */\r\n      .tracker-modal-buttons {\r\n        display: flex;\r\n        justify-content: space-between;\r\n        margin-top: 1.5em;\r\n      }\r\n      \r\n      .tracker-modal-buttons button {\r\n        padding: 0.5em 1em;\r\n        border-radius: 5px;\r\n        cursor: pointer;\r\n        border: 1px solid var(--background-modifier-border);\r\n        transition: all 0.2s ease;\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-warning {\r\n        background: var(--interactive-normal);\r\n        color: var(--text-normal);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-warning:hover {\r\n        background: var(--text-error);\r\n        border-color: var(--text-error);\r\n        color: var(--text-on-accent);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-cta {\r\n        background: var(--interactive-accent);\r\n        color: var(--text-on-accent);\r\n        border-color: var(--interactive-accent);\r\n      }\r\n      \r\n      .tracker-modal-buttons button.mod-cta:hover {\r\n        background: var(--interactive-accent-hover);\r\n        border-color: var(--interactive-accent-hover);\r\n      }\r\n      \r\n      /* Hide buttons in preview mode */\r\n      .markdown-preview-view .tracker-notes__settings-btn,\r\n      .markdown-preview-view .tracker-notes__order-btns {\r\n        display: none !important;\r\n      }\r\n      \r\n      /* Explicit display in edit mode */\r\n      .markdown-source-view .tracker-notes__settings-btn,\r\n      .markdown-source-view .tracker-notes__order-btns {\r\n        display: flex;\r\n      }\r\n      \r\n      /* Limit indicators - only error state */\r\n      .tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Progress bar with limits */\r\n      .tracker-notes__progress-bar-progress.tracker-notes__limit-error {\r\n        background: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Number input with limits */\r\n      .tracker-notes input[type="number"].tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Text input with limits */\r\n      .tracker-notes__text-input.tracker-notes__limit-error {\r\n        border-color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Value display with limits (for PLUSMINUS) */\r\n      .tracker-notes__value.tracker-notes__limit-error {\r\n        color: var(--text-error, #c00000) !important;\r\n      }\r\n      \r\n      /* Iconize integration styles */\r\n      .tracker-notes__folder-header .iconize-icon,\r\n      .tracker-notes__tracker-title .iconize-icon {\r\n        display: inline-block;\r\n        vertical-align: middle;\r\n        line-height: 1;\r\n      }\r\n      \r\n      .tracker-notes__folder-header .lucide-icon,\r\n      .tracker-notes__tracker-title .lucide-icon {\r\n        /* Iconize will handle Lucide icon rendering via its own CSS */\r\n        /* This is a fallback for when Iconize CSS is not loaded */\r\n        font-size: 0.9em;\r\n        opacity: 0.8;\r\n      }';
 
 // src/services/heatmap-service.ts
 var HeatmapService = class {
@@ -16638,7 +16650,7 @@ var HeatmapService = class {
         const isChecked = isTrackerValueTrue(currentValue);
         const newValue = isChecked ? 0 : 1;
         entries.set(dateStr, newValue);
-        this.writeLogLine(file, dateStr, String(newValue)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+        this.writeLogLine(file, dateStr, String(newValue)).catch((err) => console.error("Tracker: write error", err));
         if (newValue === 1) {
           dayDiv.addClass("has-value");
         } else {
@@ -16755,7 +16767,7 @@ var ControlsRenderer = class {
       await this.renderScale(container, file, dateIso, opts, fileOpts, entries, updateVisualizations);
     } else {
       container.createEl("div", {
-        text: `\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u044B\u0439 mode: ${mode}. \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.TEXT}, ${TrackerType.SCALE}`
+        text: `Unknown mode: ${mode}. Available: ${TrackerType.GOOD_HABIT}, ${TrackerType.BAD_HABIT}, ${TrackerType.NUMBER}, ${TrackerType.PLUSMINUS}, ${TrackerType.TEXT}, ${TrackerType.SCALE}`
       });
     }
   }
@@ -16796,13 +16808,13 @@ var ControlsRenderer = class {
           clearTimeout(debounceTimer);
           debounceTimer = null;
         }
-        await this.writeLogLine(file, dateIso, String(val)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+        await this.writeLogLine(file, dateIso, String(val)).catch((err) => console.error("Tracker: write error", err));
       } else {
         if (debounceTimer) {
           clearTimeout(debounceTimer);
         }
         debounceTimer = setTimeout(async () => {
-          await this.writeLogLine(file, dateIso, String(val)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+          await this.writeLogLine(file, dateIso, String(val)).catch((err) => console.error("Tracker: write error", err));
           debounceTimer = null;
         }, DEBOUNCE_DELAY_MS);
       }
@@ -16864,7 +16876,7 @@ var ControlsRenderer = class {
       current = (Number.isFinite(current) ? current : 0) - step;
       updateValueAndLimits(current);
       entries.set(dateIso, current);
-      this.writeLogLine(file, dateIso, String(current)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+      this.writeLogLine(file, dateIso, String(current)).catch((err) => console.error("Tracker: write error", err));
       setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       await updateVisualizations(entries);
     };
@@ -16872,7 +16884,7 @@ var ControlsRenderer = class {
       current = (Number.isFinite(current) ? current : 0) + step;
       updateValueAndLimits(current);
       entries.set(dateIso, current);
-      this.writeLogLine(file, dateIso, String(current)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+      this.writeLogLine(file, dateIso, String(current)).catch((err) => console.error("Tracker: write error", err));
       setTimeout(() => valEl.classList.remove(CSS_CLASSES.VALUE_UPDATED), ANIMATION_DURATION_MS);
       await updateVisualizations(entries);
     };
@@ -16881,15 +16893,15 @@ var ControlsRenderer = class {
     const wrap = container.createDiv({ cls: CSS_CLASSES.ROW });
     const input = wrap.createEl("textarea", {
       cls: CSS_CLASSES.TEXT_INPUT,
-      placeholder: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0442\u0435\u043A\u0441\u0442..."
+      placeholder: PLACEHOLDERS.TEXT_INPUT
     });
     const current = await this.readValueForDate(file, dateIso);
     if (current != null && typeof current === "string") input.value = current;
-    const btn = wrap.createEl("button", { text: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C" });
+    const btn = wrap.createEl("button", { text: MODAL_LABELS.SAVE });
     btn.onclick = async () => {
       const val = input.value.trim();
       entries.set(dateIso, val);
-      this.writeLogLine(file, dateIso, val).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+      this.writeLogLine(file, dateIso, val).catch((err) => console.error("Tracker: write error", err));
       btn.style.transform = "scale(0.95)";
       setTimeout(() => btn.style.transform = "", ANIMATION_DURATION_MS);
       await updateVisualizations(entries);
@@ -16984,7 +16996,7 @@ var ControlsRenderer = class {
         progressBarInput.style.cursor = "";
         if (hasMoved) {
           entries.set(dateIso, currentValue);
-          this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+          this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: write error", err));
           await updateVisualizations(entries);
         }
       }
@@ -17001,7 +17013,7 @@ var ControlsRenderer = class {
       currentValue = newValue;
       updateProgressBar(currentValue);
       entries.set(dateIso, currentValue);
-      this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+      this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: write error", err));
       await updateVisualizations(entries);
     };
     const handleKeyDown = (e) => {
@@ -17027,7 +17039,7 @@ var ControlsRenderer = class {
     const handleKeyUp = async (e) => {
       if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
         entries.set(dateIso, currentValue);
-        this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", err));
+        this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: write error", err));
         await updateVisualizations(entries);
       }
     };
@@ -17097,15 +17109,10 @@ var TrackerRenderer = class {
     const baseName = removePrefix(file.basename);
     const unit = fileOpts.unit || "";
     const displayName = unit ? `${baseName} (${unit})` : baseName;
-    console.log("[TrackerRenderer] Rendering tracker:", file.basename, "path:", file.path);
     const titleContainer = header.createDiv({ cls: CSS_CLASSES.TRACKER_TITLE });
     const trackerIcon = this.getIconForPath?.(file.path, true);
-    console.log("[TrackerRenderer] Tracker icon result:", trackerIcon, "has renderIcon:", !!this.renderIcon);
     if (trackerIcon && this.renderIcon) {
-      console.log("[TrackerRenderer] Rendering tracker icon");
       this.renderIcon(trackerIcon, titleContainer);
-    } else {
-      console.log("[TrackerRenderer] No tracker icon found or renderIcon not available");
     }
     const titleLink = titleContainer.createEl("a", {
       text: displayName,
@@ -17120,7 +17127,7 @@ var TrackerRenderer = class {
           text: "\u2191",
           cls: CSS_CLASSES.ORDER_BTN_UP
         });
-        upButton.title = "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0432\u0432\u0435\u0440\u0445";
+        upButton.title = MODAL_LABELS.MOVE_UP;
         upButton.onclick = async (e) => {
           e.stopPropagation();
           await this.onMoveTrackerUp(file);
@@ -17131,7 +17138,7 @@ var TrackerRenderer = class {
           text: "\u2193",
           cls: CSS_CLASSES.ORDER_BTN_DOWN
         });
-        downButton.title = "\u041F\u0435\u0440\u0435\u043C\u0435\u0441\u0442\u0438\u0442\u044C \u0432\u043D\u0438\u0437";
+        downButton.title = MODAL_LABELS.MOVE_DOWN;
         downButton.onclick = async (e) => {
           e.stopPropagation();
           await this.onMoveTrackerDown(file);
@@ -17143,7 +17150,7 @@ var TrackerRenderer = class {
         text: "\u2699\uFE0F",
         cls: CSS_CLASSES.SETTINGS_BTN
       });
-      settingsButton.title = "\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u0442\u0440\u0435\u043A\u0435\u0440\u0430";
+      settingsButton.title = MODAL_LABELS.TRACKER_SETTINGS;
       settingsButton.onclick = () => {
         this.onEditTracker(file);
       };
@@ -17418,25 +17425,16 @@ var IconizeService = class {
    */
   async loadIconizeData() {
     if (this.dataLoaded) {
-      console.log("[Iconize] Data already loaded");
       return;
     }
     const configDir = this.app.vault.configDir || ".obsidian";
-    console.log("[Iconize] Config dir:", configDir);
     try {
       const relativePath = (0, import_obsidian9.normalizePath)(`${configDir}/plugins/obsidian-icon-folder/data.json`);
-      console.log("[Iconize] Relative path from vault root:", relativePath);
       try {
-        console.log("[Iconize] Attempting to read file at relative path:", relativePath);
         const content = await this.app.vault.adapter.read(relativePath);
         this.iconData = JSON.parse(content);
         this.dataLoaded = true;
-        const iconCount = Object.keys(this.iconData).filter((k) => k !== "settings").length;
-        console.log("[Iconize] Data loaded successfully, icons count:", iconCount);
-        console.log("[Iconize] Sample paths:", Object.keys(this.iconData).slice(0, 5));
       } catch (readError) {
-        console.log("[Iconize] File not found or can't be read:", readError);
-        console.log("[Iconize] Tried path:", relativePath);
         this.iconData = null;
         this.dataLoaded = true;
       }
@@ -17454,35 +17452,26 @@ var IconizeService = class {
    * @returns Icon string (emoji or Lucide icon name) or null if not found
    */
   getIcon(path, isFile = false) {
-    console.log("[Iconize] getIcon called for path:", path, "isFile:", isFile);
     if (!this.iconData) {
-      console.log("[Iconize] No icon data available");
       return null;
     }
     const normalizedPath = this.normalizePath(path);
-    console.log("[Iconize] Normalized path:", normalizedPath);
     if (this.iconData[normalizedPath]) {
-      console.log("[Iconize] Found exact match:", this.iconData[normalizedPath]);
       return this.iconData[normalizedPath];
     }
     const pathWithSlash = `/${normalizedPath}`;
     if (this.iconData[pathWithSlash]) {
-      console.log("[Iconize] Found match with leading slash:", this.iconData[pathWithSlash]);
       return this.iconData[pathWithSlash];
     }
     if (normalizedPath.endsWith(".md")) {
       const pathWithoutExt = normalizedPath.slice(0, -3);
-      console.log("[Iconize] Trying without extension:", pathWithoutExt);
       if (this.iconData[pathWithoutExt]) {
-        console.log("[Iconize] Found match without extension:", this.iconData[pathWithoutExt]);
         return this.iconData[pathWithoutExt];
       }
       if (this.iconData[`/${pathWithoutExt}`]) {
-        console.log("[Iconize] Found match without extension (with slash):", this.iconData[`/${pathWithoutExt}`]);
         return this.iconData[`/${pathWithoutExt}`];
       }
     }
-    console.log("[Iconize] No icon found for path:", path);
     return null;
   }
   /**
@@ -17498,13 +17487,10 @@ var IconizeService = class {
    * @param container - Container element to render icon in
    */
   renderIcon(icon, container) {
-    console.log("[Iconize] renderIcon called with icon:", icon, "container:", container);
     if (!icon) {
-      console.log("[Iconize] No icon provided, skipping render");
       return;
     }
     if (icon.startsWith("Li")) {
-      console.log("[Iconize] Rendering Lucide icon:", icon);
       const iconSpan = container.createSpan({
         cls: "iconize-icon lucide-icon",
         attr: {
@@ -17514,12 +17500,9 @@ var IconizeService = class {
       });
       iconSpan.style.marginRight = "0.3em";
       iconSpan.style.display = "inline-block";
-      console.log("[Iconize] Lucide icon span created:", iconSpan);
     } else {
-      console.log("[Iconize] Rendering emoji icon:", icon);
       const emojiSpan = container.createSpan({ text: icon });
       emojiSpan.style.marginRight = "0.3em";
-      console.log("[Iconize] Emoji span created:", emojiSpan);
     }
   }
   /**
@@ -17602,8 +17585,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.visualizationService = new VisualizationService();
     this.trackerOrderService = new TrackerOrderService(this.app);
     this.iconizeService = new IconizeService(this.app);
-    this.iconizeService.loadIconizeData().catch((err) => {
-      console.debug("Tracker: Failed to load Iconize data", err);
+    this.iconizeService.loadIconizeData().catch(() => {
     });
     this.heatmapService = new HeatmapService(
       this.settings,
@@ -17688,7 +17670,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.activeBlocks.forEach((block) => block.unload());
     this.activeBlocks.clear();
   }
-  // ---- Код-блоки ------------------------------------------------------------
+  // ---- Code blocks ------------------------------------------------------------
   async processTrackerBlock(source, el, ctx) {
     const block = new TrackerBlockRenderChild(this, source, el, ctx);
     ctx.addChild(block);
@@ -17713,7 +17695,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0431\u043B\u043E\u043A\u0430", error);
+        console.error("Tracker: error updating block", error);
       }
     }
   }
@@ -17846,7 +17828,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u043F\u0440\u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0438 \u0431\u043B\u043E\u043A\u0430", error);
+        console.error("Tracker: error updating block", error);
       }
     }
     const restoreScroll = () => {
@@ -17877,7 +17859,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     if (!path) return "";
     return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
   }
-  // Вспомогательная функция для получения типа из frontmatter файла
+  // Helper function to get type from frontmatter file
   async getFileTypeFromFrontmatter(file) {
     const state = await this.ensureTrackerState(file);
     return state.fileOpts;
@@ -17914,7 +17896,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       await this.updateStats(statsDiv, file, dateIso, daysToShow, trackerType, entries);
     }
   }
-  // ---- Визуализация ---------------------------------------------------------
+  // ---- Visualization ---------------------------------------------------------
   async renderChart(container, file, dateIso, daysToShow, entries) {
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
     const metricType = (fileOpts.mode ?? "good-habit").toLowerCase();
@@ -17972,7 +17954,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         label = m(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
-        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        const month = date.toDate().toLocaleDateString("en", { month: "short" });
         label = `${day} ${month}`;
       }
       labels.push(label);
@@ -18051,7 +18033,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     if (unit) {
       chartLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
     } else {
-      chartLabel = metricType === "text" ? "\u041A\u043E\u043B-\u0432\u043E \u0441\u043B\u043E\u0432" : "\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435";
+      chartLabel = metricType === "text" ? "Word count" : "Value";
     }
     const startLineColor = colors2.startLineColor;
     const drawStartLine = (chart, index2, color2) => {
@@ -18317,8 +18299,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       chartInstance.minLimit = minLimit;
       chartInstance.maxLimit = maxLimit;
     } catch (error) {
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u0430", error);
-      chartDiv.setText("\u041E\u0448\u0438\u0431\u043A\u0430 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u0430");
+      console.error("Tracker: error creating chart", error);
+      chartDiv.setText("Chart display error");
     }
   }
   async updateChart(chartDiv, file, dateIso, daysToShow, entries) {
@@ -18369,7 +18351,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         label = m(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
-        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        const month = date.toDate().toLocaleDateString("en", { month: "short" });
         label = `${day} ${month}`;
       }
       labels.push(label);
@@ -18625,7 +18607,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       }
     }
   }
-  // ---- Чтение/запись --------------------------------------------------------
+  // ---- Read/Write --------------------------------------------------------
   async ensureFileWithHeading(filePath, type = "good-habit") {
     return this.trackerFileService.ensureFileWithHeading(filePath, type);
   }
@@ -18649,16 +18631,16 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       await this.trackerFileService.writeLogLine(file, dateIso, value);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      new import_obsidian10.Notice(`\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438: ${errorMsg}`);
-      console.error("Tracker: \u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0438\u0441\u0438", error);
+      new import_obsidian10.Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+      console.error("Tracker: write error", error);
       throw error;
     }
   }
-  // Простейший «пикер» файла: предлагает последние открытые/подходящие
+  // Simple file picker: suggests recently opened/suitable files
   async pickTrackerFile() {
     const files = this.app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(this.settings.trackersFolder + "/"));
     if (files.length === 0) {
-      new import_obsidian10.Notice("\u041D\u0435\u0442 \u0442\u0440\u0435\u043A\u0435\u0440\u043E\u0432");
+      new import_obsidian10.Notice(MODAL_LABELS.NO_TRACKERS_FOUND);
       return null;
     }
     if (files.length === 1) return files[0];
@@ -18768,23 +18750,20 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.folderTreeService.invalidate(parentFolderPath);
     await this.refreshBlocksForFolder(parentFolderPath);
   }
-  // Методы для безопасной модификации файлов (игнорирование внутренних изменений)
+  // Methods for safe file modification (ignoring internal changes)
   /**
    * Gets icon for a path from Iconize plugin
    * @param path - Path to file or folder
    * @param isFile - Whether the path is a file (true) or folder (false)
    */
   getIconForPath(path, isFile = false) {
-    console.log("[TrackerPlugin] getIconForPath called for:", path, "isFile:", isFile);
     const icon = this.iconizeService.getIcon(path, isFile);
-    console.log("[TrackerPlugin] getIconForPath result:", icon);
     return icon;
   }
   /**
    * Renders icon in a container element
    */
   renderIcon(icon, container) {
-    console.log("[TrackerPlugin] renderIcon called with icon:", icon);
     this.iconizeService.renderIcon(icon, container);
   }
 };
