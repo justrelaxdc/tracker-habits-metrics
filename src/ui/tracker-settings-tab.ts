@@ -1,6 +1,7 @@
 import type { App } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 import type TrackerPlugin from "../core/tracker-plugin";
+import { FolderSuggest } from "./suggest/folder-suggest";
 
 export class TrackerSettingsTab extends PluginSettingTab {
   private readonly plugin: TrackerPlugin;
@@ -14,18 +15,20 @@ export class TrackerSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
+    const folders = this.app.vault.getAllFolders();
+
     new Setting(containerEl)
       .setName("Default trackers folder")
       .setDesc("Can be overridden with `folder` parameter in habit block")
-      .addText((t) =>
-        t
-          .setPlaceholder("0. Files/Trackers")
+      .addText((t) => {
+        t.setPlaceholder("0. Files/Trackers")
           .setValue(this.plugin.settings.trackersFolder)
           .onChange(async (v) => {
             this.plugin.settings.trackersFolder = v.trim();
             await this.plugin.saveSettings();
-          }),
-      );
+          });
+        new FolderSuggest(this.app, t.inputEl, folders);
+      });
 
     new Setting(containerEl)
       .setName("Show chart by default")
