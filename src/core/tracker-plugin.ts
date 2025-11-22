@@ -21,10 +21,10 @@ import { TrackerRenderer } from "../services/tracker-renderer";
 import { VisualizationService } from "../services/visualization-service";
 import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
-import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS } from "../constants";
+import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS, CSS_CLASSES } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { showNoticeIfNotMobile } from "../utils/notifications";
-import { removePrefix, parseFilename } from "../utils/filename-parser";
+import { removePrefix, parseFilename, formatFilename } from "../utils/filename-parser";
 
 export default class TrackerPlugin extends Plugin {
   settings: TrackerSettings;
@@ -166,7 +166,7 @@ export default class TrackerPlugin extends Plugin {
     const notePath = ctx.sourcePath || null;
     if (notePath !== this.currentNotePath) {
       // New note opened - clear all caches to show fresh data
-      this.clearAllCaches();
+      await this.clearAllCaches();
       this.currentNotePath = notePath;
     }
     
@@ -202,6 +202,113 @@ export default class TrackerPlugin extends Plugin {
     }
   }
 
+  /**
+   * Reorders tracker DOM elements in place after file renaming without full re-rendering
+   * This preserves icons and other DOM content
+   * @param folderPath Path to the folder containing trackers
+   * @param oldPathsMap Map of old paths before renaming (oldPath -> oldPath)
+   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
+   */
+  private async swapTrackerElementsInDOM(
+    folderPath: string, 
+    oldPathsMap?: Map<string, string>, 
+    newPathsMap?: Map<string, string>
+  ): Promise<void> {
+    const normalizedFolderPath = this.normalizePath(folderPath);
+    const folder = this.app.vault.getAbstractFileByPath(folderPath);
+    if (!folder || !(folder instanceof TFolder)) return;
+
+    // Get current files in folder after renaming (they already have new paths)
+    const trackers = folder.children.filter(
+      f => f instanceof TFile && f.extension === "md"
+    ) as TFile[];
+
+    // Sort by prefix to get correct order
+    trackers.sort((a, b) => {
+      const aParsed = parseFilename(a.basename);
+      const bParsed = parseFilename(b.basename);
+      if (aParsed.prefix !== null && bParsed.prefix !== null) {
+        return aParsed.prefix - bParsed.prefix;
+      }
+      if (aParsed.prefix !== null) return -1;
+      if (bParsed.prefix !== null) return 1;
+      return a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" });
+    });
+
+    // Find all active blocks containing this folder
+    const relevantBlocks = Array.from(this.activeBlocks).filter((block) => {
+      const blockPath = this.normalizePath(block.getFolderPath());
+      return this.isFolderRelevant(normalizedFolderPath, blockPath);
+    });
+
+    // Process each block
+    for (const block of relevantBlocks) {
+      // Find trackers container for this folder
+      const trackersContainers = block.containerEl.querySelectorAll<HTMLElement>(
+        `.tracker-notes__trackers[data-folder-path="${normalizedFolderPath}"]`
+      );
+
+      for (const trackersContainer of Array.from(trackersContainers)) {
+        // Find all tracker elements for files in this folder
+        // Use old paths first (from DOM), then update to new paths
+        const trackerElementsMap = new Map<string, HTMLElement>();
+        
+        // First, try to find elements by old paths (before renaming)
+        if (oldPathsMap && newPathsMap) {
+          for (const [oldPath, newPath] of newPathsMap.entries()) {
+            // Try old path first (DOM element may still have old path)
+            let trackerElement = trackersContainer.querySelector<HTMLElement>(
+              `.tracker-notes__tracker[data-file-path="${oldPath}"]`
+            );
+            // If not found, try new path (in case it was already updated)
+            if (!trackerElement) {
+              trackerElement = trackersContainer.querySelector<HTMLElement>(
+                `.tracker-notes__tracker[data-file-path="${newPath}"]`
+              );
+            }
+            if (trackerElement) {
+              trackerElementsMap.set(newPath, trackerElement);
+              // Update dataset to new path
+              trackerElement.dataset.filePath = newPath;
+            }
+          }
+        } else {
+          // Fallback: find by current file paths (if paths map not provided)
+          for (const file of trackers) {
+            const trackerElement = trackersContainer.querySelector<HTMLElement>(
+              `.tracker-notes__tracker[data-file-path="${file.path}"]`
+            );
+            if (trackerElement) {
+              trackerElementsMap.set(file.path, trackerElement);
+            }
+          }
+        }
+
+        // Create array of tracker elements in correct order
+        const sortedTrackerElements: HTMLElement[] = [];
+        for (const file of trackers) {
+          const element = trackerElementsMap.get(file.path);
+          if (element) {
+            sortedTrackerElements.push(element);
+          }
+        }
+
+        // Reorder elements in DOM: remove all tracker elements, then reinsert in correct order
+        // Remove all tracker elements from their current positions
+        for (const trackerEl of sortedTrackerElements) {
+          if (trackerEl.parentElement) {
+            trackerEl.remove();
+          }
+        }
+
+        // Reinsert trackers in correct order at the end of container
+        for (const trackerEl of sortedTrackerElements) {
+          trackersContainer.appendChild(trackerEl);
+        }
+      }
+    }
+  }
+
   async refreshTrackersForFile(file: TFile) {
     const refreshPromises: Promise<void>[] = [];
     for (const block of Array.from(this.activeBlocks)) {
@@ -230,12 +337,24 @@ export default class TrackerPlugin extends Plugin {
             const unit = fileOpts.unit || "";
             const displayName = unit ? `${baseName} (${unit})` : baseName;
             
-            // Update only name in header without full recreation
-            const titleLink = trackerItem.querySelector('.tracker-notes__tracker-title') as HTMLElement;
-            if (titleLink) {
-              titleLink.textContent = displayName;
-              titleLink.setAttribute('href', file.path);
-              titleLink.setAttribute('data-href', file.path);
+            // Update name in header (leave icons untouched)
+            const titleContainer = trackerItem.querySelector(`.${CSS_CLASSES.TRACKER_TITLE}`) as HTMLElement;
+            if (titleContainer) {
+              // Update only title link text and attributes, preserving icons
+              const titleLink = titleContainer.querySelector('a.internal-link') as HTMLAnchorElement;
+              if (titleLink) {
+                titleLink.textContent = displayName;
+                titleLink.setAttribute('href', file.path);
+                titleLink.setAttribute('data-href', file.path);
+              } else {
+                // If titleLink doesn't exist, create it
+                const link = titleContainer.createEl('a', {
+                  text: displayName,
+                  cls: 'internal-link',
+                  href: file.path
+                });
+                link.setAttribute('data-href', file.path);
+              }
             }
             
             // Update dataset.filePath in case of rename
@@ -1293,14 +1412,17 @@ export default class TrackerPlugin extends Plugin {
   }
   
   /**
-   * Clears all caches (trackerState and FolderTreeService cache)
+   * Clears all caches (trackerState, FolderTreeService cache, and Iconize cache)
    * Called when switching to a new note to ensure fresh data
    */
-  private clearAllCaches(): void {
+  private async clearAllCaches(): Promise<void> {
     // Clear all tracker states
     this.trackerState.clear();
     // Clear all folder tree cache
     this.folderTreeService.invalidate();
+    // Invalidate and reload Iconize cache to get fresh icon data
+    this.iconizeService.invalidateCache();
+    await this.iconizeService.loadIconizeData();
   }
   
   invalidateCacheForFolder(folderPath: string): void {
@@ -1533,12 +1655,28 @@ export default class TrackerPlugin extends Plugin {
     const currentIndex = trackers.findIndex(t => t.path === file.path);
     if (currentIndex <= 0) return; // Already first or not found
 
+    // Save old paths before renaming
+    const oldPathsMap = new Map<string, string>();
+    for (const tracker of trackers) {
+      oldPathsMap.set(tracker.path, tracker.path);
+    }
+
     // Swap with previous
     [trackers[currentIndex - 1], trackers[currentIndex]] = [trackers[currentIndex], trackers[currentIndex - 1]];
 
+    // Calculate new paths after reordering (before actual renaming)
+    const newPathsMap = new Map<string, string>();
+    for (let i = 0; i < trackers.length; i++) {
+      const oldPath = trackers[i].path;
+      const parsed = parseFilename(trackers[i].basename);
+      const newBasename = formatFilename(parsed.name, i + 1);
+      const newPath = `${folderPath}/${newBasename}.md`;
+      newPathsMap.set(oldPath, newPath);
+    }
+
     await this.trackerOrderService.reorderTrackers(folderPath, trackers);
     this.folderTreeService.invalidate(folderPath);
-    await this.refreshBlocksForFolder(folderPath);
+    await this.swapTrackerElementsInDOM(folderPath, oldPathsMap, newPathsMap);
   }
 
   async moveTrackerDown(file: TFile): Promise<void> {
@@ -1565,12 +1703,28 @@ export default class TrackerPlugin extends Plugin {
     const currentIndex = trackers.findIndex(t => t.path === file.path);
     if (currentIndex < 0 || currentIndex >= trackers.length - 1) return; // Already last or not found
 
+    // Save old paths before renaming
+    const oldPathsMap = new Map<string, string>();
+    for (const tracker of trackers) {
+      oldPathsMap.set(tracker.path, tracker.path);
+    }
+
     // Swap with next
     [trackers[currentIndex], trackers[currentIndex + 1]] = [trackers[currentIndex + 1], trackers[currentIndex]];
 
+    // Calculate new paths after reordering (before actual renaming)
+    const newPathsMap = new Map<string, string>();
+    for (let i = 0; i < trackers.length; i++) {
+      const oldPath = trackers[i].path;
+      const parsed = parseFilename(trackers[i].basename);
+      const newBasename = formatFilename(parsed.name, i + 1);
+      const newPath = `${folderPath}/${newBasename}.md`;
+      newPathsMap.set(oldPath, newPath);
+    }
+
     await this.trackerOrderService.reorderTrackers(folderPath, trackers);
     this.folderTreeService.invalidate(folderPath);
-    await this.refreshBlocksForFolder(folderPath);
+    await this.swapTrackerElementsInDOM(folderPath, oldPathsMap, newPathsMap);
   }
 
   async moveFolderUp(folderPath: string): Promise<void> {

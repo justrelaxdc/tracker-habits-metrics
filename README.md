@@ -4,13 +4,12 @@ Obsidian plugin that allows you to track daily habits and metrics (trackers), st
 
 ## ✨ Features
 
-- 📝 **Separate notes for each tracker** - each tracker (habit or metric) is stored in its own note
+- 📝 **Separate notes for each tracker** - each tracker (habit or metric) and its data is stored in its own note
 - 🎯 **Different tracker types**:
-  - **Good habit** (good-habit) - checkbox to track habit completion
-  - **Bad habit** (bad-habit) - checkbox to track absence of bad habit
+  - **Good habit** (good-habit) - heatmaps to track habit completion
+  - **Bad habit** (bad-habit) - heatmaps to track absence of bad habit
   - **Number** (number) - numeric value with automatic saving (debounce)
   - **Counter** (plusminus) - increase/decrease value with +/- buttons
-  - **Star rating** (rating) - rating from 3 to 10 stars
   - **Text** (text) - text notes
   - **Scale** (scale) - slider with customizable value range
 - 📅 **Common date for block** - one date picker for all trackers in the block
@@ -270,111 +269,24 @@ The plugin provides detailed statistics for each tracker:
 - **Current streak** 🔥 - sequence of days with records up to the current date
 - **Best streak** ⭐ - maximum sequence of successful days of all time
 
-### For metrics (number, plusminus, rating, scale, text):
-
-- **Total records** - total number of records
-- **Last N days** - sum for the period
-- **Average** - average value for the period
-- **Min / Max** - minimum and maximum value for the period
-- **Median** - median value for the period
-- **Current streak** 🔥 - sequence of days with records up to the current date
-
-**Important:** Statistics take into account the tracking start date (`trackingStartDate`) if it is specified in the file frontmatter.
-
-## 🎯 Usage examples
-
-### Daily dashboard
-
-Create a note `Daily dashboard.md` and add all your trackers:
-
-````markdown
-# Daily dashboard
-
-## Health
-
-```habit
-folder: 0. Files/Trackers/01-Habits
-showChart: true
-showStats: true
-```
-
-## Metrics
-
-```habit
-folder: 0. Files/Trackers/02-Metrics
-showChart: true
-showStats: true
-```
-````
-
-### Weekly review
-
-Create a note for weekly review with trackers in display mode:
-
-````markdown
-# Week January 15-21
-
-## Progress
-
-```habit
-folder: 0. Files/Trackers/01-Habits
-view: display
-showStats: true
-date: 2025-01-21
-days: 7
-```
-````
-
-### Tracking a specific metric
-
-````markdown
-# Weight tracking
+## 🎯 Markdown example
 
 ```tracker
-file: 0. Files/Trackers/02-Metrics/Weight.md
-mode: number
+path: 0. Files/Trackers
 showChart: true
 showStats: true
 days: 90
 ```
-````
 
-## 🔧 Development
-
-### Build
+## 🔧 Build
 
 ```bash
 npm install
 npm run build
 ```
-
-The `npm run build` command uses `esbuild` and automatically bundles `src/main.ts` together with all dependencies and styles from `src/styles/tracker.css`. For development, you can run `npm run dev` - the builder will watch for changes and instantly rebuild `main.js`.
-
-### Project structure
-
-- `src/main.ts` — entry point, exports Obsidian plugin.
-- `src/core` — main plugin logic (`tracker-plugin.ts`).
-- `src/domain` — types and default values.
-- `src/services` — file system work and helper services:
-  - `iconize-service.ts` — Iconize plugin integration
-  - `tracker-file-service.ts` — tracker file work
-  - `controls-renderer.ts` — control elements rendering
-  - `visualization-service.ts` — statistics calculation and display
-  - `heatmap-service.ts` — heatmap rendering
-  - `chart-service.ts` — chart rendering
-- `src/ui` — interface elements: blocks, settings, modals, suggestions.
-- `src/utils` — utilities for dates, options, etc.
-- `src/styles/tracker.css` — single source of custom tracker styles.
-- `main.css` — uPlot styles that need to be placed next to `main.js` in Obsidian.
-- `manifest.json` and `package.json` — metadata and dependencies.
-
 ## 📝 License
 
 MIT License © 2025 Vladislav (Vlad Ross)
-
-## 🙏 Acknowledgments
-
-Inspired by the [Habit Tracker 21](https://github.com/benjaminwoskin/obsidian-habit-tracker-21) plugin.
 
 ## 💡 Ideas for future versions
 

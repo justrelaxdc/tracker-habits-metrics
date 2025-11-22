@@ -3,9 +3,10 @@
   "name": "Tracker: habits and metrics",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "Habits and metrics as separate notes with the ability to manage them from any page.",
+  "description": "Track daily habits and metrics, storing them as separate notes in your file hierarchy.",
   "author": "Vlad Ross",
   "authorUrl": "https://t.me/justrelaxdc",
   "fundingUrl": "https://ko-fi.com/vladross",
+  "helpUrl": "https://t.me/justrelaxdc",
   "isDesktopOnly": false
 }
