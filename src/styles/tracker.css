@@ -24,8 +24,8 @@
       .tracker-notes__value.updated { animation: pulse 0.3s ease; }
       @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
       .tracker-notes input { outline: none !important; }
-      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; }
-      .tracker-notes input[type="number"]:focus { outline: none !important; border-color: var(--interactive-accent); }
+      .tracker-notes input[type="number"] { width: 4.5em; min-width: 4.5em; max-width: 100%; padding: 0.4em 0.6em; border: 1px solid var(--background-modifier-border); border-radius: 5px; color: var(--text-normal); font-size: 0.9em; transition: border-color 0.2s ease; box-sizing: border-box; transform: scale(1) !important; }
+      .tracker-notes input[type="number"]:focus { outline: none !important; box-shadow: none !important; }
       .tracker-notes input[type="range"], .tracker-notes__slider { flex: 1 1 auto; min-width: 0; height: 6px; border-radius: 3px; background: var(--background-modifier-border); outline: none; -webkit-appearance: none; cursor: pointer; }
       .tracker-notes input[type="range"]::-webkit-slider-thumb, .tracker-notes__slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--interactive-accent); cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
       .tracker-notes input[type="range"]::-webkit-slider-thumb:hover, .tracker-notes__slider::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
@@ -257,9 +257,13 @@
         display: flex;
       }
       
-      /* Limit indicators - only error state */
+      /* Limit indicators - error and success states */
       .tracker-notes__limit-error {
         border-color: var(--text-error, #c00000) !important;
+      }
+      
+      .tracker-notes__limit-success {
+        border-color: var(--interactive-accent, #7f6df2) !important;
       }
       
       /* Progress bar with limits */
@@ -267,14 +271,35 @@
         background: var(--text-error, #c00000) !important;
       }
       
+      .tracker-notes__progress-bar-progress.tracker-notes__limit-success {
+        background: var(--interactive-accent, #7f6df2) !important;
+      }
+      
       /* Number input with limits */
       .tracker-notes input[type="number"].tracker-notes__limit-error {
         border-color: var(--text-error, #c00000) !important;
       }
       
+      .tracker-notes input[type="number"].tracker-notes__limit-success {
+        border-color: var(--interactive-accent, #7f6df2) !important;
+      }
+      
+      /* Value span with limits */
+      .tracker-notes__value.tracker-notes__limit-error {
+        color: var(--text-error, #c00000) !important;
+      }
+      
+      .tracker-notes__value.tracker-notes__limit-success {
+        color: var(--interactive-accent, #7f6df2) !important;
+      }
+      
       /* Text input with limits */
       .tracker-notes__text-input.tracker-notes__limit-error {
         border-color: var(--text-error, #c00000) !important;
+      }
+      
+      .tracker-notes__text-input.tracker-notes__limit-success {
+        border-color: var(--interactive-accent, #7f6df2) !important;
       }
       
       /* Value display with limits (for PLUSMINUS) */

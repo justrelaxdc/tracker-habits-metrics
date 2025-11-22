@@ -99,7 +99,7 @@ export class EditTrackerModal extends Modal {
     // Warning element about data before new date
     const warningEl = contentEl.createDiv({
       cls: "tracker-notes__start-date-warning",
-      attr: { style: "display: none; margin-top: 0.5em; padding: 0.75em; background: var(--background-modifier-error); color: var(--text-error); border-radius: 4px; font-size: 0.9em;" }
+      attr: { style: "display: none; margin-top: 0.5em; padding: 0.75em; background: var(--background-modifier-error); color: #fff; border-radius: 4px; font-size: 0.9em;" }
     });
 
     // Date change handler for data validation

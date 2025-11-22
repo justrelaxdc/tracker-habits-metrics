@@ -115,12 +115,15 @@ export class ControlsRenderer {
     const current = await this.readValueForDate(file, dateIso);
     if (current != null && !isNaN(Number(current))) {
       input.value = String(current);
-      // Применяем цветовые индикаторы при инициализации только если есть лимиты и значение вне диапазона
-      if (minLimit !== null || maxLimit !== null) {
+      // Применяем цветовые индикаторы при инициализации только если есть лимиты
+      // И только если настройка не отключает реакцию на диапазон
+      if ((minLimit !== null || maxLimit !== null) && !this.settings.disableLimitReaction) {
         const limitCheck = checkLimits(Number(current), minLimit, maxLimit);
-        input.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        input.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
         if (limitCheck.status === 'error') {
           input.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        } else if (limitCheck.status === 'success') {
+          input.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
         }
       }
     }
@@ -132,12 +135,15 @@ export class ControlsRenderer {
     const updateVisualState = async (val: number) => {
       input.value = String(val);
       
-      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
-      if (minLimit !== null || maxLimit !== null) {
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты
+      // И только если настройка не отключает реакцию на диапазон
+      if ((minLimit !== null || maxLimit !== null) && !this.settings.disableLimitReaction) {
         const limitCheck = checkLimits(val, minLimit, maxLimit);
-        input.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        input.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
         if (limitCheck.status === 'error') {
           input.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        } else if (limitCheck.status === 'success') {
+          input.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
         }
       }
       
@@ -175,8 +181,15 @@ export class ControlsRenderer {
     
     // Полное обновление (визуализации + запись)
     const updateValue = async (immediate = false) => {
+      // Если поле пустое, записываем 0, но не меняем визуальное состояние (поле остается пустым)
+      if (input.value === "") {
+        await writeToFile(0, immediate);
+        return;
+      }
+      
       const val = Number(input.value);
-      if (input.value === "" || isNaN(val)) return;
+      // Если значение невалидное (NaN), не записываем
+      if (isNaN(val)) return;
       
       await updateVisualState(val);
       await writeToFile(val, immediate);
@@ -184,8 +197,15 @@ export class ControlsRenderer {
     
     // Обработчик ввода с debounce
     input.oninput = () => {
+      // Если поле пустое, записываем 0 (но поле остается пустым визуально)
+      if (input.value === "") {
+        void updateValue(false);
+        return;
+      }
+      
       const val = Number(input.value);
-      if (input.value === "" || isNaN(val)) return;
+      // Если значение невалидное (NaN), не записываем
+      if (isNaN(val)) return;
       void updateValue(false);
     };
     
@@ -198,8 +218,15 @@ export class ControlsRenderer {
     
     // Немедленная запись при потере фокуса
     input.onblur = async () => {
+      // Если поле пустое, записываем 0 (но поле остается пустым визуально)
+      if (input.value === "") {
+        await updateValue(true);
+        return;
+      }
+      
       const val = Number(input.value);
-      if (input.value !== "" && !isNaN(val)) {
+      // Если значение валидное, записываем
+      if (!isNaN(val)) {
         await updateValue(true);
       }
     };
@@ -224,12 +251,15 @@ export class ControlsRenderer {
     let current = Number(await this.readValueForDate(file, dateIso) ?? 0);
     if (!isNaN(current)) {
       valEl.setText(String(current));
-      // Применяем цветовые индикаторы при инициализации только если есть лимиты и значение вне диапазона
-      if (minLimit !== null || maxLimit !== null) {
+      // Применяем цветовые индикаторы при инициализации только если есть лимиты
+      // И только если настройка не отключает реакцию на диапазон
+      if ((minLimit !== null || maxLimit !== null) && !this.settings.disableLimitReaction) {
         const limitCheck = checkLimits(current, minLimit, maxLimit);
-        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
         if (limitCheck.status === 'error') {
           valEl.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        } else if (limitCheck.status === 'success') {
+          valEl.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
         }
       }
     }
@@ -237,12 +267,15 @@ export class ControlsRenderer {
     const updateValueAndLimits = (newValue: number) => {
       valEl.setText(String(newValue));
       valEl.classList.add(CSS_CLASSES.VALUE_UPDATED);
-      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
-      if (minLimit !== null || maxLimit !== null) {
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты
+      // И только если настройка не отключает реакцию на диапазон
+      if ((minLimit !== null || maxLimit !== null) && !this.settings.disableLimitReaction) {
         const limitCheck = checkLimits(newValue, minLimit, maxLimit);
-        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        valEl.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
         if (limitCheck.status === 'error') {
           valEl.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        } else if (limitCheck.status === 'success') {
+          valEl.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
         }
       }
     };
@@ -374,12 +407,15 @@ export class ControlsRenderer {
       progressBar.setAttribute("aria-valuenow", String(value));
       wrapper.setAttribute("data-internal-value", String(value));
       
-      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты и значение вне диапазона
-      if (minLimit !== null || maxLimit !== null) {
+      // Проверяем лимиты и применяем цветовые индикаторы только если есть лимиты
+      // И только если настройка не отключает реакцию на диапазон
+      if ((minLimit !== null || maxLimit !== null) && !this.settings.disableLimitReaction) {
         const limitCheck = checkLimits(value, minLimit, maxLimit);
-        progressBar.classList.remove(CSS_CLASSES.LIMIT_ERROR);
+        progressBar.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
         if (limitCheck.status === 'error') {
           progressBar.classList.add(CSS_CLASSES.LIMIT_ERROR);
+        } else if (limitCheck.status === 'success') {
+          progressBar.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
         }
       }
     };

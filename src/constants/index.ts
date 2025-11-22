@@ -109,6 +109,7 @@ export const CSS_CLASSES = {
   
   // Limit indicators
   LIMIT_ERROR: 'tracker-notes__limit-error',
+  LIMIT_SUCCESS: 'tracker-notes__limit-success',
 } as const;
 
 // CSS Variables (Obsidian theme)

@@ -74,6 +74,18 @@ export class TrackerSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Disable color reaction to range compliance")
+      .setDesc("Disables color feedback when metric values are within or outside the defined limit range")
+      .addToggle((t) =>
+        t
+          .setValue(this.plugin.settings.disableLimitReaction)
+          .onChange(async (v) => {
+            this.plugin.settings.disableLimitReaction = v;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
       .setName("Number of days")
       .setDesc("Number of past days displayed for charts and habits")
       .addText((t) =>

@@ -9,6 +9,7 @@ export type TrackerSettings = {
   showStatsByDefault: boolean;
   hideChartOnMobile: boolean;
   hideStatsOnMobile: boolean;
+  disableLimitReaction: boolean;
 };
 
 export const DEFAULT_SETTINGS: TrackerSettings = {
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: TrackerSettings = {
   showStatsByDefault: false,
   hideChartOnMobile: false,
   hideStatsOnMobile: false,
+  disableLimitReaction: false,
 };
 
 export interface FolderNode {
