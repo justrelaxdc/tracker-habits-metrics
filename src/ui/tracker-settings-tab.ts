@@ -16,7 +16,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Default trackers folder")
-      .setDesc("Can be overridden with folder: `path` parameter")
+      .setDesc("Can be overridden with `folder` parameter in habit block")
       .addText((t) =>
         t
           .setPlaceholder("0. Files/Trackers")
@@ -87,7 +87,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Number of days")
-      .setDesc("Number of past days displayed for charts and habits")
+      .setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block")
       .addText((t) =>
         t
           .setPlaceholder("30")

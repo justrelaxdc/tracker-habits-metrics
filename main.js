@@ -15727,7 +15727,7 @@ var TrackerSettingsTab = class extends import_obsidian4.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian4.Setting(containerEl).setName("Default trackers folder").setDesc("Can be overridden with folder: `path` parameter").addText(
+    new import_obsidian4.Setting(containerEl).setName("Default trackers folder").setDesc("Can be overridden with `folder` parameter in habit block").addText(
       (t) => t.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v) => {
         this.plugin.settings.trackersFolder = v.trim();
         await this.plugin.saveSettings();
@@ -15763,7 +15763,7 @@ var TrackerSettingsTab = class extends import_obsidian4.PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits").addText(
+    new import_obsidian4.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block").addText(
       (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
         const num = parseInt(v.trim());
         if (!isNaN(num) && num > 0) {

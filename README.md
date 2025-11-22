@@ -59,58 +59,28 @@ Obsidian plugin that allows you to track daily habits and metrics (trackers), st
 5. Set tracking start date (optional)
 6. Click "Create"
 
-### Using in notes
-
-#### Displaying a single tracker
-
-In any note, add a code block to display and manage a tracker:
-
-````markdown
-```tracker
-file: 0. Files/Trackers/01-Habits/Morning workout.md
-```
-````
-
-#### Displaying all trackers in a folder
-
-To display all trackers in a folder, use the `habit` block:
-
-````markdown
-```habit
-folder: 0. Files/Trackers/01-Habits
-```
-````
-
-Or with additional parameters:
-
-````markdown
-```habit
-folder: 0. Files/Trackers/01-Habits
-date: 2025-01-15
-days: 30
-showChart: true
-showStats: true
-```
-````
-
 #### `tracker` code block parameters:
 
 - `file` (required) - path to tracker file
-- `mode` - display type: `good-habit`, `bad-habit`, `number`, `plusminus`, `rating`, `text`, `scale` (default is determined from file frontmatter)
+- `mode` - display type: `good-habit`, `bad-habit`, `number`, `plusminus`, `text`, `scale` (ignored - type is determined from file frontmatter)
 - `view` - view mode: `control` (default) or `display` (view only)
-- `date` - date (default "today")
+- `date` - date (default "today" or parsed from note filename)
 - `days` - number of days to display in chart and statistics (default from settings)
 - `showChart` - show chart (`true`/`false`, default from settings)
 - `showStats` - show statistics (`true`/`false`, default from settings)
+- `minValue` - minimum value (for scale type, overrides frontmatter)
+- `maxValue` - maximum value (for scale type, overrides frontmatter)
+- `step` - step value (for scale type, overrides frontmatter)
 
 #### `habit` code block parameters:
 
-- `folder` (required) - path to folder with trackers
-- `date` - date (default "today")
+- `folder` - path to folder with trackers (default from settings)
+- `date` - date (default "today" or parsed from note filename)
 - `days` - number of days to display in chart and statistics (default from settings)
-- `view` - view mode: `control` (default) or `display` (view only)
 - `showChart` - show chart for all trackers (`true`/`false`, default from settings)
 - `showStats` - show statistics for all trackers (`true`/`false`, default from settings)
+
+> **Note:** For complete parameter documentation, see `src/constants/block-parameters.ts` in the source code.
 
 #### Examples:
 
