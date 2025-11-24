@@ -104,7 +104,7 @@
       .tracker-notes__chart { transition: opacity 0.15s ease; }
       .tracker-notes__hierarchy { display: flex; flex-direction: column; gap: 1.5em; }
       .tracker-notes__folder-node { display: flex; flex-direction: column; margin-bottom: 1em; }
-      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 1.5em; }
+      .tracker-notes__folder-node.level-0 { padding-left: 0; margin-bottom: 0; }
       .tracker-notes__folder-node.level-1 { padding-left: 0; margin-top: 1em; margin-bottom: 1.25em; }
       .tracker-notes__folder-node.level-2 { padding-left: 1em; margin-top: 0.75em; margin-bottom: 1em; }
       .tracker-notes__folder-node.level-3 { padding-left: 0.5em; margin-top: 0.5em; margin-bottom: 0.75em; }
