@@ -3,7 +3,6 @@ import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { CSS_CLASSES, TrackerType, ViewMode, MODAL_LABELS } from "../constants";
 import type { ControlsRenderer } from "./controls-renderer";
 import type { HeatmapService } from "./heatmap-service";
-import { removePrefix } from "../utils/filename-parser";
 
 /**
  * Service for rendering tracker items
@@ -64,7 +63,7 @@ export class TrackerRenderer {
     const header = trackerItem.createDiv({ cls: CSS_CLASSES.TRACKER_HEADER });
     // Get unit for display in name
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
-    const baseName = removePrefix(file.basename);
+    const baseName = file.basename;
     const unit = fileOpts.unit || "";
     const displayName = unit ? `${baseName} (${unit})` : baseName;
     

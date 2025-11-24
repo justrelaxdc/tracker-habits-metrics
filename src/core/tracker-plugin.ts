@@ -24,7 +24,7 @@ import { IconizeService } from "../services/iconize-service";
 import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, CHART_CONFIG, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS, CSS_CLASSES } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { showNoticeIfNotMobile } from "../utils/notifications";
-import { removePrefix, parseFilename, formatFilename } from "../utils/filename-parser";
+import { parseFilename, formatFilename } from "../utils/filename-parser";
 
 export default class TrackerPlugin extends Plugin {
   settings: TrackerSettings;
@@ -48,6 +48,7 @@ export default class TrackerPlugin extends Plugin {
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
+    this.folderTreeService.updateSettings(this.settings);
     this.trackerFileService = new TrackerFileService(this.app);
     this.visualizationService = new VisualizationService();
     this.trackerOrderService = new TrackerOrderService(this.app);
@@ -116,6 +117,15 @@ export default class TrackerPlugin extends Plugin {
       name: "Create new tracker",
       callback: () => this.createNewTracker()
     });
+
+    // Register handler for file/folder rename events
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        if (file instanceof TFile || file instanceof TFolder) {
+          this.handleRename(file, oldPath);
+        }
+      })
+    );
   }
 
   private isFileInTrackersFolder(file: TFile): boolean {
@@ -213,13 +223,11 @@ export default class TrackerPlugin extends Plugin {
    * This preserves icons and other DOM content
    * Works independently of file system - uses only passed data
    * @param folderPath Path to the folder containing trackers
-   * @param trackersInNewOrder Array of files in the desired order (before renaming)
-   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
+   * @param trackersInNewOrder Array of files in the desired order
    */
   private async swapTrackerElementsInDOM(
     folderPath: string,
-    trackersInNewOrder: TFile[],
-    newPathsMap: Map<string, string>
+    trackersInNewOrder: TFile[]
   ): Promise<void> {
     const normalizedFolderPath = this.normalizePath(folderPath);
 
@@ -237,49 +245,38 @@ export default class TrackerPlugin extends Plugin {
       );
 
       for (const trackersContainer of Array.from(trackersContainers)) {
-        // Find all tracker elements by old paths (from DOM)
+        // Find all tracker elements by file paths
         const trackerElementsMap = new Map<string, HTMLElement>();
         
-        for (const [oldPath, newPath] of newPathsMap.entries()) {
-          // Try old path first (DOM element still has old path)
-          let trackerElement = trackersContainer.querySelector<HTMLElement>(
-            `.tracker-notes__tracker[data-file-path="${oldPath}"]`
+        for (const file of trackersInNewOrder) {
+          const trackerElement = trackersContainer.querySelector<HTMLElement>(
+            `.tracker-notes__tracker[data-file-path="${file.path}"]`
           );
-          // If not found, try new path (in case it was already updated)
-          if (!trackerElement) {
-            trackerElement = trackersContainer.querySelector<HTMLElement>(
-              `.tracker-notes__tracker[data-file-path="${newPath}"]`
-            );
-          }
           if (trackerElement) {
-            trackerElementsMap.set(oldPath, trackerElement);
+            trackerElementsMap.set(file.path, trackerElement);
           }
         }
 
         // Create array of tracker elements in correct order based on trackersInNewOrder
-        // Also create mapping to update paths after reordering
-        const sortedTrackerElements: Array<{ element: HTMLElement; newPath: string }> = [];
+        const sortedTrackerElements: HTMLElement[] = [];
         for (const file of trackersInNewOrder) {
           const element = trackerElementsMap.get(file.path);
           if (element) {
-            const newPath = newPathsMap.get(file.path) || file.path;
-            sortedTrackerElements.push({ element, newPath });
+            sortedTrackerElements.push(element);
           }
         }
 
         // Reorder elements in DOM: remove all tracker elements, then reinsert in correct order
         // Remove all tracker elements from their current positions
-        for (const { element } of sortedTrackerElements) {
+        for (const element of sortedTrackerElements) {
           if (element.parentElement) {
             element.remove();
           }
         }
 
         // Reinsert trackers in correct order at the end of container
-        for (const { element, newPath } of sortedTrackerElements) {
+        for (const element of sortedTrackerElements) {
           trackersContainer.appendChild(element);
-          // Update dataset to new path after reordering
-          element.dataset.filePath = newPath;
         }
       }
     }
@@ -290,13 +287,11 @@ export default class TrackerPlugin extends Plugin {
    * This preserves icons and all DOM content
    * Works independently of file system - uses only passed data
    * @param parentFolderPath Path to the parent folder containing folders
-   * @param foldersInNewOrder Array of folders in the desired order (before renaming)
-   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
+   * @param foldersInNewOrder Array of folders in the desired order
    */
   private async reorderFolderElementsInDOM(
     parentFolderPath: string,
-    foldersInNewOrder: TFolder[],
-    newPathsMap: Map<string, string>
+    foldersInNewOrder: TFolder[]
   ): Promise<void> {
     const normalizedParentPath = this.normalizePath(parentFolderPath);
 
@@ -364,7 +359,7 @@ export default class TrackerPlugin extends Plugin {
 
       console.log(`Tracker: Found ${folderSiblings.length} folder siblings for parent ${parentFolderPath}`);
 
-      // Map folder elements by their old paths (from DOM)
+      // Map folder elements by their paths (from DOM)
       const folderElementsMap = new Map<string, HTMLElement>();
       
       for (const folderNode of folderSiblings) {
@@ -378,27 +373,19 @@ export default class TrackerPlugin extends Plugin {
           }
         }
         
-        if (!nodeFolderPath) continue;
-        
-        // Match by old path from newPathsMap (before renaming)
-        for (const [oldPath] of newPathsMap.entries()) {
-          const normalizedOldPath = this.normalizePath(oldPath);
-          if (normalizedOldPath === nodeFolderPath) {
-            folderElementsMap.set(oldPath, folderNode);
-            break;
-          }
+        if (nodeFolderPath) {
+          folderElementsMap.set(nodeFolderPath, folderNode);
         }
       }
 
       // Create array of folder elements in correct order based on foldersInNewOrder
       // Only include folders that are actually present in DOM
       // Some folders might not be rendered if they have no files and no children
-      const sortedFolderElements: Array<{ element: HTMLElement; newPath: string }> = [];
+      const sortedFolderElements: HTMLElement[] = [];
       for (const folder of foldersInNewOrder) {
         const element = folderElementsMap.get(folder.path);
         if (element) {
-          const newPath = newPathsMap.get(folder.path) || folder.path;
-          sortedFolderElements.push({ element, newPath });
+          sortedFolderElements.push(element);
         }
       }
 
@@ -412,7 +399,7 @@ export default class TrackerPlugin extends Plugin {
       // (some folders might not be rendered if they have no content)
       if (sortedFolderElements.length < foldersInNewOrder.length) {
         console.warn(`Tracker: Some folders not found in DOM. Expected ${foldersInNewOrder.length}, found ${sortedFolderElements.length}. Parent: ${parentFolderPath}`);
-        const foundPaths = sortedFolderElements.map(({ element }) => {
+        const foundPaths = sortedFolderElements.map((element) => {
           const tc = element.querySelector<HTMLElement>(`.tracker-notes__trackers`);
           return tc?.dataset.folderPath || 'no-trackers-container';
         });
@@ -425,7 +412,7 @@ export default class TrackerPlugin extends Plugin {
 
       // Reorder elements in DOM: remove all folder elements, then reinsert in correct order
       // Remove all folder elements from their current positions
-      for (const { element } of sortedFolderElements) {
+      for (const element of sortedFolderElements) {
         if (element.parentElement) {
           element.remove();
         }
@@ -445,25 +432,13 @@ export default class TrackerPlugin extends Plugin {
 
       if (insertBefore) {
         // Insert before the first non-folder element after folders
-        for (const { element, newPath } of sortedFolderElements) {
+        for (const element of sortedFolderElements) {
           parentContainer.insertBefore(element, insertBefore);
-          // Update dataset to new path after reordering
-          element.dataset.folderPath = newPath;
-          const trackersContainer = element.querySelector<HTMLElement>(`.tracker-notes__trackers`);
-          if (trackersContainer) {
-            trackersContainer.dataset.folderPath = newPath;
-          }
         }
       } else {
         // Append at the end
-        for (const { element, newPath } of sortedFolderElements) {
+        for (const element of sortedFolderElements) {
           parentContainer.appendChild(element);
-          // Update dataset to new path after reordering
-          element.dataset.folderPath = newPath;
-          const trackersContainer = element.querySelector<HTMLElement>(`.tracker-notes__trackers`);
-          if (trackersContainer) {
-            trackersContainer.dataset.folderPath = newPath;
-          }
         }
       }
     }
@@ -494,7 +469,7 @@ export default class TrackerPlugin extends Plugin {
           (async () => {
             // Get frontmatter to check for changes
             const fileOpts = await this.getFileTypeFromFrontmatter(file);
-            const baseName = removePrefix(file.basename);
+            const baseName = file.basename;
             const unit = fileOpts.unit || "";
             const displayName = unit ? `${baseName} (${unit})` : baseName;
             
@@ -578,7 +553,7 @@ export default class TrackerPlugin extends Plugin {
               }
             }
             // If name changed, update tracker position alphabetically
-            const newBasename = removePrefix(file.basename);
+            const newBasename = file.basename;
             if (newBasename !== baseName) {
               const allTrackers = Array.from(parent.children).filter(
                 (el) => el.classList.contains('tracker-notes__tracker')
@@ -1684,31 +1659,223 @@ export default class TrackerPlugin extends Plugin {
   }
 
   /**
-   * Sorts items (files or folders) by prefix
-   * Items with prefixes come first, sorted by prefix number
-   * Items without prefixes come after, sorted alphabetically
+   * Gets normalized full path from vault root
+   * Returns the full normalized path as-is, without relative calculations
    */
-  private sortByPrefix<T extends TFile | TFolder>(items: T[]): T[] {
-    const sorted = [...items];
-    sorted.sort((a, b) => {
+  private getRelativePath(fullPath: string): string {
+    return this.normalizePath(fullPath);
+  }
+
+  /**
+   * Gets current sort order for a folder from settings or creates alphabetical order
+   */
+  private getSortOrderForFolder<T extends TFile | TFolder>(
+    items: T[],
+    folderPath: string
+  ): string[] {
+    const relativePath = this.getRelativePath(folderPath);
+    const sortOrder = this.settings.customSortOrder?.[relativePath];
+    
+    if (sortOrder && sortOrder.length > 0) {
+      return sortOrder;
+    }
+    
+    // No custom sort order - return alphabetical order
+    return items
+      .map(item => item instanceof TFile ? item.basename : item.name)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  }
+
+  /**
+   * Saves sort order for a folder to settings
+   */
+  private async saveSortOrderForFolder(folderPath: string, order: string[]): Promise<void> {
+    const relativePath = this.getRelativePath(folderPath);
+    
+    if (!this.settings.customSortOrder) {
+      this.settings.customSortOrder = {};
+    }
+    
+    this.settings.customSortOrder[relativePath] = order;
+    await this.saveSettings();
+  }
+
+  /**
+   * Sorts items using custom sort order if available, otherwise alphabetically
+   */
+  private sortItemsByOrder<T extends TFile | TFolder>(
+    items: T[],
+    folderPath: string
+  ): T[] {
+    const order = this.getSortOrderForFolder(items, folderPath);
+    
+    // Create a map for quick lookup
+    const itemMap = new Map<string, T>();
+    for (const item of items) {
+      const itemName = item instanceof TFile ? item.basename : item.name;
+      itemMap.set(itemName, item);
+    }
+    
+    // Build sorted array based on order
+    const sorted: T[] = [];
+    const added = new Set<string>();
+    
+    // Add items in custom order
+    for (const orderedName of order) {
+      const item = itemMap.get(orderedName);
+      if (item) {
+        sorted.push(item);
+        added.add(orderedName);
+      }
+    }
+    
+    // Add remaining items (new ones not in sort order) at the end, sorted alphabetically
+    const remaining: T[] = [];
+    for (const item of items) {
+      const itemName = item instanceof TFile ? item.basename : item.name;
+      if (!added.has(itemName)) {
+        remaining.push(item);
+      }
+    }
+    remaining.sort((a, b) => {
       const aName = a instanceof TFile ? a.basename : a.name;
       const bName = b instanceof TFile ? b.basename : b.name;
-      const aParsed = parseFilename(aName);
-      const bParsed = parseFilename(bName);
-      
-      if (aParsed.prefix !== null && bParsed.prefix !== null) {
-        return aParsed.prefix - bParsed.prefix;
-      }
-      if (aParsed.prefix !== null) return -1;
-      if (bParsed.prefix !== null) return 1;
       return aName.localeCompare(bName, undefined, { sensitivity: "base" });
     });
-    return sorted;
+    
+    return [...sorted, ...remaining];
   }
   
   handleTrackerRenamed(oldPath: string, file: TFile): void {
     this.moveTrackerState(oldPath, file.path);
     // Iconize cache is automatically updated by file watcher
+  }
+
+  /**
+   * Handles rename events from Obsidian vault
+   */
+  private handleRename(file: TFile | TFolder, oldPath: string): void {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+
+    const normalizedOldPath = this.normalizePath(oldPath);
+    const normalizedNewPath = this.normalizePath(file.path);
+    const isFolder = file instanceof TFolder;
+
+    void this.updateCustomSortOrderOnRename(normalizedOldPath, normalizedNewPath, isFolder);
+  }
+
+  /**
+   * Updates customSortOrder when a file or folder is renamed
+   */
+  private async updateCustomSortOrderOnRename(
+    oldPath: string,
+    newPath: string,
+    isFolder: boolean
+  ): Promise<void> {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+
+    const updated = { ...this.settings.customSortOrder };
+    let hasChanges = false;
+
+    if (isFolder) {
+      // Handle folder rename
+      // 1. Update keys that exactly match the old path
+      if (updated[oldPath]) {
+        updated[newPath] = updated[oldPath];
+        delete updated[oldPath];
+        hasChanges = true;
+      }
+
+      // 2. Update keys that start with oldPath + "/" (subfolders)
+      const oldPathPrefix = `${oldPath}/`;
+      const newPathPrefix = `${newPath}/`;
+      const keysToUpdate: string[] = [];
+
+      for (const key of Object.keys(updated)) {
+        if (key.startsWith(oldPathPrefix)) {
+          keysToUpdate.push(key);
+        }
+      }
+
+      for (const key of keysToUpdate) {
+        const newKey = key.replace(oldPathPrefix, newPathPrefix);
+        updated[newKey] = updated[key];
+        delete updated[key];
+        hasChanges = true;
+      }
+
+      // 3. Update values in arrays where old folder name appears
+      const oldFolderName = oldPath.split('/').pop() || oldPath;
+      const newFolderName = newPath.split('/').pop() || newPath;
+
+      for (const key of Object.keys(updated)) {
+        const order = updated[key];
+        if (Array.isArray(order)) {
+          let orderChanged = false;
+          const updatedOrder = order.map(item => {
+            if (item === oldFolderName) {
+              orderChanged = true;
+              return newFolderName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[key] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    } else {
+      // Handle file rename
+      // Extract basename and remove .md extension for comparison
+      // In customSortOrder, file names are stored without .md extension
+      const oldFullFileName = oldPath.split('/').pop() || oldPath;
+      const newFullFileName = newPath.split('/').pop() || newPath;
+      const oldFileName = oldFullFileName.replace(/\.md$/, '');
+      const newFileName = newFullFileName.replace(/\.md$/, '');
+      const oldFolderPath = this.getFolderPathFromFile(oldPath);
+      const newFolderPath = this.getFolderPathFromFile(newPath);
+      const normalizedOldFolderPath = this.normalizePath(oldFolderPath);
+      const normalizedNewFolderPath = this.normalizePath(newFolderPath);
+
+      // 1. Update values in arrays where old file name appears
+      // Check both old and new folder paths (in case file was moved)
+      const foldersToCheck = new Set<string>();
+      if (normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedOldFolderPath);
+      }
+      if (normalizedNewFolderPath && normalizedNewFolderPath !== normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedNewFolderPath);
+      }
+
+      for (const folderPath of foldersToCheck) {
+        if (updated[folderPath] && Array.isArray(updated[folderPath])) {
+          const order = updated[folderPath];
+          let orderChanged = false;
+          const updatedOrder = order.map(item => {
+            if (item === oldFileName) {
+              orderChanged = true;
+              return newFileName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[folderPath] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    }
+
+    if (hasChanges) {
+      this.settings.customSortOrder = updated;
+      await this.saveSettings();
+      this.folderTreeService.updateSettings(this.settings);
+    }
   }
 
   /**
@@ -1911,7 +2078,10 @@ export default class TrackerPlugin extends Plugin {
     });
   }
 
-  async saveSettings() { await this.saveData(this.settings); }
+  async saveSettings() { 
+    await this.saveData(this.settings);
+    this.folderTreeService.updateSettings(this.settings);
+  }
 
   editTracker(file: TFile): void {
     new EditTrackerModal(this.app, this, file).open();
@@ -1926,8 +2096,8 @@ export default class TrackerPlugin extends Plugin {
       f => f instanceof TFile && f.extension === "md"
     ) as TFile[];
 
-    // Sort trackers by prefix
-    const sortedTrackers = this.sortByPrefix(trackers);
+    // Get current sort order
+    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
     if (currentIndex <= 0) return; // Already first or not found
@@ -1935,24 +2105,13 @@ export default class TrackerPlugin extends Plugin {
     // Swap with previous
     [sortedTrackers[currentIndex - 1], sortedTrackers[currentIndex]] = [sortedTrackers[currentIndex], sortedTrackers[currentIndex - 1]];
 
-    // Calculate new paths after reordering (before actual renaming)
-    const newPathsMap = new Map<string, string>();
-    for (let i = 0; i < sortedTrackers.length; i++) {
-      const oldPath = sortedTrackers[i].path;
-      const parsed = parseFilename(sortedTrackers[i].basename);
-      const newBasename = formatFilename(parsed.name, i + 1);
-      const newPath = `${folderPath}/${newBasename}.md`;
-      newPathsMap.set(oldPath, newPath);
-    }
+    // Save new order to settings
+    const newOrder = sortedTrackers.map(t => t.basename);
+    await this.saveSortOrderForFolder(folderPath, newOrder);
 
-    // Update DOM immediately (before renaming files)
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers, newPathsMap);
+    // Update DOM immediately
+    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
 
-    // Rename files in parallel (after DOM update)
-    await this.trackerOrderService.reorderTrackers(folderPath, sortedTrackers);
-    
-    // Update trackerState after renaming
-    this.updateTrackerStateAfterRename(newPathsMap);
     this.folderTreeService.invalidate(folderPath);
   }
 
@@ -1965,8 +2124,8 @@ export default class TrackerPlugin extends Plugin {
       f => f instanceof TFile && f.extension === "md"
     ) as TFile[];
 
-    // Sort trackers by prefix
-    const sortedTrackers = this.sortByPrefix(trackers);
+    // Get current sort order
+    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
     if (currentIndex < 0 || currentIndex >= sortedTrackers.length - 1) return; // Already last or not found
@@ -1974,24 +2133,13 @@ export default class TrackerPlugin extends Plugin {
     // Swap with next
     [sortedTrackers[currentIndex], sortedTrackers[currentIndex + 1]] = [sortedTrackers[currentIndex + 1], sortedTrackers[currentIndex]];
 
-    // Calculate new paths after reordering (before actual renaming)
-    const newPathsMap = new Map<string, string>();
-    for (let i = 0; i < sortedTrackers.length; i++) {
-      const oldPath = sortedTrackers[i].path;
-      const parsed = parseFilename(sortedTrackers[i].basename);
-      const newBasename = formatFilename(parsed.name, i + 1);
-      const newPath = `${folderPath}/${newBasename}.md`;
-      newPathsMap.set(oldPath, newPath);
-    }
+    // Save new order to settings
+    const newOrder = sortedTrackers.map(t => t.basename);
+    await this.saveSortOrderForFolder(folderPath, newOrder);
 
-    // Update DOM immediately (before renaming files)
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers, newPathsMap);
+    // Update DOM immediately
+    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
 
-    // Rename files in parallel (after DOM update)
-    await this.trackerOrderService.reorderTrackers(folderPath, sortedTrackers);
-    
-    // Update trackerState after renaming
-    this.updateTrackerStateAfterRename(newPathsMap);
     this.folderTreeService.invalidate(folderPath);
   }
 
@@ -2013,8 +2161,8 @@ export default class TrackerPlugin extends Plugin {
       ) as TFolder[];
     }
 
-    // Sort folders by prefix
-    const sortedFolders = this.sortByPrefix(folders);
+    // Get current sort order
+    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || '');
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
     if (currentIndex <= 0) return; // Already first or not found
@@ -2022,28 +2170,14 @@ export default class TrackerPlugin extends Plugin {
     // Swap with previous
     [sortedFolders[currentIndex - 1], sortedFolders[currentIndex]] = [sortedFolders[currentIndex], sortedFolders[currentIndex - 1]];
 
-    // Calculate new paths after reordering (before actual renaming)
-    const newPathsMap = new Map<string, string>();
-    for (let i = 0; i < sortedFolders.length; i++) {
-      const oldPath = sortedFolders[i].path;
-      const parsed = parseFilename(sortedFolders[i].name);
-      const newName = formatFilename(parsed.name, i + 1);
-      const newPath = parentFolderPath ? `${parentFolderPath}/${newName}` : newName;
-      newPathsMap.set(oldPath, newPath);
-    }
+    // Save new order to settings
+    const newOrder = sortedFolders.map(f => f.name);
+    await this.saveSortOrderForFolder(parentFolderPath || '', newOrder);
 
-    // Update DOM immediately (before renaming folders)
-    await this.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders, newPathsMap);
+    // Update DOM immediately
+    await this.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
 
-    // Rename folders in parallel (after DOM update)
-    await this.trackerOrderService.reorderFolders(parentFolderPath, sortedFolders);
-    
-    // Update trackerState for all trackers inside renamed folders
-    this.updateTrackerStateForRenamedFolders(newPathsMap);
     this.folderTreeService.invalidate(parentFolderPath || '');
-    
-    // Update button handlers for all renamed folders with their new paths from vault
-    await this.updateAllFolderButtonHandlersAfterRename(newPathsMap);
   }
 
   async moveFolderDown(folderPath: string): Promise<void> {
@@ -2064,8 +2198,8 @@ export default class TrackerPlugin extends Plugin {
       ) as TFolder[];
     }
 
-    // Sort folders by prefix
-    const sortedFolders = this.sortByPrefix(folders);
+    // Get current sort order
+    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || '');
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
     if (currentIndex < 0 || currentIndex >= sortedFolders.length - 1) return; // Already last or not found
@@ -2073,28 +2207,14 @@ export default class TrackerPlugin extends Plugin {
     // Swap with next
     [sortedFolders[currentIndex], sortedFolders[currentIndex + 1]] = [sortedFolders[currentIndex + 1], sortedFolders[currentIndex]];
 
-    // Calculate new paths after reordering (before actual renaming)
-    const newPathsMap = new Map<string, string>();
-    for (let i = 0; i < sortedFolders.length; i++) {
-      const oldPath = sortedFolders[i].path;
-      const parsed = parseFilename(sortedFolders[i].name);
-      const newName = formatFilename(parsed.name, i + 1);
-      const newPath = parentFolderPath ? `${parentFolderPath}/${newName}` : newName;
-      newPathsMap.set(oldPath, newPath);
-    }
+    // Save new order to settings
+    const newOrder = sortedFolders.map(f => f.name);
+    await this.saveSortOrderForFolder(parentFolderPath || '', newOrder);
 
-    // Update DOM immediately (before renaming folders)
-    await this.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders, newPathsMap);
+    // Update DOM immediately
+    await this.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
 
-    // Rename folders in parallel (after DOM update)
-    await this.trackerOrderService.reorderFolders(parentFolderPath, sortedFolders);
-    
-    // Update trackerState for all trackers inside renamed folders
-    this.updateTrackerStateForRenamedFolders(newPathsMap);
     this.folderTreeService.invalidate(parentFolderPath || '');
-    
-    // Update button handlers for all renamed folders with their new paths from vault
-    await this.updateAllFolderButtonHandlersAfterRename(newPathsMap);
   }
 
   /**

@@ -1,12 +1,19 @@
 import { App, TFile, TFolder } from "obsidian";
-import type { FolderNode } from "../domain/types";
+import type { FolderNode, TrackerSettings } from "../domain/types";
 import { normalizePath } from "../utils/path";
-import { parseFilename } from "../utils/filename-parser";
 
 export class FolderTreeService {
   private readonly cache = new Map<string, FolderNode | null>();
+  private customSortOrder: Record<string, string[]> | undefined = undefined;
 
   constructor(private readonly app: App) {}
+
+  /**
+   * Updates settings for sorting
+   */
+  updateSettings(settings: TrackerSettings): void {
+    this.customSortOrder = settings.customSortOrder;
+  }
 
   private cacheKey(folderPath: string, maxDepth: number): string {
     return `${normalizePath(folderPath)}::${maxDepth}`;
@@ -43,6 +50,73 @@ export class FolderTreeService {
     return null;
   }
 
+  /**
+   * Gets normalized full path from vault root
+   * Returns the full normalized path as-is, without relative calculations
+   */
+  private getRelativePath(fullPath: string): string {
+    return normalizePath(fullPath);
+  }
+
+  /**
+   * Sorts items using custom sort order if available, otherwise alphabetically
+   */
+  private sortItems<T extends TFile | TFolder>(
+    items: T[],
+    folderPath: string
+  ): T[] {
+    const relativePath = this.getRelativePath(folderPath);
+    const sortOrder = this.customSortOrder?.[relativePath];
+    
+    if (!sortOrder || sortOrder.length === 0) {
+      // No custom sort order - sort alphabetically
+      return [...items].sort((a, b) => {
+        const aName = a instanceof TFile ? a.basename : a.name;
+        const bName = b instanceof TFile ? b.basename : b.name;
+        return aName.localeCompare(bName, undefined, { sensitivity: "base" });
+      });
+    }
+    
+    // Create a map for quick lookup
+    const itemMap = new Map<string, T>();
+    const itemNames = new Set<string>();
+    
+    for (const item of items) {
+      const itemName = item instanceof TFile ? item.basename : item.name;
+      itemMap.set(itemName, item);
+      itemNames.add(itemName);
+    }
+    
+    // Build sorted array based on custom order
+    const sorted: T[] = [];
+    const added = new Set<string>();
+    
+    // Add items in custom order
+    for (const orderedName of sortOrder) {
+      const item = itemMap.get(orderedName);
+      if (item) {
+        sorted.push(item);
+        added.add(orderedName);
+      }
+    }
+    
+    // Add remaining items (new ones not in sort order) at the end, sorted alphabetically
+    const remaining: T[] = [];
+    for (const item of items) {
+      const itemName = item instanceof TFile ? item.basename : item.name;
+      if (!added.has(itemName)) {
+        remaining.push(item);
+      }
+    }
+    remaining.sort((a, b) => {
+      const aName = a instanceof TFile ? a.basename : a.name;
+      const bName = b instanceof TFile ? b.basename : b.name;
+      return aName.localeCompare(bName, undefined, { sensitivity: "base" });
+    });
+    
+    return [...sorted, ...remaining];
+  }
+
   private buildFolderTree(folder: TFolder, maxDepth: number, currentLevel: number): FolderNode {
     const node: FolderNode = {
       name: folder.name,
@@ -58,22 +132,8 @@ export class FolderTreeService {
       }
     }
 
-    node.files.sort((a, b) => {
-      const aParsed = parseFilename(a.basename);
-      const bParsed = parseFilename(b.basename);
-      
-      // If both have prefixes, sort by prefix
-      if (aParsed.prefix !== null && bParsed.prefix !== null) {
-        return aParsed.prefix - bParsed.prefix;
-      }
-      
-      // Files with prefixes come before files without prefixes
-      if (aParsed.prefix !== null) return -1;
-      if (bParsed.prefix !== null) return 1;
-      
-      // If no prefixes, sort alphabetically
-      return a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" });
-    });
+    // Sort files using custom sort order or alphabetically
+    node.files = this.sortItems(node.files, folder.path);
 
     if (currentLevel < maxDepth) {
       for (const child of folder.children) {
@@ -85,22 +145,9 @@ export class FolderTreeService {
         }
       }
 
-      node.children.sort((a, b) => {
-        const aParsed = parseFilename(a.name);
-        const bParsed = parseFilename(b.name);
-        
-        // If both have prefixes, sort by prefix
-        if (aParsed.prefix !== null && bParsed.prefix !== null) {
-          return aParsed.prefix - bParsed.prefix;
-        }
-        
-        // Folders with prefixes come before folders without prefixes
-        if (aParsed.prefix !== null) return -1;
-        if (bParsed.prefix !== null) return 1;
-        
-        // If no prefixes, sort alphabetically
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-      });
+      // Sort folders using custom sort order or alphabetically
+      // For folders, we need to use the parent folder path (folder.path) as the key
+      node.children = this.sortItems(node.children, folder.path);
     }
 
     return node;

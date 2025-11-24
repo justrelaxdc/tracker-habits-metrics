@@ -9,7 +9,7 @@ import { parseOptions } from "../utils/options";
 import { resolveDateIso } from "../utils/date";
 import { DateService } from "../services/date-service";
 import { normalizePath } from "../utils/path";
-import { removePrefix, parseFilename } from "../utils/filename-parser";
+import { parseFilename } from "../utils/filename-parser";
 import { CSS_CLASSES, ERROR_MESSAGES, MODAL_LABELS } from "../constants";
 
 export class TrackerBlockRenderChild extends MarkdownRenderChild {
@@ -265,7 +265,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       if (folderIcon) {
         this.plugin.renderIcon(folderIcon, folderNameEl);
       }
-      folderNameEl.createSpan({ text: removePrefix(node.name) });
+      folderNameEl.createSpan({ text: node.name });
       
       // Order buttons (on the right side)
       const orderBtnsContainer = folderHeader.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });

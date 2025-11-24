@@ -14788,35 +14788,6 @@ function normalizePath(path) {
   return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
 }
 
-// src/utils/filename-parser.ts
-function parseFilename(basename) {
-  const match = basename.match(/^(\d+)[-.\s]+(.+)$/);
-  if (match) {
-    return {
-      prefix: parseInt(match[1], 10),
-      name: match[2],
-      original: basename
-    };
-  }
-  return {
-    prefix: null,
-    name: basename,
-    original: basename
-  };
-}
-function removePrefix(basename) {
-  const parsed = parseFilename(basename);
-  return parsed.name;
-}
-function formatFilename(name, prefix) {
-  if (prefix === void 0 || prefix === null) {
-    return name;
-  }
-  const prefixWidth = prefix >= 100 ? 3 : prefix >= 10 ? 2 : 2;
-  const prefixStr = String(prefix).padStart(prefixWidth, "0");
-  return `${prefixStr}-${name}`;
-}
-
 // src/constants/index.ts
 var MOBILE_BREAKPOINT = 768;
 var MAX_DAYS_BACK = 3650;
@@ -15252,7 +15223,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       if (folderIcon) {
         this.plugin.renderIcon(folderIcon, folderNameEl);
       }
-      folderNameEl.createSpan({ text: removePrefix(node.name) });
+      folderNameEl.createSpan({ text: node.name });
       const orderBtnsContainer = folderHeader.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
       const upButton = orderBtnsContainer.createEl("button", {
         text: "\u2191",
@@ -15330,6 +15301,13 @@ var FolderTreeService = class {
   constructor(app) {
     this.app = app;
     this.cache = /* @__PURE__ */ new Map();
+    this.customSortOrder = void 0;
+  }
+  /**
+   * Updates settings for sorting
+   */
+  updateSettings(settings) {
+    this.customSortOrder = settings.customSortOrder;
   }
   cacheKey(folderPath, maxDepth) {
     return `${normalizePath(folderPath)}::${maxDepth}`;
@@ -15360,6 +15338,56 @@ var FolderTreeService = class {
     }
     return null;
   }
+  /**
+   * Gets normalized full path from vault root
+   * Returns the full normalized path as-is, without relative calculations
+   */
+  getRelativePath(fullPath) {
+    return normalizePath(fullPath);
+  }
+  /**
+   * Sorts items using custom sort order if available, otherwise alphabetically
+   */
+  sortItems(items, folderPath) {
+    const relativePath = this.getRelativePath(folderPath);
+    const sortOrder = this.customSortOrder?.[relativePath];
+    if (!sortOrder || sortOrder.length === 0) {
+      return [...items].sort((a, b) => {
+        const aName = a instanceof import_obsidian2.TFile ? a.basename : a.name;
+        const bName = b instanceof import_obsidian2.TFile ? b.basename : b.name;
+        return aName.localeCompare(bName, void 0, { sensitivity: "base" });
+      });
+    }
+    const itemMap = /* @__PURE__ */ new Map();
+    const itemNames = /* @__PURE__ */ new Set();
+    for (const item of items) {
+      const itemName = item instanceof import_obsidian2.TFile ? item.basename : item.name;
+      itemMap.set(itemName, item);
+      itemNames.add(itemName);
+    }
+    const sorted = [];
+    const added = /* @__PURE__ */ new Set();
+    for (const orderedName of sortOrder) {
+      const item = itemMap.get(orderedName);
+      if (item) {
+        sorted.push(item);
+        added.add(orderedName);
+      }
+    }
+    const remaining = [];
+    for (const item of items) {
+      const itemName = item instanceof import_obsidian2.TFile ? item.basename : item.name;
+      if (!added.has(itemName)) {
+        remaining.push(item);
+      }
+    }
+    remaining.sort((a, b) => {
+      const aName = a instanceof import_obsidian2.TFile ? a.basename : a.name;
+      const bName = b instanceof import_obsidian2.TFile ? b.basename : b.name;
+      return aName.localeCompare(bName, void 0, { sensitivity: "base" });
+    });
+    return [...sorted, ...remaining];
+  }
   buildFolderTree(folder, maxDepth, currentLevel) {
     const node = {
       name: folder.name,
@@ -15373,16 +15401,7 @@ var FolderTreeService = class {
         node.files.push(child);
       }
     }
-    node.files.sort((a, b) => {
-      const aParsed = parseFilename(a.basename);
-      const bParsed = parseFilename(b.basename);
-      if (aParsed.prefix !== null && bParsed.prefix !== null) {
-        return aParsed.prefix - bParsed.prefix;
-      }
-      if (aParsed.prefix !== null) return -1;
-      if (bParsed.prefix !== null) return 1;
-      return a.basename.localeCompare(b.basename, void 0, { sensitivity: "base" });
-    });
+    node.files = this.sortItems(node.files, folder.path);
     if (currentLevel < maxDepth) {
       for (const child of folder.children) {
         if (child instanceof import_obsidian2.TFolder) {
@@ -15392,16 +15411,7 @@ var FolderTreeService = class {
           }
         }
       }
-      node.children.sort((a, b) => {
-        const aParsed = parseFilename(a.name);
-        const bParsed = parseFilename(b.name);
-        if (aParsed.prefix !== null && bParsed.prefix !== null) {
-          return aParsed.prefix - bParsed.prefix;
-        }
-        if (aParsed.prefix !== null) return -1;
-        if (bParsed.prefix !== null) return 1;
-        return a.name.localeCompare(b.name, void 0, { sensitivity: "base" });
-      });
+      node.children = this.sortItems(node.children, folder.path);
     }
     return node;
   }
@@ -17139,7 +17149,7 @@ var TrackerRenderer = class {
     trackerItem.dataset.filePath = file.path;
     const header = trackerItem.createDiv({ cls: CSS_CLASSES.TRACKER_HEADER });
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
-    const baseName = removePrefix(file.basename);
+    const baseName = file.basename;
     const unit = fileOpts.unit || "";
     const displayName = unit ? `${baseName} (${unit})` : baseName;
     const titleContainer = header.createDiv({ cls: CSS_CLASSES.TRACKER_TITLE });
@@ -17402,6 +17412,31 @@ var VisualizationService = class {
   }
 };
 
+// src/utils/filename-parser.ts
+function parseFilename(basename) {
+  const match = basename.match(/^(\d+)[-.\s]+(.+)$/);
+  if (match) {
+    return {
+      prefix: parseInt(match[1], 10),
+      name: match[2],
+      original: basename
+    };
+  }
+  return {
+    prefix: null,
+    name: basename,
+    original: basename
+  };
+}
+function formatFilename(name, prefix) {
+  if (prefix === void 0 || prefix === null) {
+    return name;
+  }
+  const prefixWidth = prefix >= 100 ? 3 : prefix >= 10 ? 2 : 2;
+  const prefixStr = String(prefix).padStart(prefixWidth, "0");
+  return `${prefixStr}-${name}`;
+}
+
 // src/services/tracker-order-service.ts
 var TrackerOrderService = class {
   constructor(app) {
@@ -17651,6 +17686,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.folderTreeService = new FolderTreeService(this.app);
+    this.folderTreeService.updateSettings(this.settings);
     this.trackerFileService = new TrackerFileService(this.app);
     this.visualizationService = new VisualizationService();
     this.trackerOrderService = new TrackerOrderService(this.app);
@@ -17703,6 +17739,13 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       name: "Create new tracker",
       callback: () => this.createNewTracker()
     });
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (file instanceof import_obsidian10.TFile || file instanceof import_obsidian10.TFolder) {
+          this.handleRename(file, oldPath);
+        }
+      })
+    );
   }
   isFileInTrackersFolder(file) {
     const fileFolderPath = this.getFolderPathFromFile(file.path);
@@ -17782,10 +17825,9 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
    * This preserves icons and other DOM content
    * Works independently of file system - uses only passed data
    * @param folderPath Path to the folder containing trackers
-   * @param trackersInNewOrder Array of files in the desired order (before renaming)
-   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
+   * @param trackersInNewOrder Array of files in the desired order
    */
-  async swapTrackerElementsInDOM(folderPath, trackersInNewOrder, newPathsMap) {
+  async swapTrackerElementsInDOM(folderPath, trackersInNewOrder) {
     const normalizedFolderPath = this.normalizePath(folderPath);
     const relevantBlocks = Array.from(this.activeBlocks).filter((block) => {
       const blockPath = this.normalizePath(block.getFolderPath());
@@ -17797,35 +17839,28 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       );
       for (const trackersContainer of Array.from(trackersContainers)) {
         const trackerElementsMap = /* @__PURE__ */ new Map();
-        for (const [oldPath, newPath] of newPathsMap.entries()) {
-          let trackerElement = trackersContainer.querySelector(
-            `.tracker-notes__tracker[data-file-path="${oldPath}"]`
+        for (const file of trackersInNewOrder) {
+          const trackerElement = trackersContainer.querySelector(
+            `.tracker-notes__tracker[data-file-path="${file.path}"]`
           );
-          if (!trackerElement) {
-            trackerElement = trackersContainer.querySelector(
-              `.tracker-notes__tracker[data-file-path="${newPath}"]`
-            );
-          }
           if (trackerElement) {
-            trackerElementsMap.set(oldPath, trackerElement);
+            trackerElementsMap.set(file.path, trackerElement);
           }
         }
         const sortedTrackerElements = [];
         for (const file of trackersInNewOrder) {
           const element = trackerElementsMap.get(file.path);
           if (element) {
-            const newPath = newPathsMap.get(file.path) || file.path;
-            sortedTrackerElements.push({ element, newPath });
+            sortedTrackerElements.push(element);
           }
         }
-        for (const { element } of sortedTrackerElements) {
+        for (const element of sortedTrackerElements) {
           if (element.parentElement) {
             element.remove();
           }
         }
-        for (const { element, newPath } of sortedTrackerElements) {
+        for (const element of sortedTrackerElements) {
           trackersContainer.appendChild(element);
-          element.dataset.filePath = newPath;
         }
       }
     }
@@ -17835,10 +17870,9 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
    * This preserves icons and all DOM content
    * Works independently of file system - uses only passed data
    * @param parentFolderPath Path to the parent folder containing folders
-   * @param foldersInNewOrder Array of folders in the desired order (before renaming)
-   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
+   * @param foldersInNewOrder Array of folders in the desired order
    */
-  async reorderFolderElementsInDOM(parentFolderPath, foldersInNewOrder, newPathsMap) {
+  async reorderFolderElementsInDOM(parentFolderPath, foldersInNewOrder) {
     const normalizedParentPath = this.normalizePath(parentFolderPath);
     const relevantBlocks = Array.from(this.activeBlocks).filter((block) => {
       const blockPath = this.normalizePath(block.getFolderPath());
@@ -17893,21 +17927,15 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
             nodeFolderPath = this.normalizePath(trackersContainer.dataset.folderPath || "");
           }
         }
-        if (!nodeFolderPath) continue;
-        for (const [oldPath] of newPathsMap.entries()) {
-          const normalizedOldPath = this.normalizePath(oldPath);
-          if (normalizedOldPath === nodeFolderPath) {
-            folderElementsMap.set(oldPath, folderNode);
-            break;
-          }
+        if (nodeFolderPath) {
+          folderElementsMap.set(nodeFolderPath, folderNode);
         }
       }
       const sortedFolderElements = [];
       for (const folder of foldersInNewOrder) {
         const element = folderElementsMap.get(folder.path);
         if (element) {
-          const newPath = newPathsMap.get(folder.path) || folder.path;
-          sortedFolderElements.push({ element, newPath });
+          sortedFolderElements.push(element);
         }
       }
       if (sortedFolderElements.length === 0) {
@@ -17916,7 +17944,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       }
       if (sortedFolderElements.length < foldersInNewOrder.length) {
         console.warn(`Tracker: Some folders not found in DOM. Expected ${foldersInNewOrder.length}, found ${sortedFolderElements.length}. Parent: ${parentFolderPath}`);
-        const foundPaths = sortedFolderElements.map(({ element }) => {
+        const foundPaths = sortedFolderElements.map((element) => {
           const tc = element.querySelector(`.tracker-notes__trackers`);
           return tc?.dataset.folderPath || "no-trackers-container";
         });
@@ -17924,7 +17952,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         console.warn(`Tracker: Missing folders:`, missingPaths);
         console.warn(`Tracker: Found folders:`, foundPaths);
       }
-      for (const { element } of sortedFolderElements) {
+      for (const element of sortedFolderElements) {
         if (element.parentElement) {
           element.remove();
         }
@@ -17939,22 +17967,12 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         }
       }
       if (insertBefore) {
-        for (const { element, newPath } of sortedFolderElements) {
+        for (const element of sortedFolderElements) {
           parentContainer.insertBefore(element, insertBefore);
-          element.dataset.folderPath = newPath;
-          const trackersContainer = element.querySelector(`.tracker-notes__trackers`);
-          if (trackersContainer) {
-            trackersContainer.dataset.folderPath = newPath;
-          }
         }
       } else {
-        for (const { element, newPath } of sortedFolderElements) {
+        for (const element of sortedFolderElements) {
           parentContainer.appendChild(element);
-          element.dataset.folderPath = newPath;
-          const trackersContainer = element.querySelector(`.tracker-notes__trackers`);
-          if (trackersContainer) {
-            trackersContainer.dataset.folderPath = newPath;
-          }
         }
       }
     }
@@ -17976,7 +17994,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         refreshPromises.push(
           (async () => {
             const fileOpts = await this.getFileTypeFromFrontmatter(file);
-            const baseName = removePrefix(file.basename);
+            const baseName = file.basename;
             const unit = fileOpts.unit || "";
             const displayName = unit ? `${baseName} (${unit})` : baseName;
             const oldPath = trackerItem.dataset.filePath;
@@ -18036,7 +18054,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
                 await this.controlsRenderer.renderControlsForDate(controlsContainer, file, activeDateIso, mergedOpts);
               }
             }
-            const newBasename = removePrefix(file.basename);
+            const newBasename = file.basename;
             if (newBasename !== baseName) {
               const allTrackers = Array.from(parent.children).filter(
                 (el) => el.classList.contains("tracker-notes__tracker")
@@ -18843,28 +18861,169 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.updateTrackerStateAfterRename(filePathsMap);
   }
   /**
-   * Sorts items (files or folders) by prefix
-   * Items with prefixes come first, sorted by prefix number
-   * Items without prefixes come after, sorted alphabetically
+   * Gets normalized full path from vault root
+   * Returns the full normalized path as-is, without relative calculations
    */
-  sortByPrefix(items) {
-    const sorted = [...items];
-    sorted.sort((a, b) => {
+  getRelativePath(fullPath) {
+    return this.normalizePath(fullPath);
+  }
+  /**
+   * Gets current sort order for a folder from settings or creates alphabetical order
+   */
+  getSortOrderForFolder(items, folderPath) {
+    const relativePath = this.getRelativePath(folderPath);
+    const sortOrder = this.settings.customSortOrder?.[relativePath];
+    if (sortOrder && sortOrder.length > 0) {
+      return sortOrder;
+    }
+    return items.map((item) => item instanceof import_obsidian10.TFile ? item.basename : item.name).sort((a, b) => a.localeCompare(b, void 0, { sensitivity: "base" }));
+  }
+  /**
+   * Saves sort order for a folder to settings
+   */
+  async saveSortOrderForFolder(folderPath, order) {
+    const relativePath = this.getRelativePath(folderPath);
+    if (!this.settings.customSortOrder) {
+      this.settings.customSortOrder = {};
+    }
+    this.settings.customSortOrder[relativePath] = order;
+    await this.saveSettings();
+  }
+  /**
+   * Sorts items using custom sort order if available, otherwise alphabetically
+   */
+  sortItemsByOrder(items, folderPath) {
+    const order = this.getSortOrderForFolder(items, folderPath);
+    const itemMap = /* @__PURE__ */ new Map();
+    for (const item of items) {
+      const itemName = item instanceof import_obsidian10.TFile ? item.basename : item.name;
+      itemMap.set(itemName, item);
+    }
+    const sorted = [];
+    const added = /* @__PURE__ */ new Set();
+    for (const orderedName of order) {
+      const item = itemMap.get(orderedName);
+      if (item) {
+        sorted.push(item);
+        added.add(orderedName);
+      }
+    }
+    const remaining = [];
+    for (const item of items) {
+      const itemName = item instanceof import_obsidian10.TFile ? item.basename : item.name;
+      if (!added.has(itemName)) {
+        remaining.push(item);
+      }
+    }
+    remaining.sort((a, b) => {
       const aName = a instanceof import_obsidian10.TFile ? a.basename : a.name;
       const bName = b instanceof import_obsidian10.TFile ? b.basename : b.name;
-      const aParsed = parseFilename(aName);
-      const bParsed = parseFilename(bName);
-      if (aParsed.prefix !== null && bParsed.prefix !== null) {
-        return aParsed.prefix - bParsed.prefix;
-      }
-      if (aParsed.prefix !== null) return -1;
-      if (bParsed.prefix !== null) return 1;
       return aName.localeCompare(bName, void 0, { sensitivity: "base" });
     });
-    return sorted;
+    return [...sorted, ...remaining];
   }
   handleTrackerRenamed(oldPath, file) {
     this.moveTrackerState(oldPath, file.path);
+  }
+  /**
+   * Handles rename events from Obsidian vault
+   */
+  handleRename(file, oldPath) {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+    const normalizedOldPath = this.normalizePath(oldPath);
+    const normalizedNewPath = this.normalizePath(file.path);
+    const isFolder = file instanceof import_obsidian10.TFolder;
+    void this.updateCustomSortOrderOnRename(normalizedOldPath, normalizedNewPath, isFolder);
+  }
+  /**
+   * Updates customSortOrder when a file or folder is renamed
+   */
+  async updateCustomSortOrderOnRename(oldPath, newPath, isFolder) {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+    const updated = { ...this.settings.customSortOrder };
+    let hasChanges = false;
+    if (isFolder) {
+      if (updated[oldPath]) {
+        updated[newPath] = updated[oldPath];
+        delete updated[oldPath];
+        hasChanges = true;
+      }
+      const oldPathPrefix = `${oldPath}/`;
+      const newPathPrefix = `${newPath}/`;
+      const keysToUpdate = [];
+      for (const key of Object.keys(updated)) {
+        if (key.startsWith(oldPathPrefix)) {
+          keysToUpdate.push(key);
+        }
+      }
+      for (const key of keysToUpdate) {
+        const newKey = key.replace(oldPathPrefix, newPathPrefix);
+        updated[newKey] = updated[key];
+        delete updated[key];
+        hasChanges = true;
+      }
+      const oldFolderName = oldPath.split("/").pop() || oldPath;
+      const newFolderName = newPath.split("/").pop() || newPath;
+      for (const key of Object.keys(updated)) {
+        const order = updated[key];
+        if (Array.isArray(order)) {
+          let orderChanged = false;
+          const updatedOrder = order.map((item) => {
+            if (item === oldFolderName) {
+              orderChanged = true;
+              return newFolderName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[key] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    } else {
+      const oldFullFileName = oldPath.split("/").pop() || oldPath;
+      const newFullFileName = newPath.split("/").pop() || newPath;
+      const oldFileName = oldFullFileName.replace(/\.md$/, "");
+      const newFileName = newFullFileName.replace(/\.md$/, "");
+      const oldFolderPath = this.getFolderPathFromFile(oldPath);
+      const newFolderPath = this.getFolderPathFromFile(newPath);
+      const normalizedOldFolderPath = this.normalizePath(oldFolderPath);
+      const normalizedNewFolderPath = this.normalizePath(newFolderPath);
+      const foldersToCheck = /* @__PURE__ */ new Set();
+      if (normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedOldFolderPath);
+      }
+      if (normalizedNewFolderPath && normalizedNewFolderPath !== normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedNewFolderPath);
+      }
+      for (const folderPath of foldersToCheck) {
+        if (updated[folderPath] && Array.isArray(updated[folderPath])) {
+          const order = updated[folderPath];
+          let orderChanged = false;
+          const updatedOrder = order.map((item) => {
+            if (item === oldFileName) {
+              orderChanged = true;
+              return newFileName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[folderPath] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    }
+    if (hasChanges) {
+      this.settings.customSortOrder = updated;
+      await this.saveSettings();
+      this.folderTreeService.updateSettings(this.settings);
+    }
   }
   /**
    * Updates onclick handlers for folder buttons to use new path after renaming
@@ -19026,6 +19185,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   }
   async saveSettings() {
     await this.saveData(this.settings);
+    this.folderTreeService.updateSettings(this.settings);
   }
   editTracker(file) {
     new EditTrackerModal(this.app, this, file).open();
@@ -19037,21 +19197,13 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const trackers = folder.children.filter(
       (f) => f instanceof import_obsidian10.TFile && f.extension === "md"
     );
-    const sortedTrackers = this.sortByPrefix(trackers);
+    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
     const currentIndex = sortedTrackers.findIndex((t) => t.path === file.path);
     if (currentIndex <= 0) return;
     [sortedTrackers[currentIndex - 1], sortedTrackers[currentIndex]] = [sortedTrackers[currentIndex], sortedTrackers[currentIndex - 1]];
-    const newPathsMap = /* @__PURE__ */ new Map();
-    for (let i = 0; i < sortedTrackers.length; i++) {
-      const oldPath = sortedTrackers[i].path;
-      const parsed = parseFilename(sortedTrackers[i].basename);
-      const newBasename = formatFilename(parsed.name, i + 1);
-      const newPath = `${folderPath}/${newBasename}.md`;
-      newPathsMap.set(oldPath, newPath);
-    }
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers, newPathsMap);
-    await this.trackerOrderService.reorderTrackers(folderPath, sortedTrackers);
-    this.updateTrackerStateAfterRename(newPathsMap);
+    const newOrder = sortedTrackers.map((t) => t.basename);
+    await this.saveSortOrderForFolder(folderPath, newOrder);
+    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
   async moveTrackerDown(file) {
@@ -19061,21 +19213,13 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const trackers = folder.children.filter(
       (f) => f instanceof import_obsidian10.TFile && f.extension === "md"
     );
-    const sortedTrackers = this.sortByPrefix(trackers);
+    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
     const currentIndex = sortedTrackers.findIndex((t) => t.path === file.path);
     if (currentIndex < 0 || currentIndex >= sortedTrackers.length - 1) return;
     [sortedTrackers[currentIndex], sortedTrackers[currentIndex + 1]] = [sortedTrackers[currentIndex + 1], sortedTrackers[currentIndex]];
-    const newPathsMap = /* @__PURE__ */ new Map();
-    for (let i = 0; i < sortedTrackers.length; i++) {
-      const oldPath = sortedTrackers[i].path;
-      const parsed = parseFilename(sortedTrackers[i].basename);
-      const newBasename = formatFilename(parsed.name, i + 1);
-      const newPath = `${folderPath}/${newBasename}.md`;
-      newPathsMap.set(oldPath, newPath);
-    }
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers, newPathsMap);
-    await this.trackerOrderService.reorderTrackers(folderPath, sortedTrackers);
-    this.updateTrackerStateAfterRename(newPathsMap);
+    const newOrder = sortedTrackers.map((t) => t.basename);
+    await this.saveSortOrderForFolder(folderPath, newOrder);
+    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
   async moveFolderUp(folderPath) {
@@ -19092,23 +19236,14 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         (f) => f instanceof import_obsidian10.TFolder
       );
     }
-    const sortedFolders = this.sortByPrefix(folders);
+    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
     const currentIndex = sortedFolders.findIndex((f) => f.path === folderPath);
     if (currentIndex <= 0) return;
     [sortedFolders[currentIndex - 1], sortedFolders[currentIndex]] = [sortedFolders[currentIndex], sortedFolders[currentIndex - 1]];
-    const newPathsMap = /* @__PURE__ */ new Map();
-    for (let i = 0; i < sortedFolders.length; i++) {
-      const oldPath = sortedFolders[i].path;
-      const parsed = parseFilename(sortedFolders[i].name);
-      const newName = formatFilename(parsed.name, i + 1);
-      const newPath = parentFolderPath ? `${parentFolderPath}/${newName}` : newName;
-      newPathsMap.set(oldPath, newPath);
-    }
-    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders, newPathsMap);
-    await this.trackerOrderService.reorderFolders(parentFolderPath, sortedFolders);
-    this.updateTrackerStateForRenamedFolders(newPathsMap);
+    const newOrder = sortedFolders.map((f) => f.name);
+    await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
+    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
-    await this.updateAllFolderButtonHandlersAfterRename(newPathsMap);
   }
   async moveFolderDown(folderPath) {
     const parentFolderPath = this.getFolderPathFromFile(folderPath);
@@ -19124,23 +19259,14 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         (f) => f instanceof import_obsidian10.TFolder
       );
     }
-    const sortedFolders = this.sortByPrefix(folders);
+    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
     const currentIndex = sortedFolders.findIndex((f) => f.path === folderPath);
     if (currentIndex < 0 || currentIndex >= sortedFolders.length - 1) return;
     [sortedFolders[currentIndex], sortedFolders[currentIndex + 1]] = [sortedFolders[currentIndex + 1], sortedFolders[currentIndex]];
-    const newPathsMap = /* @__PURE__ */ new Map();
-    for (let i = 0; i < sortedFolders.length; i++) {
-      const oldPath = sortedFolders[i].path;
-      const parsed = parseFilename(sortedFolders[i].name);
-      const newName = formatFilename(parsed.name, i + 1);
-      const newPath = parentFolderPath ? `${parentFolderPath}/${newName}` : newName;
-      newPathsMap.set(oldPath, newPath);
-    }
-    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders, newPathsMap);
-    await this.trackerOrderService.reorderFolders(parentFolderPath, sortedFolders);
-    this.updateTrackerStateForRenamedFolders(newPathsMap);
+    const newOrder = sortedFolders.map((f) => f.name);
+    await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
+    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
-    await this.updateAllFolderButtonHandlersAfterRename(newPathsMap);
   }
   /**
    * Updates button handlers for all folders and trackers in DOM after folder renaming

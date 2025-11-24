@@ -10,6 +10,7 @@ export type TrackerSettings = {
   hideChartOnMobile: boolean;
   hideStatsOnMobile: boolean;
   disableLimitReaction: boolean;
+  customSortOrder?: Record<string, string[]>;
 };
 
 export const DEFAULT_SETTINGS: TrackerSettings = {
