@@ -119,28 +119,62 @@ export class ControlsRenderer {
     if (!trackerItem) return;
 
     const header = trackerItem.querySelector(`.${CSS_CLASSES.TRACKER_HEADER}`) as HTMLElement;
+    if (!header) return;
 
     // Remove all limit classes first
-    if (header) {
-      header.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
-    }
+    header.classList.remove(CSS_CLASSES.LIMIT_ERROR, CSS_CLASSES.LIMIT_SUCCESS);
 
-    // If no limits or value is null/undefined/NaN, keep default (gray)
+    // If no limits or value is null/undefined/NaN, reset to neutral (gray)
     if ((minLimit === null && maxLimit === null) || 
         value === null || 
         value === undefined || 
         isNaN(value) ||
         this.settings.disableLimitReaction) {
+      header.style.setProperty('--limit-progress-width', '0%');
+      header.style.setProperty('--limit-progress-color', 'transparent');
       return;
     }
 
-    // Check limits and apply classes
-    const limitCheck = checkLimits(value, minLimit, maxLimit);
-    if (limitCheck.status === 'error') {
-      if (header) header.classList.add(CSS_CLASSES.LIMIT_ERROR);
-    } else if (limitCheck.status === 'success') {
-      if (header) header.classList.add(CSS_CLASSES.LIMIT_SUCCESS);
+    // Calculate progress percentage (0-100)
+    let progressPercent = 0;
+    
+    if (minLimit !== null && maxLimit !== null) {
+      // Both limits: maxLimit = 100%, progress calculated relative to maxLimit
+      if (value <= maxLimit) {
+        // Progress from 0% (at value = 0) to 100% (at value = maxLimit)
+        progressPercent = Math.max(0, 100 * (value / maxLimit));
+      } else {
+        // Above max: progress decreases from 100% to 0% as value exceeds maxLimit
+        // When value = maxLimit * 2, progress = 0%
+        const excess = value - maxLimit;
+        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+      }
+    } else if (maxLimit !== null) {
+      // Only maxLimit: 100% when value <= maxLimit, decreases when above
+      if (value <= maxLimit) {
+        progressPercent = 100;
+      } else {
+        // When value = maxLimit * 2, progress = 0%
+        const excess = value - maxLimit;
+        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+      }
+    } else if (minLimit !== null) {
+      // Only minLimit: 0% at value = 0, 100% at value = minLimit, stays 100% above
+      progressPercent = Math.min(100, Math.max(0, 100 * (value / minLimit)));
     }
+
+    // Calculate HSL color: red (0°) to green (120°)
+    // progressPercent 0% = red (H=0), 100% = green (H=120)
+    const hue = 120 * (progressPercent / 100);
+    const saturation = 70; // Moderate saturation for visibility
+    const lightness = 50; // Medium lightness
+    
+    // Convert to CSS color string
+    const progressColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+    // Set CSS variables for the animated progress bar
+    header.style.setProperty('--limit-progress-width', `${progressPercent}%`);
+    header.style.setProperty('--limit-progress-color', progressColor);
   }
 
   private async renderNumber(

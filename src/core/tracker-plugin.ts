@@ -126,6 +126,17 @@ export default class TrackerPlugin extends Plugin {
         }
       })
     );
+
+    // Register handler for file/folder deletion events
+    this.registerEvent(
+      this.app.vault.on('delete', (file) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          void this.handleFileDelete(file, file.path);
+        } else if (file instanceof TFolder) {
+          void this.handleFolderDelete(file.path);
+        }
+      })
+    );
   }
 
   private isFileInTrackersFolder(file: TFile): boolean {
@@ -356,8 +367,6 @@ export default class TrackerPlugin extends Plugin {
       const folderSiblings = siblings.filter(el => 
         el.classList.contains('tracker-notes__folder-node')
       );
-
-      console.log(`Tracker: Found ${folderSiblings.length} folder siblings for parent ${parentFolderPath}`);
 
       // Map folder elements by their paths (from DOM)
       const folderElementsMap = new Map<string, HTMLElement>();
@@ -1692,11 +1701,13 @@ export default class TrackerPlugin extends Plugin {
   private async saveSortOrderForFolder(folderPath: string, order: string[]): Promise<void> {
     const relativePath = this.getRelativePath(folderPath);
     
-    if (!this.settings.customSortOrder) {
-      this.settings.customSortOrder = {};
-    }
+    // Создаем новый объект для customSortOrder, чтобы изменения были замечены системой сохранения
+    const updatedCustomSortOrder = this.settings.customSortOrder 
+      ? { ...this.settings.customSortOrder }
+      : {};
     
-    this.settings.customSortOrder[relativePath] = order;
+    updatedCustomSortOrder[relativePath] = order;
+    this.settings.customSortOrder = updatedCustomSortOrder;
     await this.saveSettings();
   }
 
@@ -1764,6 +1775,81 @@ export default class TrackerPlugin extends Plugin {
     const isFolder = file instanceof TFolder;
 
     void this.updateCustomSortOrderOnRename(normalizedOldPath, normalizedNewPath, isFolder);
+  }
+
+  /**
+   * Handles file deletion events - removes tracker from customSortOrder
+   */
+  private async handleFileDelete(file: TFile, filePath: string): Promise<void> {
+    const folderPath = this.getFolderPathFromFile(filePath);
+    if (!folderPath) return; // File was in root, skip
+
+    // Extract basename from filePath (remove .md extension)
+    const fileName = filePath.split('/').pop()?.replace(/\.md$/, '') || '';
+    if (!fileName) return;
+
+    const normalizedFolderPath = this.normalizePath(folderPath);
+    const relativePath = this.getRelativePath(normalizedFolderPath);
+    
+    // Get current sort order for the folder
+    if (!this.settings.customSortOrder?.[relativePath]) {
+      return; // No sort order for this folder, nothing to update
+    }
+
+    const currentSortOrder = this.settings.customSortOrder[relativePath];
+    
+    // Remove fileName from array
+    const updatedSortOrder = currentSortOrder.filter(name => name !== fileName);
+    
+    // Save updated sort order (even if array becomes empty, save it)
+    await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder);
+    
+    // Invalidate cache for this folder
+    this.folderTreeService.invalidate(folderPath);
+  }
+
+  /**
+   * Handles folder deletion events - removes folder and all nested sort order configs
+   */
+  private async handleFolderDelete(folderPath: string): Promise<void> {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+
+    const normalizedFolderPath = this.normalizePath(folderPath);
+    const relativePath = this.getRelativePath(normalizedFolderPath);
+    
+    // Create a copy of customSortOrder
+    const updated = { ...this.settings.customSortOrder };
+    let hasChanges = false;
+    
+    // Find all keys that should be deleted:
+    // 1. Keys that exactly match the folder path
+    // 2. Keys that start with folderPath + "/" (nested folders)
+    const folderPathPrefix = `${relativePath}/`;
+    const keysToDelete: string[] = [];
+    
+    for (const key of Object.keys(updated)) {
+      if (key === relativePath || key.startsWith(folderPathPrefix)) {
+        keysToDelete.push(key);
+      }
+    }
+    
+    // Delete all found keys
+    for (const key of keysToDelete) {
+      delete updated[key];
+      hasChanges = true;
+    }
+    
+    // Save updated customSortOrder if there were changes
+    if (hasChanges) {
+      this.settings.customSortOrder = updated;
+      await this.saveSettings();
+      this.folderTreeService.updateSettings(this.settings);
+    }
+    
+    // Invalidate cache for deleted folder and all subfolders
+    this.folderTreeService.invalidate(folderPath);
   }
 
   /**
@@ -1942,6 +2028,23 @@ export default class TrackerPlugin extends Plugin {
     await this.ensureTrackerState(file);
     const normalizedFolderPath = this.normalizePath(folderPath);
     
+    // Обновляем customSortOrder: добавляем новый трекер в начало
+    if (normalizedFolderPath) {
+      const relativePath = this.getRelativePath(normalizedFolderPath);
+      
+      // Get current sort order for the folder (or empty array)
+      const currentSortOrder = this.settings.customSortOrder?.[relativePath] || [];
+      
+      // Remove file.basename from array if it already exists (to avoid duplicates)
+      const updatedSortOrder = currentSortOrder.filter(name => name !== file.basename);
+      
+      // Add new tracker to the beginning
+      updatedSortOrder.unshift(file.basename);
+      
+      // Save updated sort order
+      await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder);
+    }
+    
     // Динамически добавляем новый трекер без полной перерисовки
     for (const block of Array.from(this.activeBlocks)) {
       const blockFolderPath = block.getFolderPath();
@@ -1966,30 +2069,57 @@ export default class TrackerPlugin extends Plugin {
       }
       
       for (const trackersContainer of trackersContainers) {
-        const existingTrackers = Array.from(trackersContainer.children).filter(
-          (el) => el.classList.contains('tracker-notes__tracker')
-        ) as HTMLElement[];
+        // Получаем все трекеры в папке в правильном порядке согласно customSortOrder
+        const folder = this.app.vault.getAbstractFileByPath(normalizedFolderPath);
+        if (!folder || !(folder instanceof TFolder)) continue;
         
-        let insertBefore: HTMLElement | null = null;
-        for (const tracker of existingTrackers) {
-          const trackerPath = tracker.dataset.filePath;
-          if (!trackerPath) continue;
-          const trackerFile = this.app.vault.getAbstractFileByPath(trackerPath);
-          if (trackerFile instanceof TFile) {
-            if (trackerFile.basename.localeCompare(file.basename, undefined, { sensitivity: "base" }) > 0) {
-              insertBefore = tracker;
-              break;
-            }
-          }
-        }
+        const allTrackers = folder.children.filter(
+          f => f instanceof TFile && f.extension === "md"
+        ) as TFile[];
         
+        const sortedTrackers = this.sortItemsByOrder(allTrackers, normalizedFolderPath);
+        
+        // Находим позицию нового трекера в отсортированном списке
+        const newTrackerIndex = sortedTrackers.findIndex(t => t.path === file.path);
+        if (newTrackerIndex < 0) continue; // Трекер не найден, пропускаем
+        
+        // Рендерим новый трекер
         await this.trackerRenderer.renderTracker(trackersContainer, file, activeDateIso, view, opts);
         
         const newTracker = trackersContainer.querySelector(
           `.tracker-notes__tracker[data-file-path="${file.path}"]`
         ) as HTMLElement;
-        if (newTracker && insertBefore && newTracker.parentElement === trackersContainer) {
+        
+        if (!newTracker || newTracker.parentElement !== trackersContainer) continue;
+        
+        // Находим элемент, перед которым нужно вставить новый трекер
+        let insertBefore: HTMLElement | null = null;
+        
+        if (newTrackerIndex === 0) {
+          // Новый трекер должен быть первым - вставляем в начало
+          const firstChild = trackersContainer.firstElementChild;
+          if (firstChild && firstChild !== newTracker) {
+            insertBefore = firstChild as HTMLElement;
+          }
+        } else if (newTrackerIndex < sortedTrackers.length) {
+          // Находим элемент, который должен идти после нового трекера
+          const nextTracker = sortedTrackers[newTrackerIndex];
+          if (nextTracker) {
+            insertBefore = trackersContainer.querySelector(
+              `.tracker-notes__tracker[data-file-path="${nextTracker.path}"]`
+            ) as HTMLElement | null;
+          }
+        }
+        
+        // Вставляем новый трекер в правильную позицию
+        if (insertBefore && insertBefore !== newTracker) {
           trackersContainer.insertBefore(newTracker, insertBefore);
+        } else if (newTrackerIndex === 0) {
+          // Если трекер должен быть первым, вставляем в начало
+          const firstChild = trackersContainer.firstElementChild;
+          if (firstChild !== newTracker) {
+            trackersContainer.insertBefore(newTracker, firstChild);
+          }
         }
       }
     }

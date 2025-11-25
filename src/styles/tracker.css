@@ -257,15 +257,31 @@
         display: flex;
       }
       
-      /* Limit indicators for tracker header */
+      /* Limit indicators for tracker header - animated progress bar */
+      .tracker-notes__tracker-header {
+        position: relative;
+        border-bottom: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.1));
+      }
+      
+      .tracker-notes__tracker-header::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        height: 2px;
+        width: var(--limit-progress-width, 0%);
+        background-color: var(--limit-progress-color, transparent);
+        transition: width 0.3s ease, background-color 0.3s ease;
+        z-index: 1;
+      }
+      
+      /* Keep old classes for backward compatibility (can be removed if not needed) */
       .tracker-notes__tracker-header.tracker-notes__limit-error {
-        border-bottom-color: var(--text-error, #c00000) !important;
-        transition: border-bottom-color 0.3s ease;
+        /* Old style - kept for compatibility */
       }
       
       .tracker-notes__tracker-header.tracker-notes__limit-success {
-        border-bottom-color: var(--text-success, #00c000) !important;
-        transition: border-bottom-color 0.3s ease;
+        /* Old style - kept for compatibility */
       }
       
       /* Iconize integration styles */
