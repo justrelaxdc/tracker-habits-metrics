@@ -115,8 +115,8 @@ export class HeatmapService {
         dayDiv.removeClass("start-day");
       }
       
-      // Для плохих привычек: добавляем класс before-start для дней до start-day
-      if (trackerType === 'bad-habit' && startTrackingDateStr) {
+      // Для привычек (good-habit и bad-habit): добавляем класс before-start для дней до start-day и after-today для будущих дат
+      if (trackerType === 'bad-habit' || trackerType === 'good-habit') {
         try {
           const dayDateObj = DateService.parseMultiple(dateStr, [
             this.settings.dateFormat,
@@ -124,25 +124,40 @@ export class HeatmapService {
             'DD.MM.YYYY',
             'MM/DD/YYYY'
           ]);
-          const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
-            this.settings.dateFormat,
-            'YYYY-MM-DD',
-            'DD.MM.YYYY',
-            'MM/DD/YYYY'
-          ]);
+          const today = DateService.now();
+          const todayStart = DateService.startOfDay(today);
           
-          if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
-            dayDiv.addClass("before-start");
+          // Проверяем, является ли дата будущей (после сегодня)
+          if (DateService.isAfter(dayDateObj, todayStart)) {
+            dayDiv.addClass("after-today");
+            dayDiv.removeClass("before-start");
+          } else if (startTrackingDateStr) {
+            const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+              this.settings.dateFormat,
+              'YYYY-MM-DD',
+              'DD.MM.YYYY',
+              'MM/DD/YYYY'
+            ]);
+            
+            if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+              dayDiv.addClass("before-start");
+            } else {
+              dayDiv.removeClass("before-start");
+            }
+            dayDiv.removeClass("after-today");
           } else {
             dayDiv.removeClass("before-start");
+            dayDiv.removeClass("after-today");
           }
         } catch (e) {
-          // Если не удалось распарсить дату, удаляем класс
+          // Если не удалось распарсить дату, удаляем классы
           dayDiv.removeClass("before-start");
+          dayDiv.removeClass("after-today");
         }
       } else {
-        // Для остальных типов трекеров удаляем класс
+        // Для остальных типов трекеров удаляем классы
         dayDiv.removeClass("before-start");
+        dayDiv.removeClass("after-today");
       }
     }
     
@@ -220,9 +235,44 @@ export class HeatmapService {
         const dateStr = dayDiv.dataset.dateStr;
         if (!dateStr) return;
         
-        // Всегда читаем актуальные данные из бекенда перед использованием
+        // Проверяем, можно ли кликать на этот день (не до начала отслеживания и не после сегодня)
         const entries = await this.readAllEntries(file);
         const fileOptsForClick = await this.getFileTypeFromFrontmatter(file);
+        const startTrackingDateStr = this.getStartTrackingDate(entries, fileOptsForClick);
+        const today = DateService.now();
+        const todayStart = DateService.startOfDay(today);
+        
+        try {
+          const dayDateObj = DateService.parseMultiple(dateStr, [
+            this.settings.dateFormat,
+            'YYYY-MM-DD',
+            'DD.MM.YYYY',
+            'MM/DD/YYYY'
+          ]);
+          
+          // Если дата после сегодня - не обрабатываем клик
+          if (DateService.isAfter(dayDateObj, todayStart)) {
+            return;
+          }
+          
+          // Если дата до начала отслеживания - не обрабатываем клик
+          if (startTrackingDateStr) {
+            const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+              this.settings.dateFormat,
+              'YYYY-MM-DD',
+              'DD.MM.YYYY',
+              'MM/DD/YYYY'
+            ]);
+            
+            if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+              return;
+            }
+          }
+        } catch (e) {
+          // Если не удалось распарсить дату, продолжаем обработку
+        }
+        
+        // Всегда читаем актуальные данные из бекенда перед использованием
         const currentValue = entries.get(dateStr);
         const isChecked = isTrackerValueTrue(currentValue);
         const newValue = isChecked ? 0 : 1;
@@ -240,16 +290,60 @@ export class HeatmapService {
           dayDiv.removeClass("has-value");
         }
         
-        // Обновляем start-day маркеры
-        const startTrackingDateStr = this.getStartTrackingDate(updatedEntries, fileOptsForClick);
+        // Обновляем start-day маркеры и классы для будущих дат/до начала отслеживания
+        const updatedStartTrackingDateStr = this.getStartTrackingDate(updatedEntries, fileOptsForClick);
         const allDayElements = Array.from(heatmapDiv.children) as HTMLElement[];
+        
         for (const dayEl of allDayElements) {
           const dayDateStr = dayEl.dataset.dateStr;
           if (dayDateStr) {
-            if (dayDateStr === startTrackingDateStr) {
+            if (dayDateStr === updatedStartTrackingDateStr) {
               dayEl.addClass("start-day");
             } else {
               dayEl.removeClass("start-day");
+            }
+            
+            // Обновляем классы для привычек (good-habit и bad-habit): before-start и after-today
+            if (trackerType === 'bad-habit' || trackerType === 'good-habit') {
+              try {
+                const dayDateObj = DateService.parseMultiple(dayDateStr, [
+                  this.settings.dateFormat,
+                  'YYYY-MM-DD',
+                  'DD.MM.YYYY',
+                  'MM/DD/YYYY'
+                ]);
+                
+                // Проверяем, является ли дата будущей (после сегодня)
+                if (DateService.isAfter(dayDateObj, todayStart)) {
+                  dayEl.addClass("after-today");
+                  dayEl.removeClass("before-start");
+                } else if (startTrackingDateStr) {
+                  const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+                    this.settings.dateFormat,
+                    'YYYY-MM-DD',
+                    'DD.MM.YYYY',
+                    'MM/DD/YYYY'
+                  ]);
+                  
+                  if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+                    dayEl.addClass("before-start");
+                  } else {
+                    dayEl.removeClass("before-start");
+                  }
+                  dayEl.removeClass("after-today");
+                } else {
+                  dayEl.removeClass("before-start");
+                  dayEl.removeClass("after-today");
+                }
+              } catch (e) {
+                // Если не удалось распарсить дату, удаляем классы
+                dayEl.removeClass("before-start");
+                dayEl.removeClass("after-today");
+              }
+            } else {
+              // Для остальных типов трекеров удаляем классы
+              dayEl.removeClass("before-start");
+              dayEl.removeClass("after-today");
             }
           }
         }

@@ -78,11 +78,14 @@
       .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
       .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }
       .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }
-      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }
+      .tracker-notes__heatmap-day:hover:not(.before-start):not(.after-today) { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }
       .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }
       .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }
-      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }
+      .tracker-notes__heatmap-day.bad-habit:not(.has-value):not(.before-start):not(.after-today) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }
+      .tracker-notes__heatmap-day.good-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }
+      .tracker-notes__heatmap-day.good-habit.after-today { background: var(--background-modifier-border); color: var(--text-muted); }
       .tracker-notes__heatmap-day.bad-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }
+      .tracker-notes__heatmap-day.bad-habit.after-today { background: var(--background-modifier-border); color: var(--text-muted); }
       .tracker-notes__heatmap-day.start-day { 
         flex-direction: column;
         justify-content: center;

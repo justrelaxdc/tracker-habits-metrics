@@ -16604,11 +16604,14 @@ var tracker_default = `.markdown-source-view.mod-cm6 .cm-embed-block.cm-lang-hab
       .tracker-notes__heatmap::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }\r
       .tracker-notes__heatmap::-webkit-scrollbar-thumb:hover { background: var(--text-normal); }\r
       .tracker-notes__heatmap-day { aspect-ratio: 1; min-width: 2.5em; max-width: 3em; display: flex; align-items: center; justify-content: center; border-radius: 5px; font-size: 0.85em; background: var(--background-modifier-border); color: var(--text-muted); transition: all 0.2s ease; cursor: pointer; font-weight: 500; flex-shrink: 0; }\r
-      .tracker-notes__heatmap-day:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r
+      .tracker-notes__heatmap-day:hover:not(.before-start):not(.after-today) { box-shadow: 0 2px 4px rgba(0,0,0,0.2); filter: brightness(0.90); }\r
       .tracker-notes__heatmap-day.has-value.good-habit { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r
       .tracker-notes__heatmap-day.has-value.bad-habit { background: var(--text-error, var(--background-modifier-error)); color: var(--text-on-accent, var(--text-normal)); }\r
-      .tracker-notes__heatmap-day.bad-habit:not(.has-value) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r
+      .tracker-notes__heatmap-day.bad-habit:not(.has-value):not(.before-start):not(.after-today) { background: var(--interactive-accent); color: var(--text-on-accent, var(--text-normal)); }\r
+      .tracker-notes__heatmap-day.good-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }\r
+      .tracker-notes__heatmap-day.good-habit.after-today { background: var(--background-modifier-border); color: var(--text-muted); }\r
       .tracker-notes__heatmap-day.bad-habit.before-start { background: var(--background-modifier-border); color: var(--text-muted); }\r
+      .tracker-notes__heatmap-day.bad-habit.after-today { background: var(--background-modifier-border); color: var(--text-muted); }\r
       .tracker-notes__heatmap-day.start-day { \r
         flex-direction: column;\r
         justify-content: center;\r
@@ -16904,7 +16907,7 @@ var HeatmapService = class {
       } else {
         dayDiv.removeClass("start-day");
       }
-      if (trackerType === "bad-habit" && startTrackingDateStr) {
+      if (trackerType === "bad-habit" || trackerType === "good-habit") {
         try {
           const dayDateObj = DateService.parseMultiple(dateStr, [
             this.settings.dateFormat,
@@ -16912,22 +16915,35 @@ var HeatmapService = class {
             "DD.MM.YYYY",
             "MM/DD/YYYY"
           ]);
-          const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
-            this.settings.dateFormat,
-            "YYYY-MM-DD",
-            "DD.MM.YYYY",
-            "MM/DD/YYYY"
-          ]);
-          if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
-            dayDiv.addClass("before-start");
+          const today = DateService.now();
+          const todayStart = DateService.startOfDay(today);
+          if (DateService.isAfter(dayDateObj, todayStart)) {
+            dayDiv.addClass("after-today");
+            dayDiv.removeClass("before-start");
+          } else if (startTrackingDateStr) {
+            const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+              this.settings.dateFormat,
+              "YYYY-MM-DD",
+              "DD.MM.YYYY",
+              "MM/DD/YYYY"
+            ]);
+            if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+              dayDiv.addClass("before-start");
+            } else {
+              dayDiv.removeClass("before-start");
+            }
+            dayDiv.removeClass("after-today");
           } else {
             dayDiv.removeClass("before-start");
+            dayDiv.removeClass("after-today");
           }
         } catch (e) {
           dayDiv.removeClass("before-start");
+          dayDiv.removeClass("after-today");
         }
       } else {
         dayDiv.removeClass("before-start");
+        dayDiv.removeClass("after-today");
       }
     }
     if (fragment.childNodes.length > 0) {
@@ -16982,6 +16998,32 @@ var HeatmapService = class {
         if (!dateStr) return;
         const entries = await this.readAllEntries(file);
         const fileOptsForClick = await this.getFileTypeFromFrontmatter(file);
+        const startTrackingDateStr = this.getStartTrackingDate(entries, fileOptsForClick);
+        const today = DateService.now();
+        const todayStart = DateService.startOfDay(today);
+        try {
+          const dayDateObj = DateService.parseMultiple(dateStr, [
+            this.settings.dateFormat,
+            "YYYY-MM-DD",
+            "DD.MM.YYYY",
+            "MM/DD/YYYY"
+          ]);
+          if (DateService.isAfter(dayDateObj, todayStart)) {
+            return;
+          }
+          if (startTrackingDateStr) {
+            const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+              this.settings.dateFormat,
+              "YYYY-MM-DD",
+              "DD.MM.YYYY",
+              "MM/DD/YYYY"
+            ]);
+            if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+              return;
+            }
+          }
+        } catch (e2) {
+        }
         const currentValue = entries.get(dateStr);
         const isChecked = isTrackerValueTrue(currentValue);
         const newValue = isChecked ? 0 : 1;
@@ -16992,15 +17034,51 @@ var HeatmapService = class {
         } else {
           dayDiv.removeClass("has-value");
         }
-        const startTrackingDateStr = this.getStartTrackingDate(updatedEntries, fileOptsForClick);
+        const updatedStartTrackingDateStr = this.getStartTrackingDate(updatedEntries, fileOptsForClick);
         const allDayElements = Array.from(heatmapDiv.children);
         for (const dayEl of allDayElements) {
           const dayDateStr = dayEl.dataset.dateStr;
           if (dayDateStr) {
-            if (dayDateStr === startTrackingDateStr) {
+            if (dayDateStr === updatedStartTrackingDateStr) {
               dayEl.addClass("start-day");
             } else {
               dayEl.removeClass("start-day");
+            }
+            if (trackerType === "bad-habit" || trackerType === "good-habit") {
+              try {
+                const dayDateObj = DateService.parseMultiple(dayDateStr, [
+                  this.settings.dateFormat,
+                  "YYYY-MM-DD",
+                  "DD.MM.YYYY",
+                  "MM/DD/YYYY"
+                ]);
+                if (DateService.isAfter(dayDateObj, todayStart)) {
+                  dayEl.addClass("after-today");
+                  dayEl.removeClass("before-start");
+                } else if (startTrackingDateStr) {
+                  const startTrackingDateObj = DateService.parseMultiple(startTrackingDateStr, [
+                    this.settings.dateFormat,
+                    "YYYY-MM-DD",
+                    "DD.MM.YYYY",
+                    "MM/DD/YYYY"
+                  ]);
+                  if (DateService.isBefore(dayDateObj, startTrackingDateObj)) {
+                    dayEl.addClass("before-start");
+                  } else {
+                    dayEl.removeClass("before-start");
+                  }
+                  dayEl.removeClass("after-today");
+                } else {
+                  dayEl.removeClass("before-start");
+                  dayEl.removeClass("after-today");
+                }
+              } catch (e2) {
+                dayEl.removeClass("before-start");
+                dayEl.removeClass("after-today");
+              }
+            } else {
+              dayEl.removeClass("before-start");
+              dayEl.removeClass("after-today");
             }
           }
         }
@@ -17111,24 +17189,32 @@ var ControlsRenderer = class {
       return;
     }
     let progressPercent = 0;
+    let isExceedingMax = false;
     if (minLimit !== null && maxLimit !== null) {
-      if (value <= maxLimit) {
-        progressPercent = Math.max(0, 100 * (value / maxLimit));
+      if (value >= minLimit && value <= maxLimit) {
+        progressPercent = 100;
+      } else if (value < minLimit) {
+        progressPercent = Math.max(0, 100 * (value / minLimit));
       } else {
-        const excess = value - maxLimit;
-        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+        progressPercent = 100;
+        isExceedingMax = true;
       }
     } else if (maxLimit !== null) {
       if (value <= maxLimit) {
         progressPercent = 100;
       } else {
-        const excess = value - maxLimit;
-        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+        progressPercent = 100;
+        isExceedingMax = true;
       }
     } else if (minLimit !== null) {
       progressPercent = Math.min(100, Math.max(0, 100 * (value / minLimit)));
     }
-    const hue2 = 120 * (progressPercent / 100);
+    let hue2;
+    if (isExceedingMax) {
+      hue2 = 0;
+    } else {
+      hue2 = 120 * (progressPercent / 100);
+    }
     const saturation = 70;
     const lightness = 50;
     const progressColor = `hsl(${hue2}, ${saturation}%, ${lightness}%)`;
@@ -18636,7 +18722,11 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     }
     const allMaxValues = [maxValue];
     if (maxLimit !== null) allMaxValues.push(maxLimit);
-    if (minLimit !== null) allMaxValues.push(minLimit);
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    } else if (minLimit !== null) {
+      allMaxValues.push(minLimit);
+    }
     if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
     if (scaleMinValue !== null) allMaxValues.push(scaleMinValue);
     if (allMaxValues.length > 0) {
@@ -19033,7 +19123,11 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     }
     const allMaxValues = [maxValue];
     if (maxLimit !== null) allMaxValues.push(maxLimit);
-    if (minLimit !== null) allMaxValues.push(minLimit);
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    } else if (minLimit !== null) {
+      allMaxValues.push(minLimit);
+    }
     if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
     if (scaleMinValue !== null) allMaxValues.push(scaleMinValue);
     if (allMaxValues.length > 0) {

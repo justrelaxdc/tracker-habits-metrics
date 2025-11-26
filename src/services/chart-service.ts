@@ -138,6 +138,10 @@ export class ChartService {
     
     const allMaxValues: number[] = [maxValue];
     if (maxLimit !== null) allMaxValues.push(maxLimit);
+    // Если задан только minLimit (без maxLimit), используем minLimit * 2 как верхнюю границу
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    }
     if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
     
     if (allMaxValues.length > 0) {

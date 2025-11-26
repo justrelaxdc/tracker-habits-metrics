@@ -137,26 +137,29 @@ export class ControlsRenderer {
 
     // Calculate progress percentage (0-100)
     let progressPercent = 0;
+    let isExceedingMax = false;
     
     if (minLimit !== null && maxLimit !== null) {
-      // Both limits: maxLimit = 100%, progress calculated relative to maxLimit
-      if (value <= maxLimit) {
-        // Progress from 0% (at value = 0) to 100% (at value = maxLimit)
-        progressPercent = Math.max(0, 100 * (value / maxLimit));
+      // Both limits: minLimit = 100%, progress calculated relative to minLimit
+      if (value >= minLimit && value <= maxLimit) {
+        // In range: 100% progress
+        progressPercent = 100;
+      } else if (value < minLimit) {
+        // Below min: progress decreases from 100% to 0% as value goes from minLimit to 0
+        progressPercent = Math.max(0, 100 * (value / minLimit));
       } else {
-        // Above max: progress decreases from 100% to 0% as value exceeds maxLimit
-        // When value = maxLimit * 2, progress = 0%
-        const excess = value - maxLimit;
-        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+        // Above max: keep 100% progress but mark as exceeding (will be red)
+        progressPercent = 100;
+        isExceedingMax = true;
       }
     } else if (maxLimit !== null) {
-      // Only maxLimit: 100% when value <= maxLimit, decreases when above
+      // Only maxLimit: 100% when value <= maxLimit, stays 100% but red when above
       if (value <= maxLimit) {
         progressPercent = 100;
       } else {
-        // When value = maxLimit * 2, progress = 0%
-        const excess = value - maxLimit;
-        progressPercent = Math.max(0, 100 * (1 - excess / maxLimit));
+        // Above max: keep 100% progress but mark as exceeding (will be red)
+        progressPercent = 100;
+        isExceedingMax = true;
       }
     } else if (minLimit !== null) {
       // Only minLimit: 0% at value = 0, 100% at value = minLimit, stays 100% above
@@ -164,8 +167,14 @@ export class ControlsRenderer {
     }
 
     // Calculate HSL color: red (0°) to green (120°)
-    // progressPercent 0% = red (H=0), 100% = green (H=120)
-    const hue = 120 * (progressPercent / 100);
+    // If exceeding maxLimit, force red color
+    // Otherwise: progressPercent 0% = red (H=0), 100% = green (H=120)
+    let hue: number;
+    if (isExceedingMax) {
+      hue = 0; // Red
+    } else {
+      hue = 120 * (progressPercent / 100);
+    }
     const saturation = 70; // Moderate saturation for visibility
     const lightness = 50; // Medium lightness
     

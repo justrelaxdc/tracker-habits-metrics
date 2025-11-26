@@ -937,7 +937,13 @@ export default class TrackerPlugin extends Plugin {
     // Находим максимальное значение из всех доступных (лимиты и scale)
     const allMaxValues: number[] = [maxValue]; // Добавляем максимальное значение из данных
     if (maxLimit !== null) allMaxValues.push(maxLimit);
-    if (minLimit !== null) allMaxValues.push(minLimit);
+    // Если задан только minLimit (без maxLimit), используем minLimit * 2 как верхнюю границу
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    } else if (minLimit !== null) {
+      // Если заданы оба лимита, добавляем minLimit для корректного отображения
+      allMaxValues.push(minLimit);
+    }
     if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
     if (scaleMinValue !== null) allMaxValues.push(scaleMinValue);
     
@@ -1461,7 +1467,13 @@ export default class TrackerPlugin extends Plugin {
     // Находим максимальное значение из всех доступных (лимиты и scale)
     const allMaxValues: number[] = [maxValue]; // Добавляем максимальное значение из данных
     if (maxLimit !== null) allMaxValues.push(maxLimit);
-    if (minLimit !== null) allMaxValues.push(minLimit);
+    // Если задан только minLimit (без maxLimit), используем minLimit * 2 как верхнюю границу
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    } else if (minLimit !== null) {
+      // Если заданы оба лимита, добавляем minLimit для корректного отображения
+      allMaxValues.push(minLimit);
+    }
     if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
     if (scaleMinValue !== null) allMaxValues.push(scaleMinValue);
     
