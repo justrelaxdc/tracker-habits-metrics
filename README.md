@@ -1,146 +1,146 @@
-# Tracker: habits and metrics - Plugin for tracking habits and metrics in Obsidian
+# 📊 Tracker: Habits and Metrics
 
-Obsidian plugin that allows you to track daily habits and metrics (trackers), storing all data in separate notes in your file hierarchy.
+> **Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and clean local data storage.**
 
-## ✨ Features
+Transform your Obsidian vault into a powerful tracking system. Track everything from simple daily habits to complex numeric metrics — all stored as human‑readable Markdown inside your vault. No external databases, no cloud, no telemetry.
 
-- 📝 **Separate notes for each tracker** - each tracker (habit or metric) and its data is stored in its own note
-- 🎯 **Different tracker types**:
-  - **Good habit** (good-habit) - heatmaps to track habit completion
-  - **Bad habit** (bad-habit) - heatmaps to track absence of bad habit
-  - **Number** (number) - numeric value with automatic saving (debounce)
-  - **Counter** (plusminus) - increase/decrease value with +/- buttons
-  - **Text** (text) - text notes
-  - **Scale** (scale) - slider with customizable value range
-- 📅 **Common date for block** - one date picker for all trackers in the block
-- 🎨 **Beautiful design** - all trackers in one shared container, arranged as cards in an adaptive grid
-- 📊 **Advanced visualization**:
-  - Interactive value chart with limit support
-  - Detailed statistics:
-    - Total records
-    - Sum and average for the period
-    - For habits: completion percentage, active days, current and best streak
-    - For metrics: minimum, maximum, median
-  - **Streaks** - tracking consecutive days with records 🔥
-  - **Best streak** - maximum sequence of successful days ⭐
-  - **Heatmap** - visual activity calendar
-  - **Start day highlight** - visual highlighting of the day when the tracker was started ✨
-- 🎯 **Optimized heatmap** - optimal heatmap day size for convenient viewing
-- ⚡ **Optimized rendering** - instant loading without lags even with many days
-- 🔧 **Flexible configuration** - customizable folder, date/time formats, number of days to display
-- 📁 **Hierarchical display** - support for nested folders with trackers
-- 🔄 **Automatic cache invalidation** - data updates when opening a note with a tracker
-- 🎨 **Iconize integration** - automatic display of icons from Iconize plugin for folders and trackers
-- 📱 **Responsive design** - optimization for mobile devices
+---
 
-## 📦 Installation
+<!-- 🎥 HERO GIF: main dashboard — several trackers, heatmaps, charts displayed inside a daily note or dashboard -->
 
-### Manual installation
+---
 
-1. Download the latest version of the plugin
-2. Extract the archive to `.obsidian/plugins/tracker-habits-metrics/` folder of your vault
-3. Restart Obsidian
-4. Enable the plugin in settings (Settings → Community plugins)
+## ✨ Key Features
 
-### Via BRAT (recommended for development)
+### 🎯 Six tracker types
+- **Good Habit** – track positive habits with interactive heatmaps  
+- **Bad Habit** – monitor habits you want to reduce or eliminate  
+- **Number** – record numeric values with debounced auto‑saving  
+- **Counter** – increment/decrement via “+ / –” buttons  
+- **Text** – store daily notes and observations  
+- **Scale** – slider input with customizable range (min/max/step)
 
-1. Install the [BRAT](https://obsidian.md/plugins?id=obsidian42-brat) plugin
-2. Add repository: `VladRoss/tracker-habits-metrics`
-3. Enable the plugin in settings
+### 📈 Smart Statistics
+- **Habits:**  
+  - Completion percentage & active days  
+  - Current streak 🔥  
+  - Best streak ⭐  
+  - Total completed days  
+  - Period summaries (last N days)
 
-## 🚀 Usage
+- **Metrics:**  
+  - Minimum / maximum / median  
+  - Sum & average  
+  - Active days  
+  - Period summaries  
 
-### Creating a new tracker
+### 🎨 Visuals & UX
+- **Heatmaps** — calendar overview of habit activity  
+- **Interactive charts** — line graphs with optional limit guides  
+- **Limit indicators** — animated visual feedback when crossing thresholds  
+- **Date navigation** — one date picker controls all trackers in the block  
+- **Hierarchical view** — folders (up to 3 levels) act as categories/subcategories  
+- **Iconize integration** — automatic display of emoji or icon from Iconize plugin  
 
-1. Use the `Create new tracker` command (Ctrl+P)
-2. Enter tracker name
-3. Select tracker type
-4. Configure parameters (for scale: min/max/step, for metrics: units, limits)
-5. Set tracking start date (optional)
-6. Click "Create"
+---
 
-#### `tracker` code block parameters:
+## 🚀 Quick Start
 
-- `file` (required) - path to tracker file
-- `mode` - display type: `good-habit`, `bad-habit`, `number`, `plusminus`, `text`, `scale` (ignored - type is determined from file frontmatter)
-- `view` - view mode: `control` (default) or `display` (view only)
-- `date` - date (default "today" or parsed from note filename)
-- `days` - number of days to display in chart and statistics (default from settings)
-- `showChart` - show chart (`true`/`false`, default from settings)
-- `showStats` - show statistics (`true`/`false`, default from settings)
-- `minValue` - minimum value (for scale type, overrides frontmatter)
-- `maxValue` - maximum value (for scale type, overrides frontmatter)
-- `step` - step value (for scale type, overrides frontmatter)
+> **Create your first tracker in under a minute.**
 
-#### `habit` code block parameters:
+### 1. Create a tracker
+1. Press `Ctrl+P` (or `Cmd+P` on Mac).  
+2. Run **“Create new tracker”**.  
+3. Enter a name (e.g., “Morning Workout”).  
+4. Choose (or create) a folder.  
+5. Select the tracker type.  
+6. Configure limits, units, start date, etc.  
+7. Click **Create**.
 
-- `folder` - path to folder with trackers (default from settings)
-- `date` - date (default "today" or parsed from note filename)
-- `days` - number of days to display in chart and statistics (default from settings)
-- `showChart` - show chart for all trackers (`true`/`false`, default from settings)
-- `showStats` - show statistics for all trackers (`true`/`false`, default from settings)
+<!-- 🎥 GIF: Creation flow — open palette → create new tracker → choose type → file appears -->
 
-> **Note:** For complete parameter documentation, see `src/constants/block-parameters.ts` in the source code.
+> You can structure trackers inside folders (up to 3 levels). The plugin will automatically interpret these folders as categories/subcategories.
 
-#### Examples:
+---
 
-**Good habit:**
+## 📋 Displaying trackers
+
+Embed trackers anywhere using a `habit` code block.
+
+### 2.1 Global (default settings)
+
 ````markdown
-```tracker
-file: 0. Files/Trackers/01-Habits/Morning workout.md
-mode: good-habit
+```habit
+```
+````
+
+Uses default folder & display settings from the plugin.
+
+### 2.2 Local override
+
+````markdown
+```habit
+folder: 0. Files/Trackers/Habits
+date: 2025-01-01
+days: 30
+showChart: true
 showStats: true
 ```
 ````
 
-### Quick commands
+**Parameters:**
+- `folder` — where tracker files are stored  
+- `date` — date to display  
+  - default: today  
+  - auto-detected from filename in daily notes  
+- `days` — number of days for charts/statistics  
+- `showChart` — display chart for all trackers  
+- `showStats` — display statistics for all trackers  
 
-- `Create new tracker` - create a new tracker
-- `Edit tracker` - edit an existing tracker
+---
 
 ## ⚙️ Settings
 
-In the plugin settings you can change:
+Access via **Settings → Tracker: Habits and Metrics**
 
-- **Trackers folder** - where tracker files are stored (default: `0. Files/Trackers`)
-- **Date format** - date format (default: `YYYY-MM-DD`)
-- **Number of days for charts** - number of days to display in charts and statistics (default: `30`)
-- **Show chart by default** - automatically show chart for all trackers
-- **Show statistics by default** - automatically show statistics for all trackers
-- **Hide chart on mobile** - hide chart on mobile devices
-- **Hide statistics on mobile** - hide statistics on mobile devices
+Most users can start without changing anything. These options let you fine‑tune defaults.
 
-## 🎨 Iconize Integration
+### General
+- **Trackers folder** — default folder for new tracker files  
+- **Number of days for charts** — default statistics window
 
-The plugin automatically integrates with the [Iconize](https://obsidian.md/plugins?id=obsidian-icon-folder) plugin to display icons for folders and trackers.
+### Display
+- **Show chart by default**  
+- **Show stats by default**  
+- **Hide chart on mobile**  
+- **Hide statistics on mobile**
 
-### How it works:
+### Advanced
+- **Disable limit reaction** — turn off animated feedback
 
-1. Install the Iconize plugin (if not already installed)
-2. Configure icons for your folders and files in Iconize
-3. The Tracker plugin will automatically display these icons before folder and tracker names
+<!-- 🖼 Screenshot: plugin settings panel -->
 
-### Features:
+---
 
-- Icons are displayed only for paths where they are explicitly set in Iconize
-- Icons are not inherited from parent folders
-- Both emoji and Lucide icons are supported
-- If Iconize plugin is not installed, the plugin works without icons (no errors)
+## 📁 Tracker File Structure
 
-## 📁 Tracker file structure
-
-Each tracker is stored in a separate Markdown file with the following structure:
+You normally don’t need to edit trackers manually — they are managed automatically.  
+Advanced users (or Dataview integrations) can customize using YAML:
 
 ```markdown
 ---
-type: good-habit  # or bad-habit, number, plusminus, rating, text, scale
-trackingStartDate: "2025-01-01"  # tracking start date (optional)
-minValue: 0  # only for scale type
-maxValue: 10  # only for scale type
-step: 1  # only for scale and plusminus types
-minLimit: 0  # minimum allowed value (optional)
-maxLimit: 100  # maximum allowed value (optional)
-unit: "kg"  # unit of measurement (optional)
+type: good-habit          # good-habit, bad-habit, number, plusminus, text, scale
+trackingStartDate: "2025-01-01"
+
+minValue: 0               # scale only
+maxValue: 10              # scale only
+step: 1                   # scale and plusminus
+
+minLimit: 5               # optional
+maxLimit: 100             # optional
+
+unit: "kg"                # optional
+
 data:
   "2025-01-01": 1
   "2025-01-02": 1
@@ -148,58 +148,86 @@ data:
 ---
 ```
 
-**Tracker name** is determined by the file name (without .md extension).
-
-All records are stored in the `data` section of frontmatter in the format `"YYYY-MM-DD": value`.
-
-### Value types:
-
-- **good-habit / bad-habit**: `1` (completed) or `0` (not completed)
-- **number**: numeric value
-- **plusminus**: numeric value (can be negative)
-- **rating**: number from 3 to 10 (or other maxRating value)
-- **text**: text string
-- **scale**: number in the range from minValue to maxValue
-
-## 📊 Statistics
-
-The plugin provides detailed statistics for each tracker:
-
-### For habits (good-habit / bad-habit):
-
-- **Total records** - total number of records
-- **Last N days** - sum and average for the period
-- **Completed** - completion percentage and number of active days
-- **Current streak** 🔥 - sequence of days with records up to the current date
-- **Best streak** ⭐ - maximum sequence of successful days of all time
-
-## 🎯 Markdown example
-
-```tracker
-path: 0. Files/Trackers
-showChart: true
-showStats: true
-days: 90
-```
-
-## 🔧 Build
-
-```bash
-npm install
-npm run build
-```
-## 📝 License
-
-MIT License © 2025 Vladislav (Vlad Ross)
-
-## 💡 Ideas for future versions
-
-- [ ] Export data
-- [ ] Import data
-- [ ] Reminders
-- [ ] Goals (target values) for trackers
-- [ ] Period comparison
+### Value types by tracker type
+- **good-habit / bad-habit:** `1` or `0`  
+- **number:** numeric value  
+- **plusminus:** numeric counter with step  
+- **text:** string  
+- **scale:** numeric value within `[minValue … maxValue]`
 
 ---
 
-**Enjoy tracking your habits and metrics! 📊✨**
+## 📊 Statistics Explained
+
+This section breaks down every statistic.
+
+### For Habits
+- **Total records** – count of all entries  
+- **Last N days summary** – sum/avg for selected period  
+- **Completed** – completion % and active days  
+- **Current streak** 🔥 – continuous progress up to today  
+- **Best streak** ⭐ – longest run ever recorded  
+
+### For Metrics
+- **Total records**  
+- **Sum**  
+- **Average**  
+- **Minimum**  
+- **Maximum**  
+- **Median**  
+- **Active days**  
+
+---
+
+## 🎨 Iconize Integration
+
+Optional, but powerful.
+
+### Features
+- Automatically displays icons configured via Iconize  
+- Supports emoji & Lucide icons  
+- Works even without Iconize — just put an emoji in the tracker title  
+
+### Setup
+1. Install **Iconize**  
+2. Assign icons to folders or files  
+3. Trackers will show icons automatically  
+
+---
+
+## 🛠 Commands
+
+Available in **Ctrl+P / Cmd+P**:
+
+- **Create new tracker** — guided creation flow  
+
+---
+
+## 🎯 Roadmap
+
+- [ ] Reminders & notifications  
+- [ ] Goal tracking (define target values)  
+- [ ] Period comparison (week-over-week, month-over-month)  
+- [ ] Data export/import  
+- [ ] Additional chart types  
+- [ ] Cross‑tracker analytics (correlations, trends)  
+
+---
+
+## 💬 Support & Feedback
+
+Feedback, ideas, and bug reports are very welcome:
+
+- Issues & feature requests:  
+  https://github.com/justrelaxdc/tracker-habits-metrics/issues  
+- Telegram: https://t.me/justrelaxdc  
+- Ko‑fi: https://ko-fi.com/vladross  
+
+---
+
+## 📝 License
+MIT License © 2025 Vladislav (Vlad Ross)
+
+---
+
+**Turn your Obsidian vault into a powerful tracking system — start tracking what matters.**

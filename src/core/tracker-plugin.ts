@@ -1550,10 +1550,10 @@ export default class TrackerPlugin extends Plugin {
     );
     
     // Вычисляем текущий стрик (последовательные дни с записью)
-    const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file);
+    const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file, startTrackingDateStr);
     
     // Вычисляем лучший стрик
-    const bestStreak = this.calculateBestStreak(entriesToUse, metricType, file);
+    const bestStreak = this.calculateBestStreak(entriesToUse, metricType, file, startTrackingDateStr);
     
     // Используем VisualizationService для обновления DOM
     this.visualizationService.updateStatsDisplay(statsDiv, stats, currentStreak, days, metricType, fileOpts, bestStreak);
@@ -2015,12 +2015,12 @@ export default class TrackerPlugin extends Plugin {
     this.clearTrackerState(file.path);
   }
 
-  calculateStreak(entries: Map<string, string | number>, endDate: Date | any, trackerType?: string, file?: TFile): number {
-    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file);
+  calculateStreak(entries: Map<string, string | number>, endDate: Date | any, trackerType?: string, file?: TFile, startTrackingDateStr?: string | null): number {
+    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file, startTrackingDateStr);
   }
 
-  calculateBestStreak(entries: Map<string, string | number>, trackerType?: string, file?: TFile): number {
-    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file);
+  calculateBestStreak(entries: Map<string, string | number>, trackerType?: string, file?: TFile, startTrackingDateStr?: string | null): number {
+    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file, startTrackingDateStr);
   }
 
   async readAllEntries(file: TFile): Promise<Map<string, string | number>> {

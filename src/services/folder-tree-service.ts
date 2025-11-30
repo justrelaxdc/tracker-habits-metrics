@@ -138,6 +138,10 @@ export class FolderTreeService {
     if (currentLevel < maxDepth) {
       for (const child of folder.children) {
         if (child instanceof TFolder) {
+          // Ignore folders containing "archive" in name (case-insensitive)
+          if (child.name.toLowerCase().includes("archive")) {
+            continue;
+          }
           const childNode = this.buildFolderTree(child, maxDepth, currentLevel + 1);
           if (childNode.files.length > 0 || childNode.children.length > 0) {
             node.children.push(childNode);

@@ -31,6 +31,22 @@ export class TrackerSettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName("Number of days")
+      .setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block")
+      .addText((t) =>
+        t
+          .setPlaceholder("30")
+          .setValue(String(this.plugin.settings.daysToShow))
+          .onChange(async (v) => {
+            const num = parseInt(v.trim());
+            if (!isNaN(num) && num > 0) {
+              this.plugin.settings.daysToShow = num;
+              await this.plugin.saveSettings();
+            }
+          }),
+      );
+
+    new Setting(containerEl)
       .setName("Show chart by default")
       .setDesc("Can be overridden with showChart: `true/false` parameter")
       .addToggle((t) =>
@@ -85,22 +101,6 @@ export class TrackerSettingsTab extends PluginSettingTab {
           .onChange(async (v) => {
             this.plugin.settings.disableLimitReaction = v;
             await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName("Number of days")
-      .setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block")
-      .addText((t) =>
-        t
-          .setPlaceholder("30")
-          .setValue(String(this.plugin.settings.daysToShow))
-          .onChange(async (v) => {
-            const num = parseInt(v.trim());
-            if (!isNaN(num) && num > 0) {
-              this.plugin.settings.daysToShow = num;
-              await this.plugin.saveSettings();
-            }
           }),
       );
   }

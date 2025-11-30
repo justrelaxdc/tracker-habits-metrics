@@ -15405,6 +15405,9 @@ var FolderTreeService = class {
     if (currentLevel < maxDepth) {
       for (const child of folder.children) {
         if (child instanceof import_obsidian2.TFolder) {
+          if (child.name.toLowerCase().includes("archive")) {
+            continue;
+          }
           const childNode = this.buildFolderTree(child, maxDepth, currentLevel + 1);
           if (childNode.files.length > 0 || childNode.children.length > 0) {
             node.children.push(childNode);
@@ -15463,6 +15466,71 @@ function isTrackerValueTrue(value) {
 var TrackerFileService = class {
   constructor(app) {
     this.app = app;
+  }
+  /**
+   * Находит значение в entries по дате, пробуя разные форматы
+   */
+  getEntryValueByDate(entries, date, settings) {
+    const formats = [
+      settings.dateFormat,
+      "YYYY-MM-DD",
+      "DD.MM.YYYY",
+      "MM/DD/YYYY"
+    ];
+    for (const format of formats) {
+      const dateStr = DateService.format(date, format);
+      const val = entries.get(dateStr);
+      if (val !== void 0) {
+        return val;
+      }
+    }
+    return void 0;
+  }
+  /**
+   * Определяет дату начала отслеживания с приоритетами:
+   * 1. trackingStartDate из frontmatter
+   * 2. Дата создания файла
+   * 3. Первая дата из entries
+   * 4. Fallback: 365 дней назад от текущей даты
+   */
+  determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
+    let startTrackingDate = null;
+    if (startTrackingDateStr) {
+      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
+        "YYYY-MM-DD",
+        settings.dateFormat,
+        "DD.MM.YYYY",
+        "MM/DD/YYYY"
+      ]);
+      if (startTrackingDate.isValid()) {
+        startTrackingDate = DateService.startOfDay(startTrackingDate);
+      } else {
+        startTrackingDate = null;
+      }
+    }
+    if (!startTrackingDate && file?.stat?.ctime) {
+      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
+    }
+    if (entries.size > 0) {
+      const sortedDates = Array.from(entries.keys()).sort();
+      const firstDateStr = sortedDates[0];
+      const firstDate = DateService.parseMultiple(firstDateStr, [
+        settings.dateFormat,
+        "YYYY-MM-DD",
+        "DD.MM.YYYY",
+        "MM/DD/YYYY"
+      ]);
+      if (firstDate.isValid()) {
+        const firstDateNormalized = DateService.startOfDay(firstDate);
+        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
+          startTrackingDate = firstDateNormalized;
+        }
+      }
+    }
+    if (!startTrackingDate) {
+      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
+    }
+    return startTrackingDate;
   }
   async ensureFileWithHeading(filePath, type = "good-habit") {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
@@ -15633,43 +15701,40 @@ ${newFrontmatter}---${body}`;
     }
     return DateService.format(DateService.now(), settings.dateFormat);
   }
-  calculateStreak(entries, settings, endDate, trackerType, file) {
+  calculateStreak(entries, settings, endDate, trackerType, file, startTrackingDateStr) {
     let streak = 0;
     let currentDate = endDate instanceof Date ? DateService.fromDate(endDate) : DateService.fromDate(new Date(endDate));
+    currentDate = DateService.startOfDay(currentDate);
     const metricType = (trackerType || "good-habit").toLowerCase();
     const isBadHabit = metricType === "bad-habit";
-    let startTrackingDate = null;
-    if (file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parse(firstDateStr, settings.dateFormat);
-      if (!startTrackingDate || DateService.isBefore(firstDate, startTrackingDate)) {
-        startTrackingDate = firstDate;
-      }
-    }
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.subtractDays(currentDate, 365);
+    const startTrackingDate = this.determineStartTrackingDate(
+      startTrackingDateStr,
+      file,
+      entries,
+      settings,
+      currentDate
+    );
+    if (!startTrackingDate || !startTrackingDate.isValid()) {
+      return 0;
     }
     let daysChecked = 0;
     while (daysChecked < MAX_DAYS_BACK) {
       if (DateService.isBefore(currentDate, startTrackingDate)) {
         break;
       }
-      const dateStr = DateService.format(currentDate, settings.dateFormat);
-      const val = entries.get(dateStr);
+      const val = this.getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
-        if (val == null) {
+        if (val == null || val === void 0) {
           isSuccess = true;
         } else {
           const hasValue = isTrackerValueTrue(val);
           isSuccess = !hasValue;
         }
-      } else if (val != null) {
-        isSuccess = isTrackerValueTrue(val);
+      } else {
+        if (val != null && val !== void 0) {
+          isSuccess = isTrackerValueTrue(val);
+        }
       }
       if (isSuccess) {
         streak++;
@@ -15681,38 +15746,39 @@ ${newFrontmatter}---${body}`;
     }
     return streak;
   }
-  calculateBestStreak(entries, settings, trackerType, file) {
+  calculateBestStreak(entries, settings, trackerType, file, startTrackingDateStr) {
     const metricType = (trackerType || "good-habit").toLowerCase();
     const isBadHabit = metricType === "bad-habit";
     if (entries.size === 0) return 0;
-    let startTrackingDate = null;
-    if (file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-    const sortedDates = Array.from(entries.keys()).sort();
-    const firstDateStr = sortedDates[0];
-    const firstDate = DateService.parse(firstDateStr, settings.dateFormat);
-    if (!startTrackingDate || DateService.isBefore(firstDate, startTrackingDate)) {
-      startTrackingDate = firstDate;
-    }
     const today = DateService.now();
     let currentDate = DateService.startOfDay(today);
+    const startTrackingDate = this.determineStartTrackingDate(
+      startTrackingDateStr,
+      file,
+      entries,
+      settings,
+      currentDate
+    );
+    if (!startTrackingDate || !startTrackingDate.isValid()) {
+      return 0;
+    }
     let bestStreak = 0;
     let currentStreak = 0;
     let daysChecked = 0;
     while (!DateService.isBefore(currentDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      const dateStr = DateService.format(currentDate, settings.dateFormat);
-      const val = entries.get(dateStr);
+      const val = this.getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
-        if (val == null) {
+        if (val == null || val === void 0) {
           isSuccess = true;
         } else {
           const hasValue = isTrackerValueTrue(val);
           isSuccess = !hasValue;
         }
-      } else if (val != null) {
-        isSuccess = isTrackerValueTrue(val);
+      } else {
+        if (val != null && val !== void 0) {
+          isSuccess = isTrackerValueTrue(val);
+        }
       }
       if (isSuccess) {
         currentStreak++;
@@ -15775,6 +15841,15 @@ var TrackerSettingsTab = class extends import_obsidian5.PluginSettingTab {
       });
       new FolderSuggest(this.app, t.inputEl, folders);
     });
+    new import_obsidian5.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block").addText(
+      (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
+        const num = parseInt(v.trim());
+        if (!isNaN(num) && num > 0) {
+          this.plugin.settings.daysToShow = num;
+          await this.plugin.saveSettings();
+        }
+      })
+    );
     new import_obsidian5.Setting(containerEl).setName("Show chart by default").setDesc("Can be overridden with showChart: `true/false` parameter").addToggle(
       (t) => t.setValue(this.plugin.settings.showChartByDefault).onChange(async (v) => {
         this.plugin.settings.showChartByDefault = v;
@@ -15803,15 +15878,6 @@ var TrackerSettingsTab = class extends import_obsidian5.PluginSettingTab {
       (t) => t.setValue(this.plugin.settings.disableLimitReaction).onChange(async (v) => {
         this.plugin.settings.disableLimitReaction = v;
         await this.plugin.saveSettings();
-      })
-    );
-    new import_obsidian5.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block").addText(
-      (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
-        const num = parseInt(v.trim());
-        if (!isNaN(num) && num > 0) {
-          this.plugin.settings.daysToShow = num;
-          await this.plugin.saveSettings();
-        }
       })
     );
   }
@@ -17638,9 +17704,9 @@ var TrackerRenderer = class {
 // src/services/visualization-service.ts
 var VisualizationService = class {
   /**
-   * Calculates statistics for a tracker
+   * Calculates statistics for habits (good-habit and bad-habit)
    */
-  calculateStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
+  calculateHabitStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
     const endDate = DateService.parse(dateIso, settings.dateFormat);
     const startDate = endDate.clone().subtract(daysToShow - 1, "days");
     let actualStartDate = startDate;
@@ -17657,7 +17723,69 @@ var VisualizationService = class {
     }
     const periodDays = [];
     const metricType = trackerType.toLowerCase();
-    const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
+    const isBadHabit = metricType === TrackerType.BAD_HABIT;
+    let actualDaysCount = 0;
+    let currentDate = actualStartDate.clone();
+    while (!DateService.isAfter(currentDate, endDate)) {
+      const dateStr = DateService.format(currentDate, settings.dateFormat);
+      const val = entries.get(dateStr);
+      let numVal = 0;
+      if (val != null) {
+        if (typeof val === "number") {
+          numVal = val;
+        } else if (val === "1" || String(val) === "true") {
+          numVal = 1;
+        } else {
+          numVal = Number(val) || 0;
+        }
+      }
+      if (isBadHabit) {
+        numVal = numVal === 0 || val == null ? 1 : 0;
+      } else {
+        numVal = val != null && numVal > 0 ? 1 : 0;
+      }
+      periodDays.push(numVal);
+      actualDaysCount++;
+      currentDate = currentDate.add(1, "days");
+    }
+    const sum = periodDays.reduce((a, b) => a + b, 0);
+    const avg = actualDaysCount > 0 ? sum / actualDaysCount : 0;
+    const total = entries.size;
+    const activeDays = periodDays.filter((v) => v > 0).length;
+    const completionRate = actualDaysCount > 0 ? activeDays / actualDaysCount * 100 : 0;
+    return {
+      total,
+      sum,
+      avg,
+      periodDays,
+      min: null,
+      max: null,
+      median: null,
+      completionRate,
+      activeDays,
+      actualDaysCount
+    };
+  }
+  /**
+   * Calculates statistics for metrics (number, plusminus, scale, text)
+   */
+  calculateMetricStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
+    const endDate = DateService.parse(dateIso, settings.dateFormat);
+    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
+    let actualStartDate = startDate;
+    if (startTrackingDateStr) {
+      const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
+        settings.dateFormat,
+        "YYYY-MM-DD",
+        "YYYY/MM/DD",
+        "DD.MM.YYYY"
+      ]);
+      if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
+        actualStartDate = trackingStartDate;
+      }
+    }
+    const periodDays = [];
+    const metricType = trackerType.toLowerCase();
     let actualDaysCount = 0;
     let currentDate = actualStartDate.clone();
     while (!DateService.isAfter(currentDate, endDate)) {
@@ -17675,9 +17803,6 @@ var VisualizationService = class {
           numVal = Number(val) || 0;
         }
       }
-      if (metricType === TrackerType.BAD_HABIT) {
-        numVal = numVal === 1 ? 0 : 1;
-      }
       periodDays.push(numVal);
       actualDaysCount++;
       currentDate = currentDate.add(1, "days");
@@ -17688,40 +17813,50 @@ var VisualizationService = class {
     let min = null;
     let max = null;
     let median = null;
-    let completionRate = null;
-    let activeDays = 0;
-    if (isHabit) {
-      activeDays = periodDays.filter((v) => v > 0).length;
-      completionRate = actualDaysCount > 0 ? activeDays / actualDaysCount * 100 : 0;
-    } else {
-      const nonZeroValues = periodDays.filter((v) => v > 0);
-      if (periodDays.length > 0) {
-        const sortedValues = [...periodDays].sort((a, b) => a - b);
-        min = sortedValues[0];
-        max = sortedValues[sortedValues.length - 1];
-        const mid = Math.floor(sortedValues.length / 2);
-        if (sortedValues.length % 2 === 0) {
-          median = (sortedValues[mid - 1] + sortedValues[mid]) / 2;
-        } else {
-          median = sortedValues[mid];
-        }
+    const nonZeroValues = periodDays.filter((v) => v > 0);
+    if (periodDays.length > 0) {
+      const sortedValues = [...periodDays].sort((a, b) => a - b);
+      min = sortedValues[0];
+      max = sortedValues[sortedValues.length - 1];
+      const mid = Math.floor(sortedValues.length / 2);
+      if (sortedValues.length % 2 === 0) {
+        median = (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+      } else {
+        median = sortedValues[mid];
       }
-      activeDays = nonZeroValues.length;
     }
-    return { total, sum, avg, periodDays, min, max, median, completionRate, activeDays, actualDaysCount };
+    const activeDays = nonZeroValues.length;
+    return {
+      total,
+      sum,
+      avg,
+      periodDays,
+      min,
+      max,
+      median,
+      completionRate: null,
+      activeDays,
+      actualDaysCount
+    };
   }
   /**
-   * Updates statistics DOM element
+   * Calculates statistics for a tracker
    */
-  updateStatsDisplay(statsDiv, stats, currentStreak, daysToShow, trackerType, fileOpts, bestStreak) {
-    statsDiv.empty();
+  calculateStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
     const metricType = trackerType.toLowerCase();
     const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
-    const unit = fileOpts?.unit || "";
-    const unitSuffix = unit ? ` ${unit}` : "";
-    const formatValue = (value, decimals = 1) => {
-      return `${value.toFixed(decimals)}${unitSuffix}`;
-    };
+    if (isHabit) {
+      return this.calculateHabitStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr);
+    } else {
+      return this.calculateMetricStats(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr);
+    }
+  }
+  /**
+   * Displays statistics for habits
+   */
+  displayHabitStats(statsDiv, stats, currentStreak, bestStreak, trackerType, fileOpts) {
+    const metricType = trackerType.toLowerCase();
+    const isBadHabit = metricType === TrackerType.BAD_HABIT;
     const getCompletionColor = (rate) => {
       if (rate >= 80) return "var(--text-success, var(--text-normal))";
       if (rate >= 50) return "var(--text-warning, var(--text-normal))";
@@ -17733,45 +17868,23 @@ var VisualizationService = class {
       cls: "tracker-notes__stats-item"
     });
     const periodSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
-    if (isHabit) {
-      if (stats.completionRate !== null) {
-        const completionEl = periodSection.createEl("div", {
-          cls: "tracker-notes__stats-item"
-        });
-        const rate = Math.round(stats.completionRate);
-        completionEl.createSpan({ text: `\u2705 ${STATS_LABELS.COMPLETION_RATE}: ` });
-        const rateSpan = completionEl.createSpan({ text: `${rate}%` });
-        rateSpan.style.color = getCompletionColor(rate);
-        rateSpan.style.fontWeight = "600";
-        completionEl.createSpan({ text: ` (${stats.activeDays}/${stats.actualDaysCount})` });
-      }
-      periodSection.createEl("div", {
-        text: `\u{1F4C5} ${STATS_LABELS.ACTIVE_DAYS}: ${stats.activeDays}/${stats.actualDaysCount}`,
+    if (stats.completionRate !== null) {
+      const completionEl = periodSection.createEl("div", {
         cls: "tracker-notes__stats-item"
       });
-    } else {
-      const daysLabel = stats.actualDaysCount === 1 ? STATS_LABELS.DAYS_SINGULAR : stats.actualDaysCount < 5 ? STATS_LABELS.DAYS_PLURAL_2_4 : STATS_LABELS.DAYS_PLURAL_5_PLUS;
-      periodSection.createEl("div", {
-        text: `\u{1F4C8} ${STATS_LABELS.LAST_DAYS} ${stats.actualDaysCount} ${daysLabel}: ${formatValue(stats.sum)}`,
-        cls: "tracker-notes__stats-item"
-      });
-      periodSection.createEl("div", {
-        text: `\u{1F4CA} ${STATS_LABELS.AVERAGE}: ${formatValue(stats.avg)}`,
-        cls: "tracker-notes__stats-item"
-      });
-      if (stats.min !== null && stats.max !== null) {
-        periodSection.createEl("div", {
-          text: `\u{1F4C9} ${STATS_LABELS.MIN}: ${formatValue(stats.min)} | ${STATS_LABELS.MAX}: ${formatValue(stats.max)}`,
-          cls: "tracker-notes__stats-item"
-        });
-      }
-      if (stats.median !== null) {
-        periodSection.createEl("div", {
-          text: `\u{1F4CA} ${STATS_LABELS.MEDIAN}: ${formatValue(stats.median)}`,
-          cls: "tracker-notes__stats-item"
-        });
-      }
+      const rate = Math.round(stats.completionRate);
+      const completionLabel = isBadHabit ? "Days without" : STATS_LABELS.COMPLETION_RATE;
+      completionEl.createSpan({ text: `\u2705 ${completionLabel}: ` });
+      const rateSpan = completionEl.createSpan({ text: `${rate}%` });
+      rateSpan.style.color = getCompletionColor(rate);
+      rateSpan.style.fontWeight = "600";
+      completionEl.createSpan({ text: ` (${stats.activeDays}/${stats.actualDaysCount})` });
     }
+    const activeDaysLabel = isBadHabit ? "Days without" : STATS_LABELS.ACTIVE_DAYS;
+    periodSection.createEl("div", {
+      text: `\u{1F4C5} ${activeDaysLabel}: ${stats.activeDays}/${stats.actualDaysCount}`,
+      cls: "tracker-notes__stats-item"
+    });
     if (currentStreak > 0 || bestStreak) {
       const recordsSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
       if (currentStreak > 0) {
@@ -17790,6 +17903,60 @@ var VisualizationService = class {
           cls: "tracker-notes__stats-item"
         });
       }
+    }
+  }
+  /**
+   * Displays statistics for metrics
+   */
+  displayMetricStats(statsDiv, stats, fileOpts) {
+    const unit = fileOpts?.unit || "";
+    const unitSuffix = unit ? ` ${unit}` : "";
+    const formatValue = (value, decimals = 1) => {
+      return `${value.toFixed(decimals)}${unitSuffix}`;
+    };
+    const generalSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
+    generalSection.createEl("div", {
+      text: `\u{1F4CA} ${STATS_LABELS.TOTAL_RECORDS}: ${stats.total}`,
+      cls: "tracker-notes__stats-item"
+    });
+    const periodSection = statsDiv.createDiv({ cls: "tracker-notes__stats-section" });
+    const daysLabel = stats.actualDaysCount === 1 ? STATS_LABELS.DAYS_SINGULAR : stats.actualDaysCount < 5 ? STATS_LABELS.DAYS_PLURAL_2_4 : STATS_LABELS.DAYS_PLURAL_5_PLUS;
+    periodSection.createEl("div", {
+      text: `\u{1F4C8} ${STATS_LABELS.LAST_DAYS} ${stats.actualDaysCount} ${daysLabel}: ${formatValue(stats.sum)}`,
+      cls: "tracker-notes__stats-item"
+    });
+    periodSection.createEl("div", {
+      text: `\u{1F4CA} ${STATS_LABELS.AVERAGE}: ${formatValue(stats.avg)}`,
+      cls: "tracker-notes__stats-item"
+    });
+    if (stats.min !== null && stats.max !== null) {
+      periodSection.createEl("div", {
+        text: `\u{1F4C9} ${STATS_LABELS.MIN}: ${formatValue(stats.min)} | ${STATS_LABELS.MAX}: ${formatValue(stats.max)}`,
+        cls: "tracker-notes__stats-item"
+      });
+    }
+    if (stats.median !== null) {
+      periodSection.createEl("div", {
+        text: `\u{1F4CA} ${STATS_LABELS.MEDIAN}: ${formatValue(stats.median)}`,
+        cls: "tracker-notes__stats-item"
+      });
+    }
+    periodSection.createEl("div", {
+      text: `\u{1F4C5} ${STATS_LABELS.ACTIVE_DAYS}: ${stats.activeDays}/${stats.actualDaysCount}`,
+      cls: "tracker-notes__stats-item"
+    });
+  }
+  /**
+   * Updates statistics DOM element
+   */
+  updateStatsDisplay(statsDiv, stats, currentStreak, daysToShow, trackerType, fileOpts, bestStreak) {
+    statsDiv.empty();
+    const metricType = trackerType.toLowerCase();
+    const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
+    if (isHabit) {
+      this.displayHabitStats(statsDiv, stats, currentStreak, bestStreak, trackerType, fileOpts);
+    } else {
+      this.displayMetricStats(statsDiv, stats, fileOpts);
     }
   }
   /**
@@ -19176,8 +19343,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       metricType,
       startTrackingDateStr
     );
-    const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file);
-    const bestStreak = this.calculateBestStreak(entriesToUse, metricType, file);
+    const currentStreak = this.calculateStreak(entriesToUse, endDate, metricType, file, startTrackingDateStr);
+    const bestStreak = this.calculateBestStreak(entriesToUse, metricType, file, startTrackingDateStr);
     this.visualizationService.updateStatsDisplay(statsDiv, stats, currentStreak, days, metricType, fileOpts, bestStreak);
   }
   async renderStats(container, file, dateIso, daysToShow, trackerType, entries) {
@@ -19523,11 +19690,11 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   invalidateCacheForFile(file) {
     this.clearTrackerState(file.path);
   }
-  calculateStreak(entries, endDate, trackerType, file) {
-    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file);
+  calculateStreak(entries, endDate, trackerType, file, startTrackingDateStr) {
+    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file, startTrackingDateStr);
   }
-  calculateBestStreak(entries, trackerType, file) {
-    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file);
+  calculateBestStreak(entries, trackerType, file, startTrackingDateStr) {
+    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file, startTrackingDateStr);
   }
   async readAllEntries(file) {
     const state = await this.ensureTrackerState(file);
