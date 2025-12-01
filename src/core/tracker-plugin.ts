@@ -46,7 +46,11 @@ export default class TrackerPlugin extends Plugin {
   private trackerOrderService: TrackerOrderService;
   private iconizeService: IconizeService;
 
-  private isMobileDevice(): boolean {
+  /**
+   * Check if current device is mobile (based on viewport width)
+   * Public for use by Preact components
+   */
+  isMobileDevice(): boolean {
     return window.innerWidth <= MOBILE_BREAKPOINT;
   }
 
@@ -2006,11 +2010,18 @@ export default class TrackerPlugin extends Plugin {
     }
   }
   
-  async getStartTrackingDate(entries: Map<string, string | number>, file?: TFile): Promise<string | null> {
+  async getStartTrackingDateAsync(entries: Map<string, string | number>, file?: TFile): Promise<string | null> {
     if (!file) {
       return DateService.format(DateService.now(), this.settings.dateFormat);
     }
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
+    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
+  }
+
+  /**
+   * Get start tracking date synchronously (for Preact components that already have fileOptions)
+   */
+  getStartTrackingDate(entries: Map<string, string | number>, fileOpts?: TrackerFileOptions): string | null {
     return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
   }
   
@@ -2028,7 +2039,8 @@ export default class TrackerPlugin extends Plugin {
 
   async readAllEntries(file: TFile): Promise<Map<string, string | number>> {
     const state = await this.ensureTrackerState(file);
-    return state.entries;
+    // Return a new Map so Preact detects state changes
+    return new Map(state.entries);
   }
 
   // ---- Создание привычки ----------------------------------------------------
@@ -2039,11 +2051,11 @@ export default class TrackerPlugin extends Plugin {
 
   async onTrackerCreated(folderPath: string, file: TFile) {
     this.folderTreeService.invalidate(folderPath);
-    // Загружаем данные в бекенд (первичная загрузка)
+    // Load data to backend (initial load)
     await this.ensureTrackerState(file);
     const normalizedFolderPath = this.normalizePath(folderPath);
     
-    // Обновляем customSortOrder: добавляем новый трекер в начало
+    // Update customSortOrder: add new tracker to the beginning
     if (normalizedFolderPath) {
       const relativePath = this.getRelativePath(normalizedFolderPath);
       
@@ -2060,83 +2072,13 @@ export default class TrackerPlugin extends Plugin {
       await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder);
     }
     
-    // Динамически добавляем новый трекер без полной перерисовки
+    // Re-render all relevant blocks (Preact will handle the update efficiently)
     for (const block of Array.from(this.activeBlocks)) {
       const blockFolderPath = block.getFolderPath();
       const normalizedBlockPath = this.normalizePath(blockFolderPath);
       if (!this.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
       
-      const opts = block.getOptions();
-      const view = (opts.view ?? "control").toLowerCase();
-      const dateInput = block.containerEl.querySelector(".tracker-notes__date-input") as HTMLInputElement | null;
-      const activeDateIso = dateInput?.value || resolveDateIso(opts.date, this.settings.dateFormat);
-      
-      const trackersContainers = Array.from(
-        block.containerEl.querySelectorAll<HTMLElement>(
-          `.tracker-notes__trackers[data-folder-path="${normalizedFolderPath}"]`
-        )
-      );
-      
-      // Если контейнер не найден (например, новая папка), перерисовываем весь блок
-      if (trackersContainers.length === 0) {
-        await block.render();
-        continue;
-      }
-      
-      for (const trackersContainer of trackersContainers) {
-        // Получаем все трекеры в папке в правильном порядке согласно customSortOrder
-        const folder = this.app.vault.getAbstractFileByPath(normalizedFolderPath);
-        if (!folder || !(folder instanceof TFolder)) continue;
-        
-        const allTrackers = folder.children.filter(
-          f => f instanceof TFile && f.extension === "md"
-        ) as TFile[];
-        
-        const sortedTrackers = this.sortItemsByOrder(allTrackers, normalizedFolderPath);
-        
-        // Находим позицию нового трекера в отсортированном списке
-        const newTrackerIndex = sortedTrackers.findIndex(t => t.path === file.path);
-        if (newTrackerIndex < 0) continue; // Трекер не найден, пропускаем
-        
-        // Рендерим новый трекер
-        await this.trackerRenderer.renderTracker(trackersContainer, file, activeDateIso, view, opts);
-        
-        const newTracker = trackersContainer.querySelector(
-          `.tracker-notes__tracker[data-file-path="${file.path}"]`
-        ) as HTMLElement;
-        
-        if (!newTracker || newTracker.parentElement !== trackersContainer) continue;
-        
-        // Находим элемент, перед которым нужно вставить новый трекер
-        let insertBefore: HTMLElement | null = null;
-        
-        if (newTrackerIndex === 0) {
-          // Новый трекер должен быть первым - вставляем в начало
-          const firstChild = trackersContainer.firstElementChild;
-          if (firstChild && firstChild !== newTracker) {
-            insertBefore = firstChild as HTMLElement;
-          }
-        } else if (newTrackerIndex < sortedTrackers.length) {
-          // Находим элемент, который должен идти после нового трекера
-          const nextTracker = sortedTrackers[newTrackerIndex];
-          if (nextTracker) {
-            insertBefore = trackersContainer.querySelector(
-              `.tracker-notes__tracker[data-file-path="${nextTracker.path}"]`
-            ) as HTMLElement | null;
-          }
-        }
-        
-        // Вставляем новый трекер в правильную позицию
-        if (insertBefore && insertBefore !== newTracker) {
-          trackersContainer.insertBefore(newTracker, insertBefore);
-        } else if (newTrackerIndex === 0) {
-          // Если трекер должен быть первым, вставляем в начало
-          const firstChild = trackersContainer.firstElementChild;
-          if (firstChild !== newTracker) {
-            trackersContainer.insertBefore(newTracker, firstChild);
-          }
-        }
-      }
+      await block.render();
     }
   }
 
@@ -2238,6 +2180,13 @@ export default class TrackerPlugin extends Plugin {
 
   editTracker(file: TFile): void {
     new EditTrackerModal(this.app, this, file).open();
+  }
+
+  /**
+   * Alias for editTracker for use by Preact components
+   */
+  openEditTrackerModal(file: TFile): void {
+    this.editTracker(file);
   }
 
   async moveTrackerUp(file: TFile): Promise<void> {

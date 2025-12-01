@@ -206,6 +206,38 @@ Available in **Ctrl+P / Cmd+P**:
 
 ---
 
+## 🛠️ Technical Architecture
+
+### UI Framework
+The plugin UI is built with **Preact** — a fast, lightweight alternative to React with the same API. This provides:
+- Component-based architecture for maintainable code
+- Efficient virtual DOM diffing for smooth updates
+- Small bundle size (~3KB gzipped)
+
+### Key Technologies
+- **TypeScript** — type-safe development
+- **Preact** — reactive UI components
+- **Chart.js** — interactive charts and visualizations
+- **esbuild** — fast bundling with JSX support
+- **Obsidian API** — native integration with vault and editor
+
+### Project Structure
+```
+src/
+├── components/           # Preact components
+│   ├── TrackerBlock/     # Main block container
+│   ├── TrackerItem/      # Individual tracker
+│   ├── controls/         # Input controls (Number, Scale, etc.)
+│   ├── Statistics/       # Stats display
+│   └── Chart/            # Chart.js wrapper
+├── hooks/                # Custom Preact hooks
+├── services/             # Business logic
+├── domain/               # Types and interfaces
+└── ui/                   # Obsidian UI integration
+```
+
+---
+
 ## 🎯 Roadmap
 
 - [ ] Reminders & notifications  

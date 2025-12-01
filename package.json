@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text",
-    "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --watch"
+    "build": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact",
+    "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --watch"
   },
   "dependencies": {
-    "chart.js": "^4.4.0"
+    "chart.js": "^4.4.0",
+    "preact": "^10.19.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

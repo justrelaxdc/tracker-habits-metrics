@@ -1,3 +1,4 @@
+"use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -29,28 +30,28 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian10 = require("obsidian");
 
 // node_modules/@kurkle/color/dist/color.esm.js
-function round(v) {
-  return v + 0.5 | 0;
+function round(v3) {
+  return v3 + 0.5 | 0;
 }
-var lim = (v, l, h) => Math.max(Math.min(v, h), l);
-function p2b(v) {
-  return lim(round(v * 2.55), 0, 255);
+var lim = (v3, l3, h4) => Math.max(Math.min(v3, h4), l3);
+function p2b(v3) {
+  return lim(round(v3 * 2.55), 0, 255);
 }
-function n2b(v) {
-  return lim(round(v * 255), 0, 255);
+function n2b(v3) {
+  return lim(round(v3 * 255), 0, 255);
 }
-function b2n(v) {
-  return lim(round(v / 2.55) / 100, 0, 1);
+function b2n(v3) {
+  return lim(round(v3 / 2.55) / 100, 0, 1);
 }
-function n2p(v) {
-  return lim(round(v * 100), 0, 100);
+function n2p(v3) {
+  return lim(round(v3 * 100), 0, 100);
 }
 var map$1 = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, a: 10, b: 11, c: 12, d: 13, e: 14, f: 15 };
 var hex = [..."0123456789ABCDEF"];
 var h1 = (b) => hex[b & 15];
 var h2 = (b) => hex[(b & 240) >> 4] + hex[b & 15];
 var eq = (b) => (b & 240) >> 4 === (b & 15);
-var isShort = (v) => eq(v.r) && eq(v.g) && eq(v.b) && eq(v.a);
+var isShort = (v3) => eq(v3.r) && eq(v3.g) && eq(v3.b) && eq(v3.a);
 function hexParse(str) {
   var len = str.length;
   var ret;
@@ -73,120 +74,120 @@ function hexParse(str) {
   }
   return ret;
 }
-var alpha = (a, f) => a < 255 ? f(a) : "";
-function hexString(v) {
-  var f = isShort(v) ? h1 : h2;
-  return v ? "#" + f(v.r) + f(v.g) + f(v.b) + alpha(v.a, f) : void 0;
+var alpha = (a3, f4) => a3 < 255 ? f4(a3) : "";
+function hexString(v3) {
+  var f4 = isShort(v3) ? h1 : h2;
+  return v3 ? "#" + f4(v3.r) + f4(v3.g) + f4(v3.b) + alpha(v3.a, f4) : void 0;
 }
 var HUE_RE = /^(hsla?|hwb|hsv)\(\s*([-+.e\d]+)(?:deg)?[\s,]+([-+.e\d]+)%[\s,]+([-+.e\d]+)%(?:[\s,]+([-+.e\d]+)(%)?)?\s*\)$/;
-function hsl2rgbn(h, s, l) {
-  const a = s * Math.min(l, 1 - l);
-  const f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-  return [f(0), f(8), f(4)];
+function hsl2rgbn(h4, s3, l3) {
+  const a3 = s3 * Math.min(l3, 1 - l3);
+  const f4 = (n2, k3 = (n2 + h4 / 30) % 12) => l3 - a3 * Math.max(Math.min(k3 - 3, 9 - k3, 1), -1);
+  return [f4(0), f4(8), f4(4)];
 }
-function hsv2rgbn(h, s, v) {
-  const f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
-  return [f(5), f(3), f(1)];
+function hsv2rgbn(h4, s3, v3) {
+  const f4 = (n2, k3 = (n2 + h4 / 60) % 6) => v3 - v3 * s3 * Math.max(Math.min(k3, 4 - k3, 1), 0);
+  return [f4(5), f4(3), f4(1)];
 }
-function hwb2rgbn(h, w, b) {
-  const rgb = hsl2rgbn(h, 1, 0.5);
-  let i;
-  if (w + b > 1) {
-    i = 1 / (w + b);
-    w *= i;
-    b *= i;
+function hwb2rgbn(h4, w3, b) {
+  const rgb = hsl2rgbn(h4, 1, 0.5);
+  let i4;
+  if (w3 + b > 1) {
+    i4 = 1 / (w3 + b);
+    w3 *= i4;
+    b *= i4;
   }
-  for (i = 0; i < 3; i++) {
-    rgb[i] *= 1 - w - b;
-    rgb[i] += w;
+  for (i4 = 0; i4 < 3; i4++) {
+    rgb[i4] *= 1 - w3 - b;
+    rgb[i4] += w3;
   }
   return rgb;
 }
-function hueValue(r, g, b, d, max) {
-  if (r === max) {
-    return (g - b) / d + (g < b ? 6 : 0);
+function hueValue(r3, g2, b, d3, max) {
+  if (r3 === max) {
+    return (g2 - b) / d3 + (g2 < b ? 6 : 0);
   }
-  if (g === max) {
-    return (b - r) / d + 2;
+  if (g2 === max) {
+    return (b - r3) / d3 + 2;
   }
-  return (r - g) / d + 4;
+  return (r3 - g2) / d3 + 4;
 }
-function rgb2hsl(v) {
+function rgb2hsl(v3) {
   const range = 255;
-  const r = v.r / range;
-  const g = v.g / range;
-  const b = v.b / range;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  let h, s, d;
+  const r3 = v3.r / range;
+  const g2 = v3.g / range;
+  const b = v3.b / range;
+  const max = Math.max(r3, g2, b);
+  const min = Math.min(r3, g2, b);
+  const l3 = (max + min) / 2;
+  let h4, s3, d3;
   if (max !== min) {
-    d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    h = hueValue(r, g, b, d, max);
-    h = h * 60 + 0.5;
+    d3 = max - min;
+    s3 = l3 > 0.5 ? d3 / (2 - max - min) : d3 / (max + min);
+    h4 = hueValue(r3, g2, b, d3, max);
+    h4 = h4 * 60 + 0.5;
   }
-  return [h | 0, s || 0, l];
+  return [h4 | 0, s3 || 0, l3];
 }
-function calln(f, a, b, c) {
-  return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c)).map(n2b);
+function calln(f4, a3, b, c3) {
+  return (Array.isArray(a3) ? f4(a3[0], a3[1], a3[2]) : f4(a3, b, c3)).map(n2b);
 }
-function hsl2rgb(h, s, l) {
-  return calln(hsl2rgbn, h, s, l);
+function hsl2rgb(h4, s3, l3) {
+  return calln(hsl2rgbn, h4, s3, l3);
 }
-function hwb2rgb(h, w, b) {
-  return calln(hwb2rgbn, h, w, b);
+function hwb2rgb(h4, w3, b) {
+  return calln(hwb2rgbn, h4, w3, b);
 }
-function hsv2rgb(h, s, v) {
-  return calln(hsv2rgbn, h, s, v);
+function hsv2rgb(h4, s3, v3) {
+  return calln(hsv2rgbn, h4, s3, v3);
 }
-function hue(h) {
-  return (h % 360 + 360) % 360;
+function hue(h4) {
+  return (h4 % 360 + 360) % 360;
 }
 function hueParse(str) {
-  const m = HUE_RE.exec(str);
-  let a = 255;
-  let v;
-  if (!m) {
+  const m3 = HUE_RE.exec(str);
+  let a3 = 255;
+  let v3;
+  if (!m3) {
     return;
   }
-  if (m[5] !== v) {
-    a = m[6] ? p2b(+m[5]) : n2b(+m[5]);
+  if (m3[5] !== v3) {
+    a3 = m3[6] ? p2b(+m3[5]) : n2b(+m3[5]);
   }
-  const h = hue(+m[2]);
-  const p1 = +m[3] / 100;
-  const p2 = +m[4] / 100;
-  if (m[1] === "hwb") {
-    v = hwb2rgb(h, p1, p2);
-  } else if (m[1] === "hsv") {
-    v = hsv2rgb(h, p1, p2);
+  const h4 = hue(+m3[2]);
+  const p1 = +m3[3] / 100;
+  const p22 = +m3[4] / 100;
+  if (m3[1] === "hwb") {
+    v3 = hwb2rgb(h4, p1, p22);
+  } else if (m3[1] === "hsv") {
+    v3 = hsv2rgb(h4, p1, p22);
   } else {
-    v = hsl2rgb(h, p1, p2);
+    v3 = hsl2rgb(h4, p1, p22);
   }
   return {
-    r: v[0],
-    g: v[1],
-    b: v[2],
-    a
+    r: v3[0],
+    g: v3[1],
+    b: v3[2],
+    a: a3
   };
 }
-function rotate(v, deg) {
-  var h = rgb2hsl(v);
-  h[0] = hue(h[0] + deg);
-  h = hsl2rgb(h);
-  v.r = h[0];
-  v.g = h[1];
-  v.b = h[2];
+function rotate(v3, deg) {
+  var h4 = rgb2hsl(v3);
+  h4[0] = hue(h4[0] + deg);
+  h4 = hsl2rgb(h4);
+  v3.r = h4[0];
+  v3.g = h4[1];
+  v3.b = h4[2];
 }
-function hslString(v) {
-  if (!v) {
+function hslString(v3) {
+  if (!v3) {
     return;
   }
-  const a = rgb2hsl(v);
-  const h = a[0];
-  const s = n2p(a[1]);
-  const l = n2p(a[2]);
-  return v.a < 255 ? `hsla(${h}, ${s}%, ${l}%, ${b2n(v.a)})` : `hsl(${h}, ${s}%, ${l}%)`;
+  const a3 = rgb2hsl(v3);
+  const h4 = a3[0];
+  const s3 = n2p(a3[1]);
+  const l3 = n2p(a3[2]);
+  return v3.a < 255 ? `hsla(${h4}, ${s3}%, ${l3}%, ${b2n(v3.a)})` : `hsl(${h4}, ${s3}%, ${l3}%)`;
 }
 var map = {
   x: "dark",
@@ -371,15 +372,15 @@ function unpack() {
   const unpacked = {};
   const keys = Object.keys(names$1);
   const tkeys = Object.keys(map);
-  let i, j, k, ok, nk;
-  for (i = 0; i < keys.length; i++) {
-    ok = nk = keys[i];
-    for (j = 0; j < tkeys.length; j++) {
-      k = tkeys[j];
-      nk = nk.replace(k, map[k]);
+  let i4, j3, k3, ok, nk;
+  for (i4 = 0; i4 < keys.length; i4++) {
+    ok = nk = keys[i4];
+    for (j3 = 0; j3 < tkeys.length; j3++) {
+      k3 = tkeys[j3];
+      nk = nk.replace(k3, map[k3]);
     }
-    k = parseInt(names$1[ok], 16);
-    unpacked[nk] = [k >> 16 & 255, k >> 8 & 255, k & 255];
+    k3 = parseInt(names$1[ok], 16);
+    unpacked[nk] = [k3 >> 16 & 255, k3 >> 8 & 255, k3 & 255];
   }
   return unpacked;
 }
@@ -389,82 +390,82 @@ function nameParse(str) {
     names = unpack();
     names.transparent = [0, 0, 0, 0];
   }
-  const a = names[str.toLowerCase()];
-  return a && {
-    r: a[0],
-    g: a[1],
-    b: a[2],
-    a: a.length === 4 ? a[3] : 255
+  const a3 = names[str.toLowerCase()];
+  return a3 && {
+    r: a3[0],
+    g: a3[1],
+    b: a3[2],
+    a: a3.length === 4 ? a3[3] : 255
   };
 }
 var RGB_RE = /^rgba?\(\s*([-+.\d]+)(%)?[\s,]+([-+.e\d]+)(%)?[\s,]+([-+.e\d]+)(%)?(?:[\s,/]+([-+.e\d]+)(%)?)?\s*\)$/;
 function rgbParse(str) {
-  const m = RGB_RE.exec(str);
-  let a = 255;
-  let r, g, b;
-  if (!m) {
+  const m3 = RGB_RE.exec(str);
+  let a3 = 255;
+  let r3, g2, b;
+  if (!m3) {
     return;
   }
-  if (m[7] !== r) {
-    const v = +m[7];
-    a = m[8] ? p2b(v) : lim(v * 255, 0, 255);
+  if (m3[7] !== r3) {
+    const v3 = +m3[7];
+    a3 = m3[8] ? p2b(v3) : lim(v3 * 255, 0, 255);
   }
-  r = +m[1];
-  g = +m[3];
-  b = +m[5];
-  r = 255 & (m[2] ? p2b(r) : lim(r, 0, 255));
-  g = 255 & (m[4] ? p2b(g) : lim(g, 0, 255));
-  b = 255 & (m[6] ? p2b(b) : lim(b, 0, 255));
+  r3 = +m3[1];
+  g2 = +m3[3];
+  b = +m3[5];
+  r3 = 255 & (m3[2] ? p2b(r3) : lim(r3, 0, 255));
+  g2 = 255 & (m3[4] ? p2b(g2) : lim(g2, 0, 255));
+  b = 255 & (m3[6] ? p2b(b) : lim(b, 0, 255));
   return {
-    r,
-    g,
+    r: r3,
+    g: g2,
     b,
-    a
+    a: a3
   };
 }
-function rgbString(v) {
-  return v && (v.a < 255 ? `rgba(${v.r}, ${v.g}, ${v.b}, ${b2n(v.a)})` : `rgb(${v.r}, ${v.g}, ${v.b})`);
+function rgbString(v3) {
+  return v3 && (v3.a < 255 ? `rgba(${v3.r}, ${v3.g}, ${v3.b}, ${b2n(v3.a)})` : `rgb(${v3.r}, ${v3.g}, ${v3.b})`);
 }
-var to = (v) => v <= 31308e-7 ? v * 12.92 : Math.pow(v, 1 / 2.4) * 1.055 - 0.055;
-var from = (v) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-function interpolate(rgb1, rgb2, t) {
-  const r = from(b2n(rgb1.r));
-  const g = from(b2n(rgb1.g));
+var to = (v3) => v3 <= 31308e-7 ? v3 * 12.92 : Math.pow(v3, 1 / 2.4) * 1.055 - 0.055;
+var from = (v3) => v3 <= 0.04045 ? v3 / 12.92 : Math.pow((v3 + 0.055) / 1.055, 2.4);
+function interpolate(rgb1, rgb2, t3) {
+  const r3 = from(b2n(rgb1.r));
+  const g2 = from(b2n(rgb1.g));
   const b = from(b2n(rgb1.b));
   return {
-    r: n2b(to(r + t * (from(b2n(rgb2.r)) - r))),
-    g: n2b(to(g + t * (from(b2n(rgb2.g)) - g))),
-    b: n2b(to(b + t * (from(b2n(rgb2.b)) - b))),
-    a: rgb1.a + t * (rgb2.a - rgb1.a)
+    r: n2b(to(r3 + t3 * (from(b2n(rgb2.r)) - r3))),
+    g: n2b(to(g2 + t3 * (from(b2n(rgb2.g)) - g2))),
+    b: n2b(to(b + t3 * (from(b2n(rgb2.b)) - b))),
+    a: rgb1.a + t3 * (rgb2.a - rgb1.a)
   };
 }
-function modHSL(v, i, ratio) {
-  if (v) {
-    let tmp = rgb2hsl(v);
-    tmp[i] = Math.max(0, Math.min(tmp[i] + tmp[i] * ratio, i === 0 ? 360 : 1));
+function modHSL(v3, i4, ratio) {
+  if (v3) {
+    let tmp = rgb2hsl(v3);
+    tmp[i4] = Math.max(0, Math.min(tmp[i4] + tmp[i4] * ratio, i4 === 0 ? 360 : 1));
     tmp = hsl2rgb(tmp);
-    v.r = tmp[0];
-    v.g = tmp[1];
-    v.b = tmp[2];
+    v3.r = tmp[0];
+    v3.g = tmp[1];
+    v3.b = tmp[2];
   }
 }
-function clone(v, proto) {
-  return v ? Object.assign(proto || {}, v) : v;
+function clone(v3, proto) {
+  return v3 ? Object.assign(proto || {}, v3) : v3;
 }
 function fromObject(input) {
-  var v = { r: 0, g: 0, b: 0, a: 255 };
+  var v3 = { r: 0, g: 0, b: 0, a: 255 };
   if (Array.isArray(input)) {
     if (input.length >= 3) {
-      v = { r: input[0], g: input[1], b: input[2], a: 255 };
+      v3 = { r: input[0], g: input[1], b: input[2], a: 255 };
       if (input.length > 3) {
-        v.a = n2b(input[3]);
+        v3.a = n2b(input[3]);
       }
     }
   } else {
-    v = clone(input, { r: 0, g: 0, b: 0, a: 1 });
-    v.a = n2b(v.a);
+    v3 = clone(input, { r: 0, g: 0, b: 0, a: 1 });
+    v3.a = n2b(v3.a);
   }
-  return v;
+  return v3;
 }
 function functionParse(str) {
   if (str.charAt(0) === "r") {
@@ -478,24 +479,24 @@ var Color = class _Color {
       return input;
     }
     const type = typeof input;
-    let v;
+    let v3;
     if (type === "object") {
-      v = fromObject(input);
+      v3 = fromObject(input);
     } else if (type === "string") {
-      v = hexParse(input) || nameParse(input) || functionParse(input);
+      v3 = hexParse(input) || nameParse(input) || functionParse(input);
     }
-    this._rgb = v;
-    this._valid = !!v;
+    this._rgb = v3;
+    this._valid = !!v3;
   }
   get valid() {
     return this._valid;
   }
   get rgb() {
-    var v = clone(this._rgb);
-    if (v) {
-      v.a = b2n(v.a);
+    var v3 = clone(this._rgb);
+    if (v3) {
+      v3.a = b2n(v3.a);
     }
-    return v;
+    return v3;
   }
   set rgb(obj) {
     this._rgb = fromObject(obj);
@@ -512,32 +513,32 @@ var Color = class _Color {
   mix(color2, weight) {
     if (color2) {
       const c1 = this.rgb;
-      const c2 = color2.rgb;
-      let w2;
-      const p = weight === w2 ? 0.5 : weight;
-      const w = 2 * p - 1;
-      const a = c1.a - c2.a;
-      const w1 = ((w * a === -1 ? w : (w + a) / (1 + w * a)) + 1) / 2;
-      w2 = 1 - w1;
-      c1.r = 255 & w1 * c1.r + w2 * c2.r + 0.5;
-      c1.g = 255 & w1 * c1.g + w2 * c2.g + 0.5;
-      c1.b = 255 & w1 * c1.b + w2 * c2.b + 0.5;
-      c1.a = p * c1.a + (1 - p) * c2.a;
+      const c22 = color2.rgb;
+      let w22;
+      const p3 = weight === w22 ? 0.5 : weight;
+      const w3 = 2 * p3 - 1;
+      const a3 = c1.a - c22.a;
+      const w1 = ((w3 * a3 === -1 ? w3 : (w3 + a3) / (1 + w3 * a3)) + 1) / 2;
+      w22 = 1 - w1;
+      c1.r = 255 & w1 * c1.r + w22 * c22.r + 0.5;
+      c1.g = 255 & w1 * c1.g + w22 * c22.g + 0.5;
+      c1.b = 255 & w1 * c1.b + w22 * c22.b + 0.5;
+      c1.a = p3 * c1.a + (1 - p3) * c22.a;
       this.rgb = c1;
     }
     return this;
   }
-  interpolate(color2, t) {
+  interpolate(color2, t3) {
     if (color2) {
-      this._rgb = interpolate(this._rgb, color2._rgb, t);
+      this._rgb = interpolate(this._rgb, color2._rgb, t3);
     }
     return this;
   }
   clone() {
     return new _Color(this.rgb);
   }
-  alpha(a) {
-    this._rgb.a = n2b(a);
+  alpha(a3) {
+    this._rgb.a = n2b(a3);
     return this;
   }
   clearer(ratio) {
@@ -557,10 +558,10 @@ var Color = class _Color {
     return this;
   }
   negate() {
-    const v = this._rgb;
-    v.r = 255 - v.r;
-    v.g = 255 - v.g;
-    v.b = 255 - v.b;
+    const v3 = this._rgb;
+    v3.r = 255 - v3.r;
+    v3.g = 255 - v3.g;
+    v3.b = 255 - v3.b;
     return this;
   }
   lighten(ratio) {
@@ -625,34 +626,34 @@ function callback(fn, args, thisArg) {
   }
 }
 function each(loopable, fn, thisArg, reverse) {
-  let i, len, keys;
+  let i4, len, keys;
   if (isArray(loopable)) {
     len = loopable.length;
     if (reverse) {
-      for (i = len - 1; i >= 0; i--) {
-        fn.call(thisArg, loopable[i], i);
+      for (i4 = len - 1; i4 >= 0; i4--) {
+        fn.call(thisArg, loopable[i4], i4);
       }
     } else {
-      for (i = 0; i < len; i++) {
-        fn.call(thisArg, loopable[i], i);
+      for (i4 = 0; i4 < len; i4++) {
+        fn.call(thisArg, loopable[i4], i4);
       }
     }
   } else if (isObject(loopable)) {
     keys = Object.keys(loopable);
     len = keys.length;
-    for (i = 0; i < len; i++) {
-      fn.call(thisArg, loopable[keys[i]], keys[i]);
+    for (i4 = 0; i4 < len; i4++) {
+      fn.call(thisArg, loopable[keys[i4]], keys[i4]);
     }
   }
 }
 function _elementsEqual(a0, a1) {
-  let i, ilen, v0, v1;
+  let i4, ilen, v0, v1;
   if (!a0 || !a1 || a0.length !== a1.length) {
     return false;
   }
-  for (i = 0, ilen = a0.length; i < ilen; ++i) {
-    v0 = a0[i];
-    v1 = a1[i];
+  for (i4 = 0, ilen = a0.length; i4 < ilen; ++i4) {
+    v0 = a0[i4];
+    v1 = a1[i4];
     if (v0.datasetIndex !== v1.datasetIndex || v0.index !== v1.index) {
       return false;
     }
@@ -667,9 +668,9 @@ function clone2(source) {
     const target = /* @__PURE__ */ Object.create(null);
     const keys = Object.keys(source);
     const klen = keys.length;
-    let k = 0;
-    for (; k < klen; ++k) {
-      target[keys[k]] = clone2(source[keys[k]]);
+    let k3 = 0;
+    for (; k3 < klen; ++k3) {
+      target[keys[k3]] = clone2(source[keys[k3]]);
     }
     return target;
   }
@@ -705,14 +706,14 @@ function merge(target, source, options) {
   options = options || {};
   const merger = options.merger || _merger;
   let current;
-  for (let i = 0; i < ilen; ++i) {
-    current = sources[i];
+  for (let i4 = 0; i4 < ilen; ++i4) {
+    current = sources[i4];
     if (!isObject(current)) {
       continue;
     }
     const keys = Object.keys(current);
-    for (let k = 0, klen = keys.length; k < klen; ++k) {
-      merger(keys[k], target, current, options);
+    for (let k3 = 0, klen = keys.length; k3 < klen; ++k3) {
+      merger(keys[k3], target, current, options);
     }
   }
   return target;
@@ -736,10 +737,10 @@ function _mergerIf(key, target, source) {
 }
 var keyResolvers = {
   // Chart.helpers.core resolveObjectKey should resolve empty key to root object
-  "": (v) => v,
+  "": (v3) => v3,
   // default resolvers
-  x: (o) => o.x,
-  y: (o) => o.y
+  x: (o3) => o3.x,
+  y: (o3) => o3.y
 };
 function _splitKey(key) {
   const parts = key.split(".");
@@ -759,11 +760,11 @@ function _splitKey(key) {
 function _getKeyResolver(key) {
   const keys = _splitKey(key);
   return (obj) => {
-    for (const k of keys) {
-      if (k === "") {
+    for (const k3 of keys) {
+      if (k3 === "") {
         break;
       }
-      obj = obj && obj[k];
+      obj = obj && obj[k3];
     }
     return obj;
   };
@@ -777,19 +778,19 @@ function _capitalize(str) {
 }
 var defined = (value) => typeof value !== "undefined";
 var isFunction = (value) => typeof value === "function";
-var setsEqual = (a, b) => {
-  if (a.size !== b.size) {
+var setsEqual = (a3, b) => {
+  if (a3.size !== b.size) {
     return false;
   }
-  for (const item of a) {
+  for (const item of a3) {
     if (!b.has(item)) {
       return false;
     }
   }
   return true;
 };
-function _isClickEvent(e) {
-  return e.type === "mouseup" || e.type === "click" || e.type === "contextmenu";
+function _isClickEvent(e3) {
+  return e3.type === "mouseup" || e3.type === "click" || e3.type === "contextmenu";
 }
 var PI = Math.PI;
 var TAU = 2 * PI;
@@ -801,8 +802,8 @@ var QUARTER_PI = PI / 4;
 var TWO_THIRDS_PI = PI * 2 / 3;
 var log10 = Math.log10;
 var sign = Math.sign;
-function almostEquals(x, y, epsilon) {
-  return Math.abs(x - y) < epsilon;
+function almostEquals(x3, y3, epsilon) {
+  return Math.abs(x3 - y3) < epsilon;
 }
 function niceNum(range) {
   const roundedRange = Math.round(range);
@@ -815,33 +816,33 @@ function niceNum(range) {
 function _factorize(value) {
   const result = [];
   const sqrt = Math.sqrt(value);
-  let i;
-  for (i = 1; i < sqrt; i++) {
-    if (value % i === 0) {
-      result.push(i);
-      result.push(value / i);
+  let i4;
+  for (i4 = 1; i4 < sqrt; i4++) {
+    if (value % i4 === 0) {
+      result.push(i4);
+      result.push(value / i4);
     }
   }
   if (sqrt === (sqrt | 0)) {
     result.push(sqrt);
   }
-  result.sort((a, b) => a - b).pop();
+  result.sort((a3, b) => a3 - b).pop();
   return result;
 }
-function isNonPrimitive(n) {
-  return typeof n === "symbol" || typeof n === "object" && n !== null && !(Symbol.toPrimitive in n || "toString" in n || "valueOf" in n);
+function isNonPrimitive(n2) {
+  return typeof n2 === "symbol" || typeof n2 === "object" && n2 !== null && !(Symbol.toPrimitive in n2 || "toString" in n2 || "valueOf" in n2);
 }
-function isNumber(n) {
-  return !isNonPrimitive(n) && !isNaN(parseFloat(n)) && isFinite(n);
+function isNumber(n2) {
+  return !isNonPrimitive(n2) && !isNaN(parseFloat(n2)) && isFinite(n2);
 }
-function almostWhole(x, epsilon) {
-  const rounded = Math.round(x);
-  return rounded - epsilon <= x && rounded + epsilon >= x;
+function almostWhole(x3, epsilon) {
+  const rounded = Math.round(x3);
+  return rounded - epsilon <= x3 && rounded + epsilon >= x3;
 }
 function _setMinAndMaxByKey(array, target, property) {
-  let i, ilen, value;
-  for (i = 0, ilen = array.length; i < ilen; i++) {
-    value = array[i][property];
+  let i4, ilen, value;
+  for (i4 = 0, ilen = array.length; i4 < ilen; i4++) {
+    value = array[i4][property];
     if (!isNaN(value)) {
       target.min = Math.min(target.min, value);
       target.max = Math.max(target.max, value);
@@ -854,17 +855,17 @@ function toRadians(degrees) {
 function toDegrees(radians) {
   return radians * (180 / PI);
 }
-function _decimalPlaces(x) {
-  if (!isNumberFinite(x)) {
+function _decimalPlaces(x3) {
+  if (!isNumberFinite(x3)) {
     return;
   }
-  let e = 1;
-  let p = 0;
-  while (Math.round(x * e) / e !== x) {
-    e *= 10;
-    p++;
+  let e3 = 1;
+  let p3 = 0;
+  while (Math.round(x3 * e3) / e3 !== x3) {
+    e3 *= 10;
+    p3++;
   }
-  return p;
+  return p3;
 }
 function getAngleFromPoint(centrePoint, anglePoint) {
   const distanceFromXCenter = anglePoint.x - centrePoint.x;
@@ -882,21 +883,21 @@ function getAngleFromPoint(centrePoint, anglePoint) {
 function distanceBetweenPoints(pt1, pt2) {
   return Math.sqrt(Math.pow(pt2.x - pt1.x, 2) + Math.pow(pt2.y - pt1.y, 2));
 }
-function _angleDiff(a, b) {
-  return (a - b + PITAU) % TAU - PI;
+function _angleDiff(a3, b) {
+  return (a3 - b + PITAU) % TAU - PI;
 }
-function _normalizeAngle(a) {
-  return (a % TAU + TAU) % TAU;
+function _normalizeAngle(a3) {
+  return (a3 % TAU + TAU) % TAU;
 }
 function _angleBetween(angle, start, end, sameAngleIsFullCircle) {
-  const a = _normalizeAngle(angle);
-  const s = _normalizeAngle(start);
-  const e = _normalizeAngle(end);
-  const angleToStart = _normalizeAngle(s - a);
-  const angleToEnd = _normalizeAngle(e - a);
-  const startToAngle = _normalizeAngle(a - s);
-  const endToAngle = _normalizeAngle(a - e);
-  return a === s || a === e || sameAngleIsFullCircle && s === e || angleToStart > angleToEnd && startToAngle < endToAngle;
+  const a3 = _normalizeAngle(angle);
+  const s3 = _normalizeAngle(start);
+  const e3 = _normalizeAngle(end);
+  const angleToStart = _normalizeAngle(s3 - a3);
+  const angleToEnd = _normalizeAngle(e3 - a3);
+  const startToAngle = _normalizeAngle(a3 - s3);
+  const endToAngle = _normalizeAngle(a3 - e3);
+  return a3 === s3 || a3 === e3 || sameAngleIsFullCircle && s3 === e3 || angleToStart > angleToEnd && startToAngle < endToAngle;
 }
 function _limitValue(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -1104,70 +1105,70 @@ function _scaleRangesChanged(meta) {
   Object.assign(_scaleRanges, newRanges);
   return changed;
 }
-var atEdge = (t) => t === 0 || t === 1;
-var elasticIn = (t, s, p) => -(Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * TAU / p));
-var elasticOut = (t, s, p) => Math.pow(2, -10 * t) * Math.sin((t - s) * TAU / p) + 1;
+var atEdge = (t3) => t3 === 0 || t3 === 1;
+var elasticIn = (t3, s3, p3) => -(Math.pow(2, 10 * (t3 -= 1)) * Math.sin((t3 - s3) * TAU / p3));
+var elasticOut = (t3, s3, p3) => Math.pow(2, -10 * t3) * Math.sin((t3 - s3) * TAU / p3) + 1;
 var effects = {
-  linear: (t) => t,
-  easeInQuad: (t) => t * t,
-  easeOutQuad: (t) => -t * (t - 2),
-  easeInOutQuad: (t) => (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1),
-  easeInCubic: (t) => t * t * t,
-  easeOutCubic: (t) => (t -= 1) * t * t + 1,
-  easeInOutCubic: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t : 0.5 * ((t -= 2) * t * t + 2),
-  easeInQuart: (t) => t * t * t * t,
-  easeOutQuart: (t) => -((t -= 1) * t * t * t - 1),
-  easeInOutQuart: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t * t : -0.5 * ((t -= 2) * t * t * t - 2),
-  easeInQuint: (t) => t * t * t * t * t,
-  easeOutQuint: (t) => (t -= 1) * t * t * t * t + 1,
-  easeInOutQuint: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t * t * t : 0.5 * ((t -= 2) * t * t * t * t + 2),
-  easeInSine: (t) => -Math.cos(t * HALF_PI) + 1,
-  easeOutSine: (t) => Math.sin(t * HALF_PI),
-  easeInOutSine: (t) => -0.5 * (Math.cos(PI * t) - 1),
-  easeInExpo: (t) => t === 0 ? 0 : Math.pow(2, 10 * (t - 1)),
-  easeOutExpo: (t) => t === 1 ? 1 : -Math.pow(2, -10 * t) + 1,
-  easeInOutExpo: (t) => atEdge(t) ? t : t < 0.5 ? 0.5 * Math.pow(2, 10 * (t * 2 - 1)) : 0.5 * (-Math.pow(2, -10 * (t * 2 - 1)) + 2),
-  easeInCirc: (t) => t >= 1 ? t : -(Math.sqrt(1 - t * t) - 1),
-  easeOutCirc: (t) => Math.sqrt(1 - (t -= 1) * t),
-  easeInOutCirc: (t) => (t /= 0.5) < 1 ? -0.5 * (Math.sqrt(1 - t * t) - 1) : 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1),
-  easeInElastic: (t) => atEdge(t) ? t : elasticIn(t, 0.075, 0.3),
-  easeOutElastic: (t) => atEdge(t) ? t : elasticOut(t, 0.075, 0.3),
-  easeInOutElastic(t) {
-    const s = 0.1125;
-    const p = 0.45;
-    return atEdge(t) ? t : t < 0.5 ? 0.5 * elasticIn(t * 2, s, p) : 0.5 + 0.5 * elasticOut(t * 2 - 1, s, p);
+  linear: (t3) => t3,
+  easeInQuad: (t3) => t3 * t3,
+  easeOutQuad: (t3) => -t3 * (t3 - 2),
+  easeInOutQuad: (t3) => (t3 /= 0.5) < 1 ? 0.5 * t3 * t3 : -0.5 * (--t3 * (t3 - 2) - 1),
+  easeInCubic: (t3) => t3 * t3 * t3,
+  easeOutCubic: (t3) => (t3 -= 1) * t3 * t3 + 1,
+  easeInOutCubic: (t3) => (t3 /= 0.5) < 1 ? 0.5 * t3 * t3 * t3 : 0.5 * ((t3 -= 2) * t3 * t3 + 2),
+  easeInQuart: (t3) => t3 * t3 * t3 * t3,
+  easeOutQuart: (t3) => -((t3 -= 1) * t3 * t3 * t3 - 1),
+  easeInOutQuart: (t3) => (t3 /= 0.5) < 1 ? 0.5 * t3 * t3 * t3 * t3 : -0.5 * ((t3 -= 2) * t3 * t3 * t3 - 2),
+  easeInQuint: (t3) => t3 * t3 * t3 * t3 * t3,
+  easeOutQuint: (t3) => (t3 -= 1) * t3 * t3 * t3 * t3 + 1,
+  easeInOutQuint: (t3) => (t3 /= 0.5) < 1 ? 0.5 * t3 * t3 * t3 * t3 * t3 : 0.5 * ((t3 -= 2) * t3 * t3 * t3 * t3 + 2),
+  easeInSine: (t3) => -Math.cos(t3 * HALF_PI) + 1,
+  easeOutSine: (t3) => Math.sin(t3 * HALF_PI),
+  easeInOutSine: (t3) => -0.5 * (Math.cos(PI * t3) - 1),
+  easeInExpo: (t3) => t3 === 0 ? 0 : Math.pow(2, 10 * (t3 - 1)),
+  easeOutExpo: (t3) => t3 === 1 ? 1 : -Math.pow(2, -10 * t3) + 1,
+  easeInOutExpo: (t3) => atEdge(t3) ? t3 : t3 < 0.5 ? 0.5 * Math.pow(2, 10 * (t3 * 2 - 1)) : 0.5 * (-Math.pow(2, -10 * (t3 * 2 - 1)) + 2),
+  easeInCirc: (t3) => t3 >= 1 ? t3 : -(Math.sqrt(1 - t3 * t3) - 1),
+  easeOutCirc: (t3) => Math.sqrt(1 - (t3 -= 1) * t3),
+  easeInOutCirc: (t3) => (t3 /= 0.5) < 1 ? -0.5 * (Math.sqrt(1 - t3 * t3) - 1) : 0.5 * (Math.sqrt(1 - (t3 -= 2) * t3) + 1),
+  easeInElastic: (t3) => atEdge(t3) ? t3 : elasticIn(t3, 0.075, 0.3),
+  easeOutElastic: (t3) => atEdge(t3) ? t3 : elasticOut(t3, 0.075, 0.3),
+  easeInOutElastic(t3) {
+    const s3 = 0.1125;
+    const p3 = 0.45;
+    return atEdge(t3) ? t3 : t3 < 0.5 ? 0.5 * elasticIn(t3 * 2, s3, p3) : 0.5 + 0.5 * elasticOut(t3 * 2 - 1, s3, p3);
   },
-  easeInBack(t) {
-    const s = 1.70158;
-    return t * t * ((s + 1) * t - s);
+  easeInBack(t3) {
+    const s3 = 1.70158;
+    return t3 * t3 * ((s3 + 1) * t3 - s3);
   },
-  easeOutBack(t) {
-    const s = 1.70158;
-    return (t -= 1) * t * ((s + 1) * t + s) + 1;
+  easeOutBack(t3) {
+    const s3 = 1.70158;
+    return (t3 -= 1) * t3 * ((s3 + 1) * t3 + s3) + 1;
   },
-  easeInOutBack(t) {
-    let s = 1.70158;
-    if ((t /= 0.5) < 1) {
-      return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
+  easeInOutBack(t3) {
+    let s3 = 1.70158;
+    if ((t3 /= 0.5) < 1) {
+      return 0.5 * (t3 * t3 * (((s3 *= 1.525) + 1) * t3 - s3));
     }
-    return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
+    return 0.5 * ((t3 -= 2) * t3 * (((s3 *= 1.525) + 1) * t3 + s3) + 2);
   },
-  easeInBounce: (t) => 1 - effects.easeOutBounce(1 - t),
-  easeOutBounce(t) {
-    const m = 7.5625;
-    const d = 2.75;
-    if (t < 1 / d) {
-      return m * t * t;
+  easeInBounce: (t3) => 1 - effects.easeOutBounce(1 - t3),
+  easeOutBounce(t3) {
+    const m3 = 7.5625;
+    const d3 = 2.75;
+    if (t3 < 1 / d3) {
+      return m3 * t3 * t3;
     }
-    if (t < 2 / d) {
-      return m * (t -= 1.5 / d) * t + 0.75;
+    if (t3 < 2 / d3) {
+      return m3 * (t3 -= 1.5 / d3) * t3 + 0.75;
     }
-    if (t < 2.5 / d) {
-      return m * (t -= 2.25 / d) * t + 0.9375;
+    if (t3 < 2.5 / d3) {
+      return m3 * (t3 -= 2.25 / d3) * t3 + 0.9375;
     }
-    return m * (t -= 2.625 / d) * t + 0.984375;
+    return m3 * (t3 -= 2.625 / d3) * t3 + 0.984375;
   },
-  easeInOutBounce: (t) => t < 0.5 ? effects.easeInBounce(t * 2) * 0.5 : effects.easeOutBounce(t * 2 - 1) * 0.5 + 0.5
+  easeInOutBounce: (t3) => t3 < 0.5 ? effects.easeInBounce(t3 * 2) * 0.5 : effects.easeOutBounce(t3 * 2 - 1) * 0.5 + 0.5
 };
 function isPatternOrGradient(value) {
   if (value && typeof value === "object") {
@@ -1253,7 +1254,7 @@ function applyAnimationsDefaults(defaults2) {
         visible: {
           type: "boolean",
           easing: "linear",
-          fn: (v) => v | 0
+          fn: (v3) => v3 | 0
         }
       }
     }
@@ -1418,9 +1419,9 @@ function getScope$1(node, key) {
     return node;
   }
   const keys = key.split(".");
-  for (let i = 0, n = keys.length; i < n; ++i) {
-    const k = keys[i];
-    node = node[k] || (node[k] = /* @__PURE__ */ Object.create(null));
+  for (let i4 = 0, n2 = keys.length; i4 < n2; ++i4) {
+    const k3 = keys[i4];
+    node = node[k3] || (node[k3] = /* @__PURE__ */ Object.create(null));
   }
   return node;
 }
@@ -1562,14 +1563,14 @@ function _longestText(ctx, font, arrayOfThings, cache) {
   ctx.font = font;
   let longest = 0;
   const ilen = arrayOfThings.length;
-  let i, j, jlen, thing, nestedThing;
-  for (i = 0; i < ilen; i++) {
-    thing = arrayOfThings[i];
+  let i4, j3, jlen, thing, nestedThing;
+  for (i4 = 0; i4 < ilen; i4++) {
+    thing = arrayOfThings[i4];
     if (thing !== void 0 && thing !== null && !isArray(thing)) {
       longest = _measureText(ctx, data, gc, longest, thing);
     } else if (isArray(thing)) {
-      for (j = 0, jlen = thing.length; j < jlen; j++) {
-        nestedThing = thing[j];
+      for (j3 = 0, jlen = thing.length; j3 < jlen; j3++) {
+        nestedThing = thing[j3];
         if (nestedThing !== void 0 && nestedThing !== null && !isArray(nestedThing)) {
           longest = _measureText(ctx, data, gc, longest, nestedThing);
         }
@@ -1579,8 +1580,8 @@ function _longestText(ctx, font, arrayOfThings, cache) {
   ctx.restore();
   const gcLen = gc.length / 2;
   if (gcLen > arrayOfThings.length) {
-    for (i = 0; i < gcLen; i++) {
-      delete data[gc[i]];
+    for (i4 = 0; i4 < gcLen; i4++) {
+      delete data[gc[i4]];
     }
     gc.splice(0, gcLen);
   }
@@ -1601,10 +1602,10 @@ function clearCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 }
-function drawPoint(ctx, options, x, y) {
-  drawPointLegend(ctx, options, x, y, null);
+function drawPoint(ctx, options, x3, y3) {
+  drawPointLegend(ctx, options, x3, y3, null);
 }
-function drawPointLegend(ctx, options, x, y, w) {
+function drawPointLegend(ctx, options, x3, y3, w3) {
   let type, xOffset, yOffset, size, cornerRadius, width, xOffsetW, yOffsetW;
   const style = options.pointStyle;
   const rotation = options.rotation;
@@ -1614,7 +1615,7 @@ function drawPointLegend(ctx, options, x, y, w) {
     type = style.toString();
     if (type === "[object HTMLImageElement]" || type === "[object HTMLCanvasElement]") {
       ctx.save();
-      ctx.translate(x, y);
+      ctx.translate(x3, y3);
       ctx.rotate(rad);
       ctx.drawImage(style, -style.width / 2, -style.height / 2, style.width, style.height);
       ctx.restore();
@@ -1628,96 +1629,96 @@ function drawPointLegend(ctx, options, x, y, w) {
   switch (style) {
     // Default includes circle
     default:
-      if (w) {
-        ctx.ellipse(x, y, w / 2, radius, 0, 0, TAU);
+      if (w3) {
+        ctx.ellipse(x3, y3, w3 / 2, radius, 0, 0, TAU);
       } else {
-        ctx.arc(x, y, radius, 0, TAU);
+        ctx.arc(x3, y3, radius, 0, TAU);
       }
       ctx.closePath();
       break;
     case "triangle":
-      width = w ? w / 2 : radius;
-      ctx.moveTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+      width = w3 ? w3 / 2 : radius;
+      ctx.moveTo(x3 + Math.sin(rad) * width, y3 - Math.cos(rad) * radius);
       rad += TWO_THIRDS_PI;
-      ctx.lineTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+      ctx.lineTo(x3 + Math.sin(rad) * width, y3 - Math.cos(rad) * radius);
       rad += TWO_THIRDS_PI;
-      ctx.lineTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+      ctx.lineTo(x3 + Math.sin(rad) * width, y3 - Math.cos(rad) * radius);
       ctx.closePath();
       break;
     case "rectRounded":
       cornerRadius = radius * 0.516;
       size = radius - cornerRadius;
       xOffset = Math.cos(rad + QUARTER_PI) * size;
-      xOffsetW = Math.cos(rad + QUARTER_PI) * (w ? w / 2 - cornerRadius : size);
+      xOffsetW = Math.cos(rad + QUARTER_PI) * (w3 ? w3 / 2 - cornerRadius : size);
       yOffset = Math.sin(rad + QUARTER_PI) * size;
-      yOffsetW = Math.sin(rad + QUARTER_PI) * (w ? w / 2 - cornerRadius : size);
-      ctx.arc(x - xOffsetW, y - yOffset, cornerRadius, rad - PI, rad - HALF_PI);
-      ctx.arc(x + yOffsetW, y - xOffset, cornerRadius, rad - HALF_PI, rad);
-      ctx.arc(x + xOffsetW, y + yOffset, cornerRadius, rad, rad + HALF_PI);
-      ctx.arc(x - yOffsetW, y + xOffset, cornerRadius, rad + HALF_PI, rad + PI);
+      yOffsetW = Math.sin(rad + QUARTER_PI) * (w3 ? w3 / 2 - cornerRadius : size);
+      ctx.arc(x3 - xOffsetW, y3 - yOffset, cornerRadius, rad - PI, rad - HALF_PI);
+      ctx.arc(x3 + yOffsetW, y3 - xOffset, cornerRadius, rad - HALF_PI, rad);
+      ctx.arc(x3 + xOffsetW, y3 + yOffset, cornerRadius, rad, rad + HALF_PI);
+      ctx.arc(x3 - yOffsetW, y3 + xOffset, cornerRadius, rad + HALF_PI, rad + PI);
       ctx.closePath();
       break;
     case "rect":
       if (!rotation) {
         size = Math.SQRT1_2 * radius;
-        width = w ? w / 2 : size;
-        ctx.rect(x - width, y - size, 2 * width, 2 * size);
+        width = w3 ? w3 / 2 : size;
+        ctx.rect(x3 - width, y3 - size, 2 * width, 2 * size);
         break;
       }
       rad += QUARTER_PI;
     /* falls through */
     case "rectRot":
-      xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+      xOffsetW = Math.cos(rad) * (w3 ? w3 / 2 : radius);
       xOffset = Math.cos(rad) * radius;
       yOffset = Math.sin(rad) * radius;
-      yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
-      ctx.moveTo(x - xOffsetW, y - yOffset);
-      ctx.lineTo(x + yOffsetW, y - xOffset);
-      ctx.lineTo(x + xOffsetW, y + yOffset);
-      ctx.lineTo(x - yOffsetW, y + xOffset);
+      yOffsetW = Math.sin(rad) * (w3 ? w3 / 2 : radius);
+      ctx.moveTo(x3 - xOffsetW, y3 - yOffset);
+      ctx.lineTo(x3 + yOffsetW, y3 - xOffset);
+      ctx.lineTo(x3 + xOffsetW, y3 + yOffset);
+      ctx.lineTo(x3 - yOffsetW, y3 + xOffset);
       ctx.closePath();
       break;
     case "crossRot":
       rad += QUARTER_PI;
     /* falls through */
     case "cross":
-      xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+      xOffsetW = Math.cos(rad) * (w3 ? w3 / 2 : radius);
       xOffset = Math.cos(rad) * radius;
       yOffset = Math.sin(rad) * radius;
-      yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
-      ctx.moveTo(x - xOffsetW, y - yOffset);
-      ctx.lineTo(x + xOffsetW, y + yOffset);
-      ctx.moveTo(x + yOffsetW, y - xOffset);
-      ctx.lineTo(x - yOffsetW, y + xOffset);
+      yOffsetW = Math.sin(rad) * (w3 ? w3 / 2 : radius);
+      ctx.moveTo(x3 - xOffsetW, y3 - yOffset);
+      ctx.lineTo(x3 + xOffsetW, y3 + yOffset);
+      ctx.moveTo(x3 + yOffsetW, y3 - xOffset);
+      ctx.lineTo(x3 - yOffsetW, y3 + xOffset);
       break;
     case "star":
-      xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+      xOffsetW = Math.cos(rad) * (w3 ? w3 / 2 : radius);
       xOffset = Math.cos(rad) * radius;
       yOffset = Math.sin(rad) * radius;
-      yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
-      ctx.moveTo(x - xOffsetW, y - yOffset);
-      ctx.lineTo(x + xOffsetW, y + yOffset);
-      ctx.moveTo(x + yOffsetW, y - xOffset);
-      ctx.lineTo(x - yOffsetW, y + xOffset);
+      yOffsetW = Math.sin(rad) * (w3 ? w3 / 2 : radius);
+      ctx.moveTo(x3 - xOffsetW, y3 - yOffset);
+      ctx.lineTo(x3 + xOffsetW, y3 + yOffset);
+      ctx.moveTo(x3 + yOffsetW, y3 - xOffset);
+      ctx.lineTo(x3 - yOffsetW, y3 + xOffset);
       rad += QUARTER_PI;
-      xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+      xOffsetW = Math.cos(rad) * (w3 ? w3 / 2 : radius);
       xOffset = Math.cos(rad) * radius;
       yOffset = Math.sin(rad) * radius;
-      yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
-      ctx.moveTo(x - xOffsetW, y - yOffset);
-      ctx.lineTo(x + xOffsetW, y + yOffset);
-      ctx.moveTo(x + yOffsetW, y - xOffset);
-      ctx.lineTo(x - yOffsetW, y + xOffset);
+      yOffsetW = Math.sin(rad) * (w3 ? w3 / 2 : radius);
+      ctx.moveTo(x3 - xOffsetW, y3 - yOffset);
+      ctx.lineTo(x3 + xOffsetW, y3 + yOffset);
+      ctx.moveTo(x3 + yOffsetW, y3 - xOffset);
+      ctx.lineTo(x3 - yOffsetW, y3 + xOffset);
       break;
     case "line":
-      xOffset = w ? w / 2 : Math.cos(rad) * radius;
+      xOffset = w3 ? w3 / 2 : Math.cos(rad) * radius;
       yOffset = Math.sin(rad) * radius;
-      ctx.moveTo(x - xOffset, y - yOffset);
-      ctx.lineTo(x + xOffset, y + yOffset);
+      ctx.moveTo(x3 - xOffset, y3 - yOffset);
+      ctx.lineTo(x3 + xOffset, y3 + yOffset);
       break;
     case "dash":
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(rad) * (w ? w / 2 : radius), y + Math.sin(rad) * radius);
+      ctx.moveTo(x3, y3);
+      ctx.lineTo(x3 + Math.cos(rad) * (w3 ? w3 / 2 : radius), y3 + Math.sin(rad) * radius);
       break;
     case false:
       ctx.closePath();
@@ -1779,13 +1780,13 @@ function setRenderOpts(ctx, opts) {
     ctx.textBaseline = opts.textBaseline;
   }
 }
-function decorateText(ctx, x, y, line, opts) {
+function decorateText(ctx, x3, y3, line, opts) {
   if (opts.strikethrough || opts.underline) {
     const metrics = ctx.measureText(line);
-    const left = x - metrics.actualBoundingBoxLeft;
-    const right = x + metrics.actualBoundingBoxRight;
-    const top = y - metrics.actualBoundingBoxAscent;
-    const bottom = y + metrics.actualBoundingBoxDescent;
+    const left = x3 - metrics.actualBoundingBoxLeft;
+    const right = x3 + metrics.actualBoundingBoxRight;
+    const top = y3 - metrics.actualBoundingBoxAscent;
+    const bottom = y3 + metrics.actualBoundingBoxDescent;
     const yDecoration = opts.strikethrough ? (top + bottom) / 2 : bottom;
     ctx.strokeStyle = ctx.fillStyle;
     ctx.beginPath();
@@ -1801,17 +1802,17 @@ function drawBackdrop(ctx, opts) {
   ctx.fillRect(opts.left, opts.top, opts.width, opts.height);
   ctx.fillStyle = oldColor;
 }
-function renderText(ctx, text, x, y, font, opts = {}) {
+function renderText(ctx, text, x3, y3, font, opts = {}) {
   const lines = isArray(text) ? text : [
     text
   ];
   const stroke = opts.strokeWidth > 0 && opts.strokeColor !== "";
-  let i, line;
+  let i4, line;
   ctx.save();
   ctx.font = font.string;
   setRenderOpts(ctx, opts);
-  for (i = 0; i < lines.length; ++i) {
-    line = lines[i];
+  for (i4 = 0; i4 < lines.length; ++i4) {
+    line = lines[i4];
     if (opts.backdrop) {
       drawBackdrop(ctx, opts.backdrop);
     }
@@ -1822,24 +1823,24 @@ function renderText(ctx, text, x, y, font, opts = {}) {
       if (!isNullOrUndef(opts.strokeWidth)) {
         ctx.lineWidth = opts.strokeWidth;
       }
-      ctx.strokeText(line, x, y, opts.maxWidth);
+      ctx.strokeText(line, x3, y3, opts.maxWidth);
     }
-    ctx.fillText(line, x, y, opts.maxWidth);
-    decorateText(ctx, x, y, line, opts);
-    y += Number(font.lineHeight);
+    ctx.fillText(line, x3, y3, opts.maxWidth);
+    decorateText(ctx, x3, y3, line, opts);
+    y3 += Number(font.lineHeight);
   }
   ctx.restore();
 }
 function addRoundedRectPath(ctx, rect) {
-  const { x, y, w, h, radius } = rect;
-  ctx.arc(x + radius.topLeft, y + radius.topLeft, radius.topLeft, 1.5 * PI, PI, true);
-  ctx.lineTo(x, y + h - radius.bottomLeft);
-  ctx.arc(x + radius.bottomLeft, y + h - radius.bottomLeft, radius.bottomLeft, PI, HALF_PI, true);
-  ctx.lineTo(x + w - radius.bottomRight, y + h);
-  ctx.arc(x + w - radius.bottomRight, y + h - radius.bottomRight, radius.bottomRight, HALF_PI, 0, true);
-  ctx.lineTo(x + w, y + radius.topRight);
-  ctx.arc(x + w - radius.topRight, y + radius.topRight, radius.topRight, 0, -HALF_PI, true);
-  ctx.lineTo(x + radius.topLeft, y);
+  const { x: x3, y: y3, w: w3, h: h4, radius } = rect;
+  ctx.arc(x3 + radius.topLeft, y3 + radius.topLeft, radius.topLeft, 1.5 * PI, PI, true);
+  ctx.lineTo(x3, y3 + h4 - radius.bottomLeft);
+  ctx.arc(x3 + radius.bottomLeft, y3 + h4 - radius.bottomLeft, radius.bottomLeft, PI, HALF_PI, true);
+  ctx.lineTo(x3 + w3 - radius.bottomRight, y3 + h4);
+  ctx.arc(x3 + w3 - radius.bottomRight, y3 + h4 - radius.bottomRight, radius.bottomRight, HALF_PI, 0, true);
+  ctx.lineTo(x3 + w3, y3 + radius.topRight);
+  ctx.arc(x3 + w3 - radius.topRight, y3 + radius.topRight, radius.topRight, 0, -HALF_PI, true);
+  ctx.lineTo(x3 + radius.topLeft, y3);
 }
 var LINE_HEIGHT = /^(normal|(\d+(?:\.\d+)?)(px|em|%)?)$/;
 var FONT_STYLE = /^(normal|italic|initial|inherit|unset|(oblique( -?[0-9]?[0-9]deg)?))$/;
@@ -1858,7 +1859,7 @@ function toLineHeight(value, size) {
   }
   return size * value;
 }
-var numberOrZero = (v) => +v || 0;
+var numberOrZero = (v3) => +v3 || 0;
 function _readValueToProps(value, props) {
   const ret = {};
   const objProps = isObject(props);
@@ -1916,9 +1917,9 @@ function toFont(options, fallback) {
 }
 function resolve(inputs, context, index2, info) {
   let cacheable = true;
-  let i, ilen, value;
-  for (i = 0, ilen = inputs.length; i < ilen; ++i) {
-    value = inputs[i];
+  let i4, ilen, value;
+  for (i4 = 0, ilen = inputs.length; i4 < ilen; ++i4) {
+    value = inputs[i4];
     if (value === void 0) {
       continue;
     }
@@ -2141,7 +2142,7 @@ function _resolveArray(prop, value, target, isIndexable) {
     return value[_context.index % value.length];
   } else if (isObject(value[0])) {
     const arr = value;
-    const scopes = _proxy._scopes.filter((s) => s !== arr);
+    const scopes = _proxy._scopes.filter((s3) => s3 !== arr);
     value = [];
     for (const item of arr) {
       const resolver = createSubResolver(scopes, _proxy, prop, item);
@@ -2239,7 +2240,7 @@ function getKeysFromAllScopes(target) {
 function resolveKeysFromAllScopes(scopes) {
   const set2 = /* @__PURE__ */ new Set();
   for (const scope of scopes) {
-    for (const key of Object.keys(scope).filter((k) => !k.startsWith("_"))) {
+    for (const key of Object.keys(scope).filter((k3) => !k3.startsWith("_"))) {
       set2.add(key);
     }
   }
@@ -2249,20 +2250,20 @@ function _parseObjectDataRadialScale(meta, data, start, count) {
   const { iScale } = meta;
   const { key = "r" } = this._parsing;
   const parsed = new Array(count);
-  let i, ilen, index2, item;
-  for (i = 0, ilen = count; i < ilen; ++i) {
-    index2 = i + start;
+  let i4, ilen, index2, item;
+  for (i4 = 0, ilen = count; i4 < ilen; ++i4) {
+    index2 = i4 + start;
     item = data[index2];
-    parsed[i] = {
+    parsed[i4] = {
       r: iScale.parse(resolveObjectKey(item, key), index2)
     };
   }
   return parsed;
 }
 var EPSILON = Number.EPSILON || 1e-14;
-var getPoint = (points, i) => i < points.length && !points[i].skip && points[i];
+var getPoint = (points, i4) => i4 < points.length && !points[i4].skip && points[i4];
 var getValueAxis = (indexAxis) => indexAxis === "x" ? "y" : "x";
-function splineCurve(firstPoint, middlePoint, afterPoint, t) {
+function splineCurve(firstPoint, middlePoint, afterPoint, t3) {
   const previous = firstPoint.skip ? middlePoint : firstPoint;
   const current = middlePoint;
   const next = afterPoint.skip ? middlePoint : afterPoint;
@@ -2272,8 +2273,8 @@ function splineCurve(firstPoint, middlePoint, afterPoint, t) {
   let s12 = d12 / (d01 + d12);
   s01 = isNaN(s01) ? 0 : s01;
   s12 = isNaN(s12) ? 0 : s12;
-  const fa = t * s01;
-  const fb = t * s12;
+  const fa = t3 * s01;
+  const fb = t3 * s12;
   return {
     previous: {
       x: current.x - fa * (next.x - previous.x),
@@ -2289,25 +2290,25 @@ function monotoneAdjust(points, deltaK, mK) {
   const pointsLen = points.length;
   let alphaK, betaK, tauK, squaredMagnitude, pointCurrent;
   let pointAfter = getPoint(points, 0);
-  for (let i = 0; i < pointsLen - 1; ++i) {
+  for (let i4 = 0; i4 < pointsLen - 1; ++i4) {
     pointCurrent = pointAfter;
-    pointAfter = getPoint(points, i + 1);
+    pointAfter = getPoint(points, i4 + 1);
     if (!pointCurrent || !pointAfter) {
       continue;
     }
-    if (almostEquals(deltaK[i], 0, EPSILON)) {
-      mK[i] = mK[i + 1] = 0;
+    if (almostEquals(deltaK[i4], 0, EPSILON)) {
+      mK[i4] = mK[i4 + 1] = 0;
       continue;
     }
-    alphaK = mK[i] / deltaK[i];
-    betaK = mK[i + 1] / deltaK[i];
+    alphaK = mK[i4] / deltaK[i4];
+    betaK = mK[i4 + 1] / deltaK[i4];
     squaredMagnitude = Math.pow(alphaK, 2) + Math.pow(betaK, 2);
     if (squaredMagnitude <= 9) {
       continue;
     }
     tauK = 3 / Math.sqrt(squaredMagnitude);
-    mK[i] = alphaK * tauK * deltaK[i];
-    mK[i + 1] = betaK * tauK * deltaK[i];
+    mK[i4] = alphaK * tauK * deltaK[i4];
+    mK[i4 + 1] = betaK * tauK * deltaK[i4];
   }
 }
 function monotoneCompute(points, mK, indexAxis = "x") {
@@ -2315,10 +2316,10 @@ function monotoneCompute(points, mK, indexAxis = "x") {
   const pointsLen = points.length;
   let delta, pointBefore, pointCurrent;
   let pointAfter = getPoint(points, 0);
-  for (let i = 0; i < pointsLen; ++i) {
+  for (let i4 = 0; i4 < pointsLen; ++i4) {
     pointBefore = pointCurrent;
     pointCurrent = pointAfter;
-    pointAfter = getPoint(points, i + 1);
+    pointAfter = getPoint(points, i4 + 1);
     if (!pointCurrent) {
       continue;
     }
@@ -2327,12 +2328,12 @@ function monotoneCompute(points, mK, indexAxis = "x") {
     if (pointBefore) {
       delta = (iPixel - pointBefore[indexAxis]) / 3;
       pointCurrent[`cp1${indexAxis}`] = iPixel - delta;
-      pointCurrent[`cp1${valueAxis}`] = vPixel - delta * mK[i];
+      pointCurrent[`cp1${valueAxis}`] = vPixel - delta * mK[i4];
     }
     if (pointAfter) {
       delta = (pointAfter[indexAxis] - iPixel) / 3;
       pointCurrent[`cp2${indexAxis}`] = iPixel + delta;
-      pointCurrent[`cp2${valueAxis}`] = vPixel + delta * mK[i];
+      pointCurrent[`cp2${valueAxis}`] = vPixel + delta * mK[i4];
     }
   }
 }
@@ -2341,20 +2342,20 @@ function splineCurveMonotone(points, indexAxis = "x") {
   const pointsLen = points.length;
   const deltaK = Array(pointsLen).fill(0);
   const mK = Array(pointsLen);
-  let i, pointBefore, pointCurrent;
+  let i4, pointBefore, pointCurrent;
   let pointAfter = getPoint(points, 0);
-  for (i = 0; i < pointsLen; ++i) {
+  for (i4 = 0; i4 < pointsLen; ++i4) {
     pointBefore = pointCurrent;
     pointCurrent = pointAfter;
-    pointAfter = getPoint(points, i + 1);
+    pointAfter = getPoint(points, i4 + 1);
     if (!pointCurrent) {
       continue;
     }
     if (pointAfter) {
       const slopeDelta = pointAfter[indexAxis] - pointCurrent[indexAxis];
-      deltaK[i] = slopeDelta !== 0 ? (pointAfter[valueAxis] - pointCurrent[valueAxis]) / slopeDelta : 0;
+      deltaK[i4] = slopeDelta !== 0 ? (pointAfter[valueAxis] - pointCurrent[valueAxis]) / slopeDelta : 0;
     }
-    mK[i] = !pointBefore ? deltaK[i] : !pointAfter ? deltaK[i - 1] : sign(deltaK[i - 1]) !== sign(deltaK[i]) ? 0 : (deltaK[i - 1] + deltaK[i]) / 2;
+    mK[i4] = !pointBefore ? deltaK[i4] : !pointAfter ? deltaK[i4 - 1] : sign(deltaK[i4 - 1]) !== sign(deltaK[i4]) ? 0 : (deltaK[i4 - 1] + deltaK[i4]) / 2;
   }
   monotoneAdjust(points, deltaK, mK);
   monotoneCompute(points, mK, indexAxis);
@@ -2363,16 +2364,16 @@ function capControlPoint(pt, min, max) {
   return Math.max(Math.min(pt, max), min);
 }
 function capBezierPoints(points, area) {
-  let i, ilen, point, inArea, inAreaPrev;
+  let i4, ilen, point, inArea, inAreaPrev;
   let inAreaNext = _isPointInArea(points[0], area);
-  for (i = 0, ilen = points.length; i < ilen; ++i) {
+  for (i4 = 0, ilen = points.length; i4 < ilen; ++i4) {
     inAreaPrev = inArea;
     inArea = inAreaNext;
-    inAreaNext = i < ilen - 1 && _isPointInArea(points[i + 1], area);
+    inAreaNext = i4 < ilen - 1 && _isPointInArea(points[i4 + 1], area);
     if (!inArea) {
       continue;
     }
-    point = points[i];
+    point = points[i4];
     if (inAreaPrev) {
       point.cp1x = capControlPoint(point.cp1x, area.left, area.right);
       point.cp1y = capControlPoint(point.cp1y, area.top, area.bottom);
@@ -2384,7 +2385,7 @@ function capBezierPoints(points, area) {
   }
 }
 function _updateBezierControlPoints(points, options, area, loop, indexAxis) {
-  let i, ilen, point, controlPoints;
+  let i4, ilen, point, controlPoints;
   if (options.spanGaps) {
     points = points.filter((pt) => !pt.skip);
   }
@@ -2392,9 +2393,9 @@ function _updateBezierControlPoints(points, options, area, loop, indexAxis) {
     splineCurveMonotone(points, indexAxis);
   } else {
     let prev = loop ? points[points.length - 1] : points[0];
-    for (i = 0, ilen = points.length; i < ilen; ++i) {
-      point = points[i];
-      controlPoints = splineCurve(prev, point, points[Math.min(i + 1, ilen - (loop ? 0 : 1)) % ilen], options.tension);
+    for (i4 = 0, ilen = points.length; i4 < ilen; ++i4) {
+      point = points[i4];
+      controlPoints = splineCurve(prev, point, points[Math.min(i4 + 1, ilen - (loop ? 0 : 1)) % ilen], options.tension);
       point.cp1x = controlPoints.previous.x;
       point.cp1y = controlPoints.previous.y;
       point.cp2x = controlPoints.next.x;
@@ -2441,33 +2442,33 @@ var positions = [
 function getPositionedStyle(styles, style, suffix) {
   const result = {};
   suffix = suffix ? "-" + suffix : "";
-  for (let i = 0; i < 4; i++) {
-    const pos = positions[i];
+  for (let i4 = 0; i4 < 4; i4++) {
+    const pos = positions[i4];
     result[pos] = parseFloat(styles[style + "-" + pos + suffix]) || 0;
   }
   result.width = result.left + result.right;
   result.height = result.top + result.bottom;
   return result;
 }
-var useOffsetPos = (x, y, target) => (x > 0 || y > 0) && (!target || !target.shadowRoot);
-function getCanvasPosition(e, canvas) {
-  const touches = e.touches;
-  const source = touches && touches.length ? touches[0] : e;
+var useOffsetPos = (x3, y3, target) => (x3 > 0 || y3 > 0) && (!target || !target.shadowRoot);
+function getCanvasPosition(e3, canvas) {
+  const touches = e3.touches;
+  const source = touches && touches.length ? touches[0] : e3;
   const { offsetX, offsetY } = source;
   let box = false;
-  let x, y;
-  if (useOffsetPos(offsetX, offsetY, e.target)) {
-    x = offsetX;
-    y = offsetY;
+  let x3, y3;
+  if (useOffsetPos(offsetX, offsetY, e3.target)) {
+    x3 = offsetX;
+    y3 = offsetY;
   } else {
     const rect = canvas.getBoundingClientRect();
-    x = source.clientX - rect.left;
-    y = source.clientY - rect.top;
+    x3 = source.clientX - rect.left;
+    y3 = source.clientY - rect.top;
     box = true;
   }
   return {
-    x,
-    y,
+    x: x3,
+    y: y3,
     box
   };
 }
@@ -2480,7 +2481,7 @@ function getRelativePosition(event, chart) {
   const borderBox = style.boxSizing === "border-box";
   const paddings = getPositionedStyle(style, "padding");
   const borders = getPositionedStyle(style, "border", "width");
-  const { x, y, box } = getCanvasPosition(event, canvas);
+  const { x: x3, y: y3, box } = getCanvasPosition(event, canvas);
   const xOffset = paddings.left + (box && borders.left);
   const yOffset = paddings.top + (box && borders.top);
   let { width, height } = chart;
@@ -2489,8 +2490,8 @@ function getRelativePosition(event, chart) {
     height -= paddings.height + borders.height;
   }
   return {
-    x: Math.round((x - xOffset) / width * canvas.width / currentDevicePixelRatio),
-    y: Math.round((y - yOffset) / height * canvas.height / currentDevicePixelRatio)
+    x: Math.round((x3 - xOffset) / width * canvas.width / currentDevicePixelRatio),
+    y: Math.round((y3 - yOffset) / height * canvas.height / currentDevicePixelRatio)
   };
 }
 function getContainerSize(canvas, width, height) {
@@ -2518,7 +2519,7 @@ function getContainerSize(canvas, width, height) {
     maxHeight: maxHeight || INFINITY
   };
 }
-var round1 = (v) => Math.round(v * 10) / 10;
+var round1 = (v3) => Math.round(v3 * 10) / 10;
 function getMaximumSize(canvas, bbWidth, bbHeight, aspectRatio) {
   const style = getComputedStyle2(canvas);
   const margins = getPositionedStyle(style, "margin");
@@ -2582,7 +2583,7 @@ var supportsEventListenerOptions = function() {
       window.addEventListener("test", null, options);
       window.removeEventListener("test", null, options);
     }
-  } catch (e) {
+  } catch (e3) {
   }
   return passiveSupported;
 }();
@@ -2591,41 +2592,41 @@ function readUsedSize(element, property) {
   const matches = value && value.match(/^(\d+)(\.\d+)?px$/);
   return matches ? +matches[1] : void 0;
 }
-function _pointInLine(p1, p2, t, mode) {
+function _pointInLine(p1, p22, t3, mode) {
   return {
-    x: p1.x + t * (p2.x - p1.x),
-    y: p1.y + t * (p2.y - p1.y)
+    x: p1.x + t3 * (p22.x - p1.x),
+    y: p1.y + t3 * (p22.y - p1.y)
   };
 }
-function _steppedInterpolation(p1, p2, t, mode) {
+function _steppedInterpolation(p1, p22, t3, mode) {
   return {
-    x: p1.x + t * (p2.x - p1.x),
-    y: mode === "middle" ? t < 0.5 ? p1.y : p2.y : mode === "after" ? t < 1 ? p1.y : p2.y : t > 0 ? p2.y : p1.y
+    x: p1.x + t3 * (p22.x - p1.x),
+    y: mode === "middle" ? t3 < 0.5 ? p1.y : p22.y : mode === "after" ? t3 < 1 ? p1.y : p22.y : t3 > 0 ? p22.y : p1.y
   };
 }
-function _bezierInterpolation(p1, p2, t, mode) {
+function _bezierInterpolation(p1, p22, t3, mode) {
   const cp1 = {
     x: p1.cp2x,
     y: p1.cp2y
   };
   const cp2 = {
-    x: p2.cp1x,
-    y: p2.cp1y
+    x: p22.cp1x,
+    y: p22.cp1y
   };
-  const a = _pointInLine(p1, cp1, t);
-  const b = _pointInLine(cp1, cp2, t);
-  const c = _pointInLine(cp2, p2, t);
-  const d = _pointInLine(a, b, t);
-  const e = _pointInLine(b, c, t);
-  return _pointInLine(d, e, t);
+  const a3 = _pointInLine(p1, cp1, t3);
+  const b = _pointInLine(cp1, cp2, t3);
+  const c3 = _pointInLine(cp2, p22, t3);
+  const d3 = _pointInLine(a3, b, t3);
+  const e3 = _pointInLine(b, c3, t3);
+  return _pointInLine(d3, e3, t3);
 }
 var getRightToLeftAdapter = function(rectX, width) {
   return {
-    x(x) {
-      return rectX + rectX + width - x;
+    x(x3) {
+      return rectX + rectX + width - x3;
     },
-    setWidth(w) {
-      width = w;
+    setWidth(w3) {
+      width = w3;
     },
     textAlign(align) {
       if (align === "center") {
@@ -2633,29 +2634,29 @@ var getRightToLeftAdapter = function(rectX, width) {
       }
       return align === "right" ? "left" : "right";
     },
-    xPlus(x, value) {
-      return x - value;
+    xPlus(x3, value) {
+      return x3 - value;
     },
-    leftForLtr(x, itemWidth) {
-      return x - itemWidth;
+    leftForLtr(x3, itemWidth) {
+      return x3 - itemWidth;
     }
   };
 };
 var getLeftToRightAdapter = function() {
   return {
-    x(x) {
-      return x;
+    x(x3) {
+      return x3;
     },
-    setWidth(w) {
+    setWidth(w3) {
     },
     textAlign(align) {
       return align;
     },
-    xPlus(x, value) {
-      return x + value;
+    xPlus(x3, value) {
+      return x3 + value;
     },
-    leftForLtr(x, _itemWidth) {
-      return x;
+    leftForLtr(x3, _itemWidth) {
+      return x3;
     }
   };
 };
@@ -2690,8 +2691,8 @@ function propertyFn(property) {
   }
   return {
     between: _isBetween,
-    compare: (a, b) => a - b,
-    normalize: (x) => x
+    compare: (a3, b) => a3 - b,
+    normalize: (x3) => x3
   };
 }
 function normalizeSegment({ start, end, count, loop, style }) {
@@ -2707,11 +2708,11 @@ function getSegment(segment, points, bounds) {
   const { between, normalize } = propertyFn(property);
   const count = points.length;
   let { start, end, loop } = segment;
-  let i, ilen;
+  let i4, ilen;
   if (loop) {
     start += count;
     end += count;
-    for (i = 0, ilen = count; i < ilen; ++i) {
+    for (i4 = 0, ilen = count; i4 < ilen; ++i4) {
       if (!between(normalize(points[start % count][property]), startBound, endBound)) {
         break;
       }
@@ -2749,8 +2750,8 @@ function _boundSegment(segment, points, bounds) {
   const endIsBefore = () => compare(endBound, value) === 0 || between(endBound, prevValue, value);
   const shouldStart = () => inside || startIsBefore();
   const shouldStop = () => !inside || endIsBefore();
-  for (let i = start, prev = start; i <= end; ++i) {
-    point = points[i % count];
+  for (let i4 = start, prev = start; i4 <= end; ++i4) {
+    point = points[i4 % count];
     if (point.skip) {
       continue;
     }
@@ -2760,19 +2761,19 @@ function _boundSegment(segment, points, bounds) {
     }
     inside = between(value, startBound, endBound);
     if (subStart === null && shouldStart()) {
-      subStart = compare(value, startBound) === 0 ? i : prev;
+      subStart = compare(value, startBound) === 0 ? i4 : prev;
     }
     if (subStart !== null && shouldStop()) {
       result.push(normalizeSegment({
         start: subStart,
-        end: i,
+        end: i4,
         loop,
         count,
         style
       }));
       subStart = null;
     }
-    prev = i;
+    prev = i4;
     prevValue = value;
   }
   if (subStart !== null) {
@@ -2789,8 +2790,8 @@ function _boundSegment(segment, points, bounds) {
 function _boundSegments(line, bounds) {
   const result = [];
   const segments = line.segments;
-  for (let i = 0; i < segments.length; i++) {
-    const sub = _boundSegment(segments[i], line.points, bounds);
+  for (let i4 = 0; i4 < segments.length; i4++) {
+    const sub = _boundSegment(segments[i4], line.points, bounds);
     if (sub.length) {
       result.push(...sub);
     }
@@ -2892,52 +2893,52 @@ function doSplitByStyles(line, segments, points, segmentOptions) {
   const result = [];
   let prevStyle = baseStyle;
   let start = segments[0].start;
-  let i = start;
-  function addStyle(s, e, l, st) {
+  let i4 = start;
+  function addStyle(s3, e3, l3, st) {
     const dir = spanGaps ? -1 : 1;
-    if (s === e) {
+    if (s3 === e3) {
       return;
     }
-    s += count;
-    while (points[s % count].skip) {
-      s -= dir;
+    s3 += count;
+    while (points[s3 % count].skip) {
+      s3 -= dir;
     }
-    while (points[e % count].skip) {
-      e += dir;
+    while (points[e3 % count].skip) {
+      e3 += dir;
     }
-    if (s % count !== e % count) {
+    if (s3 % count !== e3 % count) {
       result.push({
-        start: s % count,
-        end: e % count,
-        loop: l,
+        start: s3 % count,
+        end: e3 % count,
+        loop: l3,
         style: st
       });
       prevStyle = st;
-      start = e % count;
+      start = e3 % count;
     }
   }
   for (const segment of segments) {
     start = spanGaps ? start : segment.start;
     let prev = points[start % count];
     let style;
-    for (i = start + 1; i <= segment.end; i++) {
-      const pt = points[i % count];
+    for (i4 = start + 1; i4 <= segment.end; i4++) {
+      const pt = points[i4 % count];
       style = readStyle(segmentOptions.setContext(createContext(chartContext, {
         type: "segment",
         p0: prev,
         p1: pt,
-        p0DataIndex: (i - 1) % count,
-        p1DataIndex: i % count,
+        p0DataIndex: (i4 - 1) % count,
+        p1DataIndex: i4 % count,
         datasetIndex
       })));
       if (styleChanged(style, prevStyle)) {
-        addStyle(start, i - 1, segment.loop, prevStyle);
+        addStyle(start, i4 - 1, segment.loop, prevStyle);
       }
       prev = pt;
       prevStyle = style;
     }
-    if (start < i - 1) {
-      addStyle(start, i - 1, segment.loop, prevStyle);
+    if (start < i4 - 1) {
+      addStyle(start, i4 - 1, segment.loop, prevStyle);
     }
   }
   return result;
@@ -3036,11 +3037,11 @@ var Animator = class {
         return;
       }
       const items = anims.items;
-      let i = items.length - 1;
+      let i4 = items.length - 1;
       let draw2 = false;
       let item;
-      for (; i >= 0; --i) {
-        item = items[i];
+      for (; i4 >= 0; --i4) {
+        item = items[i4];
         if (item._active) {
           if (item._total > anims.duration) {
             anims.duration = item._total;
@@ -3048,7 +3049,7 @@ var Animator = class {
           item.tick(date);
           draw2 = true;
         } else {
-          items[i] = items[items.length - 1];
+          items[i4] = items[items.length - 1];
           items.pop();
         }
       }
@@ -3123,9 +3124,9 @@ var Animator = class {
       return;
     }
     const items = anims.items;
-    let i = items.length - 1;
-    for (; i >= 0; --i) {
-      items[i].cancel();
+    let i4 = items.length - 1;
+    for (; i4 >= 0; --i4) {
+      items[i4].cancel();
     }
     anims.items = [];
     this._notify(chart, anims, Date.now(), "complete");
@@ -3243,8 +3244,8 @@ var Animation = class {
   _notify(resolved) {
     const method = resolved ? "res" : "rej";
     const promises = this._promises || [];
-    for (let i = 0; i < promises.length; i++) {
-      promises[i][method]();
+    for (let i4 = 0; i4 < promises.length; i4++) {
+      promises[i4][method]();
     }
   }
 };
@@ -3299,9 +3300,9 @@ var Animations = class {
     const running = target.$animations || (target.$animations = {});
     const props = Object.keys(values);
     const date = Date.now();
-    let i;
-    for (i = props.length - 1; i >= 0; --i) {
-      const prop = props[i];
+    let i4;
+    for (i4 = props.length - 1; i4 >= 0; --i4) {
+      const prop = props[i4];
       if (prop.charAt(0) === "$") {
         continue;
       }
@@ -3344,8 +3345,8 @@ var Animations = class {
 function awaitAll(animations, properties) {
   const running = [];
   const keys = Object.keys(properties);
-  for (let i = 0; i < keys.length; i++) {
-    const anim = animations[keys[i]];
+  for (let i4 = 0; i4 < keys.length; i4++) {
+    const anim = animations[keys[i4]];
     if (anim && anim.active()) {
       running.push(anim.wait());
     }
@@ -3383,52 +3384,52 @@ function defaultClip(xScale, yScale, allowedOverflow) {
   if (allowedOverflow === false) {
     return false;
   }
-  const x = scaleClip(xScale, allowedOverflow);
-  const y = scaleClip(yScale, allowedOverflow);
+  const x3 = scaleClip(xScale, allowedOverflow);
+  const y3 = scaleClip(yScale, allowedOverflow);
   return {
-    top: y.end,
-    right: x.end,
-    bottom: y.start,
-    left: x.start
+    top: y3.end,
+    right: x3.end,
+    bottom: y3.start,
+    left: x3.start
   };
 }
 function toClip(value) {
-  let t, r, b, l;
+  let t3, r3, b, l3;
   if (isObject(value)) {
-    t = value.top;
-    r = value.right;
+    t3 = value.top;
+    r3 = value.right;
     b = value.bottom;
-    l = value.left;
+    l3 = value.left;
   } else {
-    t = r = b = l = value;
+    t3 = r3 = b = l3 = value;
   }
   return {
-    top: t,
-    right: r,
+    top: t3,
+    right: r3,
     bottom: b,
-    left: l,
+    left: l3,
     disabled: value === false
   };
 }
 function getSortedDatasetIndices(chart, filterVisible) {
   const keys = [];
   const metasets = chart._getSortedDatasetMetas(filterVisible);
-  let i, ilen;
-  for (i = 0, ilen = metasets.length; i < ilen; ++i) {
-    keys.push(metasets[i].index);
+  let i4, ilen;
+  for (i4 = 0, ilen = metasets.length; i4 < ilen; ++i4) {
+    keys.push(metasets[i4].index);
   }
   return keys;
 }
 function applyStack(stack, value, dsIndex, options = {}) {
   const keys = stack.keys;
   const singleMode = options.mode === "single";
-  let i, ilen, datasetIndex, otherValue;
+  let i4, ilen, datasetIndex, otherValue;
   if (value === null) {
     return;
   }
   let found = false;
-  for (i = 0, ilen = keys.length; i < ilen; ++i) {
-    datasetIndex = +keys[i];
+  for (i4 = 0, ilen = keys.length; i4 < ilen; ++i4) {
+    datasetIndex = +keys[i4];
     if (datasetIndex === dsIndex) {
       found = true;
       if (options.all) {
@@ -3452,10 +3453,10 @@ function convertObjectDataToArray(data, meta) {
   const vAxisKey = vScale.axis === "x" ? "x" : "y";
   const keys = Object.keys(data);
   const adata = new Array(keys.length);
-  let i, ilen, key;
-  for (i = 0, ilen = keys.length; i < ilen; ++i) {
-    key = keys[i];
-    adata[i] = {
+  let i4, ilen, key;
+  for (i4 = 0, ilen = keys.length; i4 < ilen; ++i4) {
+    key = keys[i4];
+    adata[i4] = {
       [iAxisKey]: key,
       [vAxisKey]: data[key]
     };
@@ -3498,8 +3499,8 @@ function updateStacks(controller, parsed) {
   const key = getStackKey(iScale, vScale, meta);
   const ilen = parsed.length;
   let stack;
-  for (let i = 0; i < ilen; ++i) {
-    const item = parsed[i];
+  for (let i4 = 0; i4 < ilen; ++i4) {
+    const item = parsed[i4];
     const { [iAxis]: index2, [vAxis]: value } = item;
     const itemStacks = item._stacks || (item._stacks = {});
     stack = itemStacks[vAxis] = getOrCreateStack(stacks, key, index2);
@@ -3603,7 +3604,7 @@ var DatasetController = class {
     const chart = this.chart;
     const meta = this._cachedMeta;
     const dataset = this.getDataset();
-    const chooseId = (axis, x, y, r) => axis === "x" ? x : axis === "r" ? r : y;
+    const chooseId = (axis, x3, y3, r3) => axis === "x" ? x3 : axis === "r" ? r3 : y3;
     const xid = meta.xAxisID = valueOrDefault(dataset.xAxisID, getFirstScaleId(chart, "x"));
     const yid = meta.yAxisID = valueOrDefault(dataset.yAxisID, getFirstScaleId(chart, "y"));
     const rid = meta.rAxisID = valueOrDefault(dataset.rAxisID, getFirstScaleId(chart, "r"));
@@ -3701,7 +3702,7 @@ var DatasetController = class {
     const iAxis = iScale.axis;
     let sorted = start === 0 && count === data.length ? true : meta._sorted;
     let prev = start > 0 && meta._parsed[start - 1];
-    let i, cur, parsed;
+    let i4, cur, parsed;
     if (this._parsing === false) {
       meta._parsed = data;
       meta._sorted = true;
@@ -3715,8 +3716,8 @@ var DatasetController = class {
         parsed = this.parsePrimitiveData(meta, data, start, count);
       }
       const isNotInOrderComparedToPrev = () => cur[iAxis] === null || prev && cur[iAxis] < prev[iAxis];
-      for (i = 0; i < count; ++i) {
-        meta._parsed[i + start] = cur = parsed[i];
+      for (i4 = 0; i4 < count; ++i4) {
+        meta._parsed[i4 + start] = cur = parsed[i4];
         if (sorted) {
           if (isNotInOrderComparedToPrev()) {
             sorted = false;
@@ -3737,10 +3738,10 @@ var DatasetController = class {
     const labels = iScale.getLabels();
     const singleScale = iScale === vScale;
     const parsed = new Array(count);
-    let i, ilen, index2;
-    for (i = 0, ilen = count; i < ilen; ++i) {
-      index2 = i + start;
-      parsed[i] = {
+    let i4, ilen, index2;
+    for (i4 = 0, ilen = count; i4 < ilen; ++i4) {
+      index2 = i4 + start;
+      parsed[i4] = {
         [iAxis]: singleScale || iScale.parse(labels[index2], index2),
         [vAxis]: vScale.parse(data[index2], index2)
       };
@@ -3750,11 +3751,11 @@ var DatasetController = class {
   parseArrayData(meta, data, start, count) {
     const { xScale, yScale } = meta;
     const parsed = new Array(count);
-    let i, ilen, index2, item;
-    for (i = 0, ilen = count; i < ilen; ++i) {
-      index2 = i + start;
+    let i4, ilen, index2, item;
+    for (i4 = 0, ilen = count; i4 < ilen; ++i4) {
+      index2 = i4 + start;
       item = data[index2];
-      parsed[i] = {
+      parsed[i4] = {
         x: xScale.parse(item[0], index2),
         y: yScale.parse(item[1], index2)
       };
@@ -3765,11 +3766,11 @@ var DatasetController = class {
     const { xScale, yScale } = meta;
     const { xAxisKey = "x", yAxisKey = "y" } = this._parsing;
     const parsed = new Array(count);
-    let i, ilen, index2, item;
-    for (i = 0, ilen = count; i < ilen; ++i) {
-      index2 = i + start;
+    let i4, ilen, index2, item;
+    for (i4 = 0, ilen = count; i4 < ilen; ++i4) {
+      index2 = i4 + start;
       item = data[index2];
-      parsed[i] = {
+      parsed[i4] = {
         x: xScale.parse(resolveObjectKey(item, xAxisKey), index2),
         y: yScale.parse(resolveObjectKey(item, yAxisKey), index2)
       };
@@ -3817,13 +3818,13 @@ var DatasetController = class {
       max: Number.NEGATIVE_INFINITY
     };
     const { min: otherMin, max: otherMax } = getUserBounds(otherScale);
-    let i, parsed;
+    let i4, parsed;
     function _skip() {
-      parsed = _parsed[i];
+      parsed = _parsed[i4];
       const otherValue = parsed[otherScale.axis];
       return !isNumberFinite(parsed[scale.axis]) || otherMin > otherValue || otherMax < otherValue;
     }
-    for (i = 0; i < ilen; ++i) {
+    for (i4 = 0; i4 < ilen; ++i4) {
       if (_skip()) {
         continue;
       }
@@ -3833,7 +3834,7 @@ var DatasetController = class {
       }
     }
     if (sorted) {
-      for (i = ilen - 1; i >= 0; --i) {
+      for (i4 = ilen - 1; i4 >= 0; --i4) {
         if (_skip()) {
           continue;
         }
@@ -3846,9 +3847,9 @@ var DatasetController = class {
   getAllParsedValues(scale) {
     const parsed = this._cachedMeta._parsed;
     const values = [];
-    let i, ilen, value;
-    for (i = 0, ilen = parsed.length; i < ilen; ++i) {
-      value = parsed[i][scale.axis];
+    let i4, ilen, value;
+    for (i4 = 0, ilen = parsed.length; i4 < ilen; ++i4) {
+      value = parsed[i4][scale.axis];
       if (isNumberFinite(value)) {
         values.push(value);
       }
@@ -3885,12 +3886,12 @@ var DatasetController = class {
     const start = this._drawStart || 0;
     const count = this._drawCount || elements2.length - start;
     const drawActiveElementsOnTop = this.options.drawActiveElementsOnTop;
-    let i;
+    let i4;
     if (meta.dataset) {
       meta.dataset.draw(ctx, area, start, count);
     }
-    for (i = start; i < start + count; ++i) {
-      const element = elements2[i];
+    for (i4 = start; i4 < start + count; ++i4) {
+      const element = elements2[i4];
       if (element.hidden) {
         continue;
       }
@@ -3900,8 +3901,8 @@ var DatasetController = class {
         element.draw(ctx, area);
       }
     }
-    for (i = 0; i < active.length; ++i) {
-      active[i].draw(ctx, area);
+    for (i4 = 0; i4 < active.length; ++i4) {
+      active[i4].draw(ctx, area);
     }
   }
   getStyle(index2, active) {
@@ -4063,16 +4064,16 @@ var DatasetController = class {
     const meta = this._cachedMeta;
     const data = meta.data;
     const end = start + count;
-    let i;
+    let i4;
     const move = (arr) => {
       arr.length += count;
-      for (i = arr.length - 1; i >= end; i--) {
-        arr[i] = arr[i - count];
+      for (i4 = arr.length - 1; i4 >= end; i4--) {
+        arr[i4] = arr[i4 - count];
       }
     };
     move(data);
-    for (i = start; i < end; ++i) {
-      data[i] = new this.dataElementType();
+    for (i4 = start; i4 < end; ++i4) {
+      data[i4] = new this.dataElementType();
     }
     if (this._parsing) {
       move(meta._parsed);
@@ -4160,10 +4161,10 @@ function getAllScaleValues(scale, type) {
   if (!scale._cache.$bar) {
     const visibleMetas = scale.getMatchingVisibleMetas(type);
     let values = [];
-    for (let i = 0, ilen = visibleMetas.length; i < ilen; i++) {
-      values = values.concat(visibleMetas[i].controller.getAllParsedValues(scale));
+    for (let i4 = 0, ilen = visibleMetas.length; i4 < ilen; i4++) {
+      values = values.concat(visibleMetas[i4].controller.getAllParsedValues(scale));
     }
-    scale._cache.$bar = _arrayUnique(values.sort((a, b) => a - b));
+    scale._cache.$bar = _arrayUnique(values.sort((a3, b) => a3 - b));
   }
   return scale._cache.$bar;
 }
@@ -4171,7 +4172,7 @@ function computeMinSampleSize(meta) {
   const scale = meta.iScale;
   const values = getAllScaleValues(scale, meta.type);
   let min = scale._length;
-  let i, ilen, curr, prev;
+  let i4, ilen, curr, prev;
   const updateMinAndPrev = () => {
     if (curr === 32767 || curr === -32768) {
       return;
@@ -4181,13 +4182,13 @@ function computeMinSampleSize(meta) {
     }
     prev = curr;
   };
-  for (i = 0, ilen = values.length; i < ilen; ++i) {
-    curr = scale.getPixelForValue(values[i]);
+  for (i4 = 0, ilen = values.length; i4 < ilen; ++i4) {
+    curr = scale.getPixelForValue(values[i4]);
     updateMinAndPrev();
   }
   prev = void 0;
-  for (i = 0, ilen = scale.ticks.length; i < ilen; ++i) {
-    curr = scale.getPixelForTick(i);
+  for (i4 = 0, ilen = scale.ticks.length; i4 < ilen; ++i4) {
+    curr = scale.getPixelForTick(i4);
     updateMinAndPrev();
   }
   return min;
@@ -4228,9 +4229,9 @@ function computeFlexCategoryTraits(index2, ruler, options, stackCount) {
     start
   };
 }
-function parseFloatBar(entry, item, vScale, i) {
-  const startValue = vScale.parse(entry[0], i);
-  const endValue = vScale.parse(entry[1], i);
+function parseFloatBar(entry, item, vScale, i4) {
+  const startValue = vScale.parse(entry[0], i4);
+  const endValue = vScale.parse(entry[1], i4);
   const min = Math.min(startValue, endValue);
   const max = Math.max(startValue, endValue);
   let barStart = min;
@@ -4249,11 +4250,11 @@ function parseFloatBar(entry, item, vScale, i) {
     max
   };
 }
-function parseValue(entry, item, vScale, i) {
+function parseValue(entry, item, vScale, i4) {
   if (isArray(entry)) {
-    parseFloatBar(entry, item, vScale, i);
+    parseFloatBar(entry, item, vScale, i4);
   } else {
-    item[vScale.axis] = vScale.parse(entry, i);
+    item[vScale.axis] = vScale.parse(entry, i4);
   }
   return item;
 }
@@ -4263,12 +4264,12 @@ function parseArrayOrPrimitive(meta, data, start, count) {
   const labels = iScale.getLabels();
   const singleScale = iScale === vScale;
   const parsed = [];
-  let i, ilen, item, entry;
-  for (i = start, ilen = start + count; i < ilen; ++i) {
-    entry = data[i];
+  let i4, ilen, item, entry;
+  for (i4 = start, ilen = start + count; i4 < ilen; ++i4) {
+    entry = data[i4];
     item = {};
-    item[iScale.axis] = singleScale || iScale.parse(labels[i], i);
-    parsed.push(parseValue(entry, item, vScale, i));
+    item[iScale.axis] = singleScale || iScale.parse(labels[i4], i4);
+    parsed.push(parseValue(entry, item, vScale, i4));
   }
   return parsed;
 }
@@ -4338,20 +4339,20 @@ function setBorderSkipped(properties, options, stack, index2) {
   res[parseEdge(edge, start, end, reverse)] = true;
   properties.borderSkipped = res;
 }
-function parseEdge(edge, a, b, reverse) {
+function parseEdge(edge, a3, b, reverse) {
   if (reverse) {
-    edge = swap(edge, a, b);
-    edge = startEnd(edge, b, a);
+    edge = swap(edge, a3, b);
+    edge = startEnd(edge, b, a3);
   } else {
-    edge = startEnd(edge, a, b);
+    edge = startEnd(edge, a3, b);
   }
   return edge;
 }
-function swap(orig, v1, v2) {
-  return orig === v1 ? v2 : orig === v2 ? v1 : orig;
+function swap(orig, v1, v22) {
+  return orig === v1 ? v22 : orig === v22 ? v1 : orig;
 }
-function startEnd(v, start, end) {
-  return v === "start" ? start : v === "end" ? end : v;
+function startEnd(v3, start, end) {
+  return v3 === "start" ? start : v3 === "end" ? end : v3;
 }
 function setInflateAmount(properties, { inflateAmount }, ratio) {
   properties.inflateAmount = inflateAmount === "auto" ? ratio === 1 ? 0.33 : 0 : inflateAmount;
@@ -4369,12 +4370,12 @@ var BarController = class extends DatasetController {
     const iAxisKey = iScale.axis === "x" ? xAxisKey : yAxisKey;
     const vAxisKey = vScale.axis === "x" ? xAxisKey : yAxisKey;
     const parsed = [];
-    let i, ilen, item, obj;
-    for (i = start, ilen = start + count; i < ilen; ++i) {
-      obj = data[i];
+    let i4, ilen, item, obj;
+    for (i4 = start, ilen = start + count; i4 < ilen; ++i4) {
+      obj = data[i4];
       item = {};
-      item[iScale.axis] = iScale.parse(resolveObjectKey(obj, iAxisKey), i);
-      parsed.push(parseValue(resolveObjectKey(obj, vAxisKey), item, vScale, i));
+      item[iScale.axis] = iScale.parse(resolveObjectKey(obj, iAxisKey), i4);
+      parsed.push(parseValue(resolveObjectKey(obj, vAxisKey), item, vScale, i4));
     }
     return parsed;
   }
@@ -4417,13 +4418,13 @@ var BarController = class extends DatasetController {
     const horizontal = vScale.isHorizontal();
     const ruler = this._getRuler();
     const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
-    for (let i = start; i < start + count; i++) {
-      const parsed = this.getParsed(i);
+    for (let i4 = start; i4 < start + count; i4++) {
+      const parsed = this.getParsed(i4);
       const vpixels = reset || isNullOrUndef(parsed[vScale.axis]) ? {
         base,
         head: base
-      } : this._calculateBarValuePixels(i);
-      const ipixels = this._calculateBarIndexPixels(i, ruler);
+      } : this._calculateBarValuePixels(i4);
+      const ipixels = this._calculateBarIndexPixels(i4, ruler);
       const stack = (parsed._stacks || {})[vScale.axis];
       const properties = {
         horizontal,
@@ -4435,12 +4436,12 @@ var BarController = class extends DatasetController {
         width: horizontal ? Math.abs(vpixels.size) : ipixels.size
       };
       if (includeOptions) {
-        properties.options = sharedOptions || this.resolveDataElementOptions(i, bars[i].active ? "active" : mode);
+        properties.options = sharedOptions || this.resolveDataElementOptions(i4, bars[i4].active ? "active" : mode);
       }
-      const options = properties.options || bars[i].options;
+      const options = properties.options || bars[i4].options;
       setBorderSkipped(properties, options, stack, index2);
       setInflateAmount(properties, options, ruler.ratio);
-      this.updateElement(bars[i], i, properties, mode);
+      this.updateElement(bars[i4], i4, properties, mode);
     }
   }
   _getStacks(last, dataIndex) {
@@ -4502,9 +4503,9 @@ var BarController = class extends DatasetController {
     const meta = this._cachedMeta;
     const iScale = meta.iScale;
     const pixels = [];
-    let i, ilen;
-    for (i = 0, ilen = meta.data.length; i < ilen; ++i) {
-      pixels.push(iScale.getPixelForValue(this.getParsed(i)[iScale.axis], i));
+    let i4, ilen;
+    for (i4 = 0, ilen = meta.data.length; i4 < ilen; ++i4) {
+      pixels.push(iScale.getPixelForValue(this.getParsed(i4)[iScale.axis], i4));
     }
     const barThickness = opts.barThickness;
     const min = barThickness || computeMinSampleSize(meta);
@@ -4607,10 +4608,10 @@ var BarController = class extends DatasetController {
     const vScale = meta.vScale;
     const rects = meta.data;
     const ilen = rects.length;
-    let i = 0;
-    for (; i < ilen; ++i) {
-      if (this.getParsed(i)[vScale.axis] !== null && !rects[i].hidden) {
-        rects[i].draw(this._ctx);
+    let i4 = 0;
+    for (; i4 < ilen; ++i4) {
+      if (this.getParsed(i4)[vScale.axis] !== null && !rects[i4].hidden) {
+        rects[i4].draw(this._ctx);
       }
     }
   }
@@ -4657,32 +4658,32 @@ var BubbleController = class extends DatasetController {
   }
   parsePrimitiveData(meta, data, start, count) {
     const parsed = super.parsePrimitiveData(meta, data, start, count);
-    for (let i = 0; i < parsed.length; i++) {
-      parsed[i]._custom = this.resolveDataElementOptions(i + start).radius;
+    for (let i4 = 0; i4 < parsed.length; i4++) {
+      parsed[i4]._custom = this.resolveDataElementOptions(i4 + start).radius;
     }
     return parsed;
   }
   parseArrayData(meta, data, start, count) {
     const parsed = super.parseArrayData(meta, data, start, count);
-    for (let i = 0; i < parsed.length; i++) {
-      const item = data[start + i];
-      parsed[i]._custom = valueOrDefault(item[2], this.resolveDataElementOptions(i + start).radius);
+    for (let i4 = 0; i4 < parsed.length; i4++) {
+      const item = data[start + i4];
+      parsed[i4]._custom = valueOrDefault(item[2], this.resolveDataElementOptions(i4 + start).radius);
     }
     return parsed;
   }
   parseObjectData(meta, data, start, count) {
     const parsed = super.parseObjectData(meta, data, start, count);
-    for (let i = 0; i < parsed.length; i++) {
-      const item = data[start + i];
-      parsed[i]._custom = valueOrDefault(item && item.r && +item.r, this.resolveDataElementOptions(i + start).radius);
+    for (let i4 = 0; i4 < parsed.length; i4++) {
+      const item = data[start + i4];
+      parsed[i4]._custom = valueOrDefault(item && item.r && +item.r, this.resolveDataElementOptions(i4 + start).radius);
     }
     return parsed;
   }
   getMaxOverflow() {
     const data = this._cachedMeta.data;
     let max = 0;
-    for (let i = data.length - 1; i >= 0; --i) {
-      max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
+    for (let i4 = data.length - 1; i4 >= 0; --i4) {
+      max = Math.max(max, data[i4].size(this.resolveDataElementOptions(i4)) / 2);
     }
     return max > 0 && max;
   }
@@ -4691,12 +4692,12 @@ var BubbleController = class extends DatasetController {
     const labels = this.chart.data.labels || [];
     const { xScale, yScale } = meta;
     const parsed = this.getParsed(index2);
-    const x = xScale.getLabelForValue(parsed.x);
-    const y = yScale.getLabelForValue(parsed.y);
-    const r = parsed._custom;
+    const x3 = xScale.getLabelForValue(parsed.x);
+    const y3 = yScale.getLabelForValue(parsed.y);
+    const r3 = parsed._custom;
     return {
       label: labels[index2] || "",
-      value: "(" + x + ", " + y + (r ? ", " + r : "") + ")"
+      value: "(" + x3 + ", " + y3 + (r3 ? ", " + r3 : "") + ")"
     };
   }
   update(mode) {
@@ -4709,20 +4710,20 @@ var BubbleController = class extends DatasetController {
     const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
     const iAxis = iScale.axis;
     const vAxis = vScale.axis;
-    for (let i = start; i < start + count; i++) {
-      const point = points[i];
-      const parsed = !reset && this.getParsed(i);
+    for (let i4 = start; i4 < start + count; i4++) {
+      const point = points[i4];
+      const parsed = !reset && this.getParsed(i4);
       const properties = {};
       const iPixel = properties[iAxis] = reset ? iScale.getPixelForDecimal(0.5) : iScale.getPixelForValue(parsed[iAxis]);
       const vPixel = properties[vAxis] = reset ? vScale.getBasePixel() : vScale.getPixelForValue(parsed[vAxis]);
       properties.skip = isNaN(iPixel) || isNaN(vPixel);
       if (includeOptions) {
-        properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        properties.options = sharedOptions || this.resolveDataElementOptions(i4, point.active ? "active" : mode);
         if (reset) {
           properties.options.radius = 0;
         }
       }
-      this.updateElement(point, i, properties, mode);
+      this.updateElement(point, i4, properties, mode);
     }
   }
   resolveDataElementOptions(index2, mode) {
@@ -4779,8 +4780,8 @@ function getRatioAndOffset(rotation, circumference, cutout) {
     const startY = Math.sin(startAngle);
     const endX = Math.cos(endAngle);
     const endY = Math.sin(endAngle);
-    const calcMax = (angle, a, b) => _angleBetween(angle, startAngle, endAngle, true) ? 1 : Math.max(a, a * cutout, b, b * cutout);
-    const calcMin = (angle, a, b) => _angleBetween(angle, startAngle, endAngle, true) ? -1 : Math.min(a, a * cutout, b, b * cutout);
+    const calcMax = (angle, a3, b) => _angleBetween(angle, startAngle, endAngle, true) ? 1 : Math.max(a3, a3 * cutout, b, b * cutout);
+    const calcMin = (angle, a3, b) => _angleBetween(angle, startAngle, endAngle, true) ? -1 : Math.min(a3, a3 * cutout, b, b * cutout);
     const maxX = calcMax(0, startX, endX);
     const maxY = calcMax(HALF_PI, startY, endY);
     const minX = calcMin(PI, startX, endX);
@@ -4814,14 +4815,14 @@ var DoughnutController = class extends DatasetController {
     if (this._parsing === false) {
       meta._parsed = data;
     } else {
-      let getter = (i2) => +data[i2];
+      let getter = (i5) => +data[i5];
       if (isObject(data[start])) {
         const { key = "value" } = this._parsing;
-        getter = (i2) => +resolveObjectKey(data[i2], key);
+        getter = (i5) => +resolveObjectKey(data[i5], key);
       }
-      let i, ilen;
-      for (i = start, ilen = start + count; i < ilen; ++i) {
-        meta._parsed[i] = getter(i);
+      let i4, ilen;
+      for (i4 = start, ilen = start + count; i4 < ilen; ++i4) {
+        meta._parsed[i4] = getter(i4);
       }
     }
   }
@@ -4834,9 +4835,9 @@ var DoughnutController = class extends DatasetController {
   _getRotationExtents() {
     let min = TAU;
     let max = -TAU;
-    for (let i = 0; i < this.chart.data.datasets.length; ++i) {
-      if (this.chart.isDatasetVisible(i) && this.chart.getDatasetMeta(i).type === this._type) {
-        const controller = this.chart.getDatasetMeta(i).controller;
+    for (let i4 = 0; i4 < this.chart.data.datasets.length; ++i4) {
+      if (this.chart.isDatasetVisible(i4) && this.chart.getDatasetMeta(i4).type === this._type) {
+        const controller = this.chart.getDatasetMeta(i4).controller;
         const rotation = controller._getRotation();
         const circumference = controller._getCircumference();
         min = Math.min(min, rotation);
@@ -4872,14 +4873,14 @@ var DoughnutController = class extends DatasetController {
     this.innerRadius = Math.max(this.outerRadius - radiusLength * chartWeight, 0);
     this.updateElements(arcs, 0, arcs.length, mode);
   }
-  _circumference(i, reset) {
+  _circumference(i4, reset) {
     const opts = this.options;
     const meta = this._cachedMeta;
     const circumference = this._getCircumference();
-    if (reset && opts.animation.animateRotate || !this.chart.getDataVisibility(i) || meta._parsed[i] === null || meta.data[i].hidden) {
+    if (reset && opts.animation.animateRotate || !this.chart.getDataVisibility(i4) || meta._parsed[i4] === null || meta.data[i4].hidden) {
       return 0;
     }
-    return this.calculateCircumference(meta._parsed[i] * circumference / TAU);
+    return this.calculateCircumference(meta._parsed[i4] * circumference / TAU);
   }
   updateElements(arcs, start, count, mode) {
     const reset = mode === "reset";
@@ -4894,13 +4895,13 @@ var DoughnutController = class extends DatasetController {
     const outerRadius = animateScale ? 0 : this.outerRadius;
     const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
     let startAngle = this._getRotation();
-    let i;
-    for (i = 0; i < start; ++i) {
-      startAngle += this._circumference(i, reset);
+    let i4;
+    for (i4 = 0; i4 < start; ++i4) {
+      startAngle += this._circumference(i4, reset);
     }
-    for (i = start; i < start + count; ++i) {
-      const circumference = this._circumference(i, reset);
-      const arc = arcs[i];
+    for (i4 = start; i4 < start + count; ++i4) {
+      const circumference = this._circumference(i4, reset);
+      const arc = arcs[i4];
       const properties = {
         x: centerX + this.offsetX,
         y: centerY + this.offsetY,
@@ -4911,20 +4912,20 @@ var DoughnutController = class extends DatasetController {
         innerRadius
       };
       if (includeOptions) {
-        properties.options = sharedOptions || this.resolveDataElementOptions(i, arc.active ? "active" : mode);
+        properties.options = sharedOptions || this.resolveDataElementOptions(i4, arc.active ? "active" : mode);
       }
       startAngle += circumference;
-      this.updateElement(arc, i, properties, mode);
+      this.updateElement(arc, i4, properties, mode);
     }
   }
   calculateTotal() {
     const meta = this._cachedMeta;
     const metaData = meta.data;
     let total = 0;
-    let i;
-    for (i = 0; i < metaData.length; i++) {
-      const value = meta._parsed[i];
-      if (value !== null && !isNaN(value) && this.chart.getDataVisibility(i) && !metaData[i].hidden) {
+    let i4;
+    for (i4 = 0; i4 < metaData.length; i4++) {
+      const value = meta._parsed[i4];
+      if (value !== null && !isNaN(value) && this.chart.getDataVisibility(i4) && !metaData[i4].hidden) {
         total += Math.abs(value);
       }
     }
@@ -4950,11 +4951,11 @@ var DoughnutController = class extends DatasetController {
   getMaxBorderWidth(arcs) {
     let max = 0;
     const chart = this.chart;
-    let i, ilen, meta, controller, options;
+    let i4, ilen, meta, controller, options;
     if (!arcs) {
-      for (i = 0, ilen = chart.data.datasets.length; i < ilen; ++i) {
-        if (chart.isDatasetVisible(i)) {
-          meta = chart.getDatasetMeta(i);
+      for (i4 = 0, ilen = chart.data.datasets.length; i4 < ilen; ++i4) {
+        if (chart.isDatasetVisible(i4)) {
+          meta = chart.getDatasetMeta(i4);
           arcs = meta.data;
           controller = meta.controller;
           break;
@@ -4964,8 +4965,8 @@ var DoughnutController = class extends DatasetController {
     if (!arcs) {
       return 0;
     }
-    for (i = 0, ilen = arcs.length; i < ilen; ++i) {
-      options = controller.resolveDataElementOptions(i);
+    for (i4 = 0, ilen = arcs.length; i4 < ilen; ++i4) {
+      options = controller.resolveDataElementOptions(i4);
       if (options.borderAlign !== "inner") {
         max = Math.max(max, options.borderWidth || 0, options.hoverBorderWidth || 0);
       }
@@ -4974,17 +4975,17 @@ var DoughnutController = class extends DatasetController {
   }
   getMaxOffset(arcs) {
     let max = 0;
-    for (let i = 0, ilen = arcs.length; i < ilen; ++i) {
-      const options = this.resolveDataElementOptions(i);
+    for (let i4 = 0, ilen = arcs.length; i4 < ilen; ++i4) {
+      const options = this.resolveDataElementOptions(i4);
       max = Math.max(max, options.offset || 0, options.hoverOffset || 0);
     }
     return max;
   }
   _getRingWeightOffset(datasetIndex) {
     let ringWeightOffset = 0;
-    for (let i = 0; i < datasetIndex; ++i) {
-      if (this.chart.isDatasetVisible(i)) {
-        ringWeightOffset += this._getRingWeight(i);
+    for (let i4 = 0; i4 < datasetIndex; ++i4) {
+      if (this.chart.isDatasetVisible(i4)) {
+        ringWeightOffset += this._getRingWeight(i4);
       }
     }
     return ringWeightOffset;
@@ -5041,14 +5042,14 @@ __publicField(DoughnutController, "overrides", {
           const data = chart.data;
           const { labels: { pointStyle, textAlign, color: color2, useBorderRadius, borderRadius } } = chart.legend.options;
           if (data.labels.length && data.datasets.length) {
-            return data.labels.map((label, i) => {
+            return data.labels.map((label, i4) => {
               const meta = chart.getDatasetMeta(0);
-              const style = meta.controller.getStyle(i);
+              const style = meta.controller.getStyle(i4);
               return {
                 text: label,
                 fillStyle: style.backgroundColor,
                 fontColor: color2,
-                hidden: !chart.getDataVisibility(i),
+                hidden: !chart.getDataVisibility(i4),
                 lineDash: style.borderDash,
                 lineDashOffset: style.borderDashOffset,
                 lineJoin: style.borderJoinStyle,
@@ -5057,14 +5058,14 @@ __publicField(DoughnutController, "overrides", {
                 textAlign,
                 pointStyle,
                 borderRadius: useBorderRadius && (borderRadius || style.borderRadius),
-                index: i
+                index: i4
               };
             });
           }
           return [];
         }
       },
-      onClick(e, legendItem, legend) {
+      onClick(e3, legendItem, legend) {
         legend.chart.toggleDataVisibility(legendItem.index);
         legend.chart.update();
       }
@@ -5115,28 +5116,28 @@ var LineController = class extends DatasetController {
     const end = start + count;
     const pointsCount = points.length;
     let prevParsed = start > 0 && this.getParsed(start - 1);
-    for (let i = 0; i < pointsCount; ++i) {
-      const point = points[i];
+    for (let i4 = 0; i4 < pointsCount; ++i4) {
+      const point = points[i4];
       const properties = directUpdate ? point : {};
-      if (i < start || i >= end) {
+      if (i4 < start || i4 >= end) {
         properties.skip = true;
         continue;
       }
-      const parsed = this.getParsed(i);
+      const parsed = this.getParsed(i4);
       const nullData = isNullOrUndef(parsed[vAxis]);
-      const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
-      const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+      const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i4);
+      const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i4);
       properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
-      properties.stop = i > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
+      properties.stop = i4 > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
       if (segment) {
         properties.parsed = parsed;
-        properties.raw = _dataset.data[i];
+        properties.raw = _dataset.data[i4];
       }
       if (includeOptions) {
-        properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        properties.options = sharedOptions || this.resolveDataElementOptions(i4, point.active ? "active" : mode);
       }
       if (!directUpdate) {
-        this.updateElement(point, i, properties, mode);
+        this.updateElement(point, i4, properties, mode);
       }
       prevParsed = parsed;
     }
@@ -5240,16 +5241,16 @@ var PolarAreaController = class extends DatasetController {
     const centerY = scale.yCenter;
     const datasetStartAngle = scale.getIndexAngle(0) - 0.5 * PI;
     let angle = datasetStartAngle;
-    let i;
+    let i4;
     const defaultAngle = 360 / this.countVisibleElements();
-    for (i = 0; i < start; ++i) {
-      angle += this._computeAngle(i, mode, defaultAngle);
+    for (i4 = 0; i4 < start; ++i4) {
+      angle += this._computeAngle(i4, mode, defaultAngle);
     }
-    for (i = start; i < start + count; i++) {
-      const arc = arcs[i];
+    for (i4 = start; i4 < start + count; i4++) {
+      const arc = arcs[i4];
       let startAngle = angle;
-      let endAngle = angle + this._computeAngle(i, mode, defaultAngle);
-      let outerRadius = chart.getDataVisibility(i) ? scale.getDistanceFromCenterForValue(this.getParsed(i).r) : 0;
+      let endAngle = angle + this._computeAngle(i4, mode, defaultAngle);
+      let outerRadius = chart.getDataVisibility(i4) ? scale.getDistanceFromCenterForValue(this.getParsed(i4).r) : 0;
       angle = endAngle;
       if (reset) {
         if (animationOpts.animateScale) {
@@ -5266,9 +5267,9 @@ var PolarAreaController = class extends DatasetController {
         outerRadius,
         startAngle,
         endAngle,
-        options: this.resolveDataElementOptions(i, arc.active ? "active" : mode)
+        options: this.resolveDataElementOptions(i4, arc.active ? "active" : mode)
       };
-      this.updateElement(arc, i, properties, mode);
+      this.updateElement(arc, i4, properties, mode);
     }
   }
   countVisibleElements() {
@@ -5317,9 +5318,9 @@ __publicField(PolarAreaController, "overrides", {
           const data = chart.data;
           if (data.labels.length && data.datasets.length) {
             const { labels: { pointStyle, color: color2 } } = chart.legend.options;
-            return data.labels.map((label, i) => {
+            return data.labels.map((label, i4) => {
               const meta = chart.getDatasetMeta(0);
-              const style = meta.controller.getStyle(i);
+              const style = meta.controller.getStyle(i4);
               return {
                 text: label,
                 fillStyle: style.backgroundColor,
@@ -5327,15 +5328,15 @@ __publicField(PolarAreaController, "overrides", {
                 fontColor: color2,
                 lineWidth: style.borderWidth,
                 pointStyle,
-                hidden: !chart.getDataVisibility(i),
-                index: i
+                hidden: !chart.getDataVisibility(i4),
+                index: i4
               };
             });
           }
           return [];
         }
       },
-      onClick(e, legendItem, legend) {
+      onClick(e3, legendItem, legend) {
         legend.chart.toggleDataVisibility(legendItem.index);
         legend.chart.update();
       }
@@ -5402,20 +5403,20 @@ var RadarController = class extends DatasetController {
   updateElements(points, start, count, mode) {
     const scale = this._cachedMeta.rScale;
     const reset = mode === "reset";
-    for (let i = start; i < start + count; i++) {
-      const point = points[i];
-      const options = this.resolveDataElementOptions(i, point.active ? "active" : mode);
-      const pointPosition = scale.getPointPositionForValue(i, this.getParsed(i).r);
-      const x = reset ? scale.xCenter : pointPosition.x;
-      const y = reset ? scale.yCenter : pointPosition.y;
+    for (let i4 = start; i4 < start + count; i4++) {
+      const point = points[i4];
+      const options = this.resolveDataElementOptions(i4, point.active ? "active" : mode);
+      const pointPosition = scale.getPointPositionForValue(i4, this.getParsed(i4).r);
+      const x3 = reset ? scale.xCenter : pointPosition.x;
+      const y3 = reset ? scale.yCenter : pointPosition.y;
       const properties = {
-        x,
-        y,
+        x: x3,
+        y: y3,
         angle: pointPosition.angle,
-        skip: isNaN(x) || isNaN(y),
+        skip: isNaN(x3) || isNaN(y3),
         options
       };
-      this.updateElement(point, i, properties, mode);
+      this.updateElement(point, i4, properties, mode);
     }
   }
 };
@@ -5445,11 +5446,11 @@ var ScatterController = class extends DatasetController {
     const labels = this.chart.data.labels || [];
     const { xScale, yScale } = meta;
     const parsed = this.getParsed(index2);
-    const x = xScale.getLabelForValue(parsed.x);
-    const y = yScale.getLabelForValue(parsed.y);
+    const x3 = xScale.getLabelForValue(parsed.x);
+    const y3 = yScale.getLabelForValue(parsed.y);
     return {
       label: labels[index2] || "",
-      value: "(" + x + ", " + y + ")"
+      value: "(" + x3 + ", " + y3 + ")"
     };
   }
   update(mode) {
@@ -5503,24 +5504,24 @@ var ScatterController = class extends DatasetController {
     const maxGapLength = isNumber(spanGaps) ? spanGaps : Number.POSITIVE_INFINITY;
     const directUpdate = this.chart._animationsDisabled || reset || mode === "none";
     let prevParsed = start > 0 && this.getParsed(start - 1);
-    for (let i = start; i < start + count; ++i) {
-      const point = points[i];
-      const parsed = this.getParsed(i);
+    for (let i4 = start; i4 < start + count; ++i4) {
+      const point = points[i4];
+      const parsed = this.getParsed(i4);
       const properties = directUpdate ? point : {};
       const nullData = isNullOrUndef(parsed[vAxis]);
-      const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
-      const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+      const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i4);
+      const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i4);
       properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
-      properties.stop = i > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
+      properties.stop = i4 > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
       if (segment) {
         properties.parsed = parsed;
-        properties.raw = _dataset.data[i];
+        properties.raw = _dataset.data[i4];
       }
       if (includeOptions) {
-        properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        properties.options = sharedOptions || this.resolveDataElementOptions(i4, point.active ? "active" : mode);
       }
       if (!directUpdate) {
-        this.updateElement(point, i, properties, mode);
+        this.updateElement(point, i4, properties, mode);
       }
       prevParsed = parsed;
     }
@@ -5531,8 +5532,8 @@ var ScatterController = class extends DatasetController {
     const data = meta.data || [];
     if (!this.options.showLine) {
       let max = 0;
-      for (let i = data.length - 1; i >= 0; --i) {
-        max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
+      for (let i4 = data.length - 1; i4 >= 0; --i4) {
+        max = Math.max(max, data[i4].size(this.resolveDataElementOptions(i4)) / 2);
       }
       return max > 0 && max;
     }
@@ -5664,13 +5665,13 @@ function binarySearch(metaset, axis, value, intersect) {
 function evaluateInteractionItems(chart, axis, position, handler, intersect) {
   const metasets = chart.getSortedVisibleDatasetMetas();
   const value = position[axis];
-  for (let i = 0, ilen = metasets.length; i < ilen; ++i) {
-    const { index: index2, data } = metasets[i];
-    const { lo, hi } = binarySearch(metasets[i], axis, value, intersect);
-    for (let j = lo; j <= hi; ++j) {
-      const element = data[j];
+  for (let i4 = 0, ilen = metasets.length; i4 < ilen; ++i4) {
+    const { index: index2, data } = metasets[i4];
+    const { lo, hi } = binarySearch(metasets[i4], axis, value, intersect);
+    for (let j3 = lo; j3 <= hi; ++j3) {
+      const element = data[j3];
       if (!element.skip) {
-        handler(element, index2, j);
+        handler(element, index2, j3);
       }
     }
   }
@@ -5789,8 +5790,8 @@ function getAxisItems(chart, position, axis, intersect, useFinalPosition) {
 var Interaction = {
   evaluateInteractionItems,
   modes: {
-    index(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    index(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       const axis = options.axis || "x";
       const includeInvisible = options.includeInvisible || false;
       const items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
@@ -5811,8 +5812,8 @@ var Interaction = {
       });
       return elements2;
     },
-    dataset(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    dataset(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       const axis = options.axis || "xy";
       const includeInvisible = options.includeInvisible || false;
       let items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
@@ -5820,34 +5821,34 @@ var Interaction = {
         const datasetIndex = items[0].datasetIndex;
         const data = chart.getDatasetMeta(datasetIndex).data;
         items = [];
-        for (let i = 0; i < data.length; ++i) {
+        for (let i4 = 0; i4 < data.length; ++i4) {
           items.push({
-            element: data[i],
+            element: data[i4],
             datasetIndex,
-            index: i
+            index: i4
           });
         }
       }
       return items;
     },
-    point(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    point(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       const axis = options.axis || "xy";
       const includeInvisible = options.includeInvisible || false;
       return getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible);
     },
-    nearest(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    nearest(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       const axis = options.axis || "xy";
       const includeInvisible = options.includeInvisible || false;
       return getNearestItems(chart, position, axis, options.intersect, useFinalPosition, includeInvisible);
     },
-    x(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    x(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       return getAxisItems(chart, position, "x", options.intersect, useFinalPosition);
     },
-    y(chart, e, options, useFinalPosition) {
-      const position = getRelativePosition(e, chart);
+    y(chart, e3, options, useFinalPosition) {
+      const position = getRelativePosition(e3, chart);
       return getAxisItems(chart, position, "y", options.intersect, useFinalPosition);
     }
   }
@@ -5859,26 +5860,26 @@ var STATIC_POSITIONS = [
   "bottom"
 ];
 function filterByPosition(array, position) {
-  return array.filter((v) => v.pos === position);
+  return array.filter((v3) => v3.pos === position);
 }
 function filterDynamicPositionByAxis(array, axis) {
-  return array.filter((v) => STATIC_POSITIONS.indexOf(v.pos) === -1 && v.box.axis === axis);
+  return array.filter((v3) => STATIC_POSITIONS.indexOf(v3.pos) === -1 && v3.box.axis === axis);
 }
 function sortByWeight(array, reverse) {
-  return array.sort((a, b) => {
-    const v0 = reverse ? b : a;
-    const v1 = reverse ? a : b;
+  return array.sort((a3, b) => {
+    const v0 = reverse ? b : a3;
+    const v1 = reverse ? a3 : b;
     return v0.weight === v1.weight ? v0.index - v1.index : v0.weight - v1.weight;
   });
 }
 function wrapBoxes(boxes) {
   const layoutBoxes = [];
-  let i, ilen, box, pos, stack, stackWeight;
-  for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
-    box = boxes[i];
+  let i4, ilen, box, pos, stack, stackWeight;
+  for (i4 = 0, ilen = (boxes || []).length; i4 < ilen; ++i4) {
+    box = boxes[i4];
     ({ position: pos, options: { stack, stackWeight = 1 } } = box);
     layoutBoxes.push({
-      index: i,
+      index: i4,
       box,
       pos,
       horizontal: box.isHorizontal(),
@@ -5910,9 +5911,9 @@ function buildStacks(layouts2) {
 function setLayoutDims(layouts2, params) {
   const stacks = buildStacks(layouts2);
   const { vBoxMaxWidth, hBoxMaxHeight } = params;
-  let i, ilen, layout;
-  for (i = 0, ilen = layouts2.length; i < ilen; ++i) {
-    layout = layouts2[i];
+  let i4, ilen, layout;
+  for (i4 = 0, ilen = layouts2.length; i4 < ilen; ++i4) {
+    layout = layouts2[i4];
     const { fullSize } = layout.box;
     const stack = stacks[layout.stack];
     const factor = stack && layout.stackWeight / stack.weight;
@@ -5944,8 +5945,8 @@ function buildLayoutBoxes(boxes) {
     horizontal: top.concat(bottom).concat(centerHorizontal)
   };
 }
-function getCombinedMax(maxPadding, chartArea, a, b) {
-  return Math.max(maxPadding[a], chartArea[a]) + Math.max(maxPadding[b], chartArea[b]);
+function getCombinedMax(maxPadding, chartArea, a3, b) {
+  return Math.max(maxPadding[a3], chartArea[a3]) + Math.max(maxPadding[b], chartArea[b]);
 }
 function updateMaxPadding(maxPadding, boxPadding) {
   maxPadding.top = Math.max(maxPadding.top, boxPadding.top);
@@ -6021,9 +6022,9 @@ function getMargins(horizontal, chartArea) {
 }
 function fitBoxes(boxes, chartArea, params, stacks) {
   const refitBoxes = [];
-  let i, ilen, layout, box, refit, changed;
-  for (i = 0, ilen = boxes.length, refit = 0; i < ilen; ++i) {
-    layout = boxes[i];
+  let i4, ilen, layout, box, refit, changed;
+  for (i4 = 0, ilen = boxes.length, refit = 0; i4 < ilen; ++i4) {
+    layout = boxes[i4];
     box = layout.box;
     box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
     const { same, other } = updateDims(chartArea, params, layout, stacks);
@@ -6045,7 +6046,7 @@ function setBoxDims(box, left, top, width, height) {
 }
 function placeBoxes(boxes, chartArea, params, stacks) {
   const userPadding = params.padding;
-  let { x, y } = chartArea;
+  let { x: x3, y: y3 } = chartArea;
   for (const layout of boxes) {
     const box = layout.box;
     const stack = stacks[layout.stack] || {
@@ -6058,34 +6059,34 @@ function placeBoxes(boxes, chartArea, params, stacks) {
       const width = chartArea.w * weight;
       const height = stack.size || box.height;
       if (defined(stack.start)) {
-        y = stack.start;
+        y3 = stack.start;
       }
       if (box.fullSize) {
-        setBoxDims(box, userPadding.left, y, params.outerWidth - userPadding.right - userPadding.left, height);
+        setBoxDims(box, userPadding.left, y3, params.outerWidth - userPadding.right - userPadding.left, height);
       } else {
-        setBoxDims(box, chartArea.left + stack.placed, y, width, height);
+        setBoxDims(box, chartArea.left + stack.placed, y3, width, height);
       }
-      stack.start = y;
+      stack.start = y3;
       stack.placed += width;
-      y = box.bottom;
+      y3 = box.bottom;
     } else {
       const height = chartArea.h * weight;
       const width = stack.size || box.width;
       if (defined(stack.start)) {
-        x = stack.start;
+        x3 = stack.start;
       }
       if (box.fullSize) {
-        setBoxDims(box, x, userPadding.top, width, params.outerHeight - userPadding.bottom - userPadding.top);
+        setBoxDims(box, x3, userPadding.top, width, params.outerHeight - userPadding.bottom - userPadding.top);
       } else {
-        setBoxDims(box, x, chartArea.top + stack.placed, width, height);
+        setBoxDims(box, x3, chartArea.top + stack.placed, width, height);
       }
-      stack.start = x;
+      stack.start = x3;
       stack.placed += height;
-      x = box.right;
+      x3 = box.right;
     }
   }
-  chartArea.x = x;
-  chartArea.y = y;
+  chartArea.x = x3;
+  chartArea.y = y3;
 }
 var layouts = {
   addBox(chart, item) {
@@ -6281,13 +6282,13 @@ function removeListener(chart, type, listener) {
 }
 function fromNativeEvent(event, chart) {
   const type = EVENT_TYPES[event.type] || event.type;
-  const { x, y } = getRelativePosition(event, chart);
+  const { x: x3, y: y3 } = getRelativePosition(event, chart);
   return {
     type,
     chart,
     native: event,
-    x: x !== void 0 ? x : null,
-    y: y !== void 0 ? y : null
+    x: x3 !== void 0 ? x3 : null,
+    y: y3 !== void 0 ? y3 : null
   };
 }
 function nodeListContains(nodeList, canvas) {
@@ -6366,9 +6367,9 @@ function createResizeObserver(chart, type, listener) {
     return;
   }
   const resize = throttled((width, height) => {
-    const w = container.clientWidth;
+    const w3 = container.clientWidth;
     listener(width, height);
-    if (w < container.clientWidth) {
+    if (w3 < container.clientWidth) {
       listener();
     }
   }, window);
@@ -6489,13 +6490,13 @@ var Element = class {
     __publicField(this, "$animations");
   }
   tooltipPosition(useFinalPosition) {
-    const { x, y } = this.getProps([
+    const { x: x3, y: y3 } = this.getProps([
       "x",
       "y"
     ], useFinalPosition);
     return {
-      x,
-      y
+      x: x3,
+      y: y3
     };
   }
   hasValue() {
@@ -6530,11 +6531,11 @@ function autoSkip(scale, ticks) {
   }
   const spacing = calculateSpacing(majorIndices, ticks, ticksLimit);
   if (numMajorIndices > 0) {
-    let i, ilen;
+    let i4, ilen;
     const avgMajorSpacing = numMajorIndices > 1 ? Math.round((last - first) / (numMajorIndices - 1)) : null;
     skip(ticks, newTicks, spacing, isNullOrUndef(avgMajorSpacing) ? 0 : first - avgMajorSpacing, first);
-    for (i = 0, ilen = numMajorIndices - 1; i < ilen; i++) {
-      skip(ticks, newTicks, spacing, majorIndices[i], majorIndices[i + 1]);
+    for (i4 = 0, ilen = numMajorIndices - 1; i4 < ilen; i4++) {
+      skip(ticks, newTicks, spacing, majorIndices[i4], majorIndices[i4 + 1]);
     }
     skip(ticks, newTicks, spacing, last, isNullOrUndef(avgMajorSpacing) ? ticks.length : last + avgMajorSpacing);
     return newTicks;
@@ -6556,8 +6557,8 @@ function calculateSpacing(majorIndices, ticks, ticksLimit) {
     return Math.max(spacing, 1);
   }
   const factors = _factorize(evenMajorSpacing);
-  for (let i = 0, ilen = factors.length - 1; i < ilen; i++) {
-    const factor = factors[i];
+  for (let i4 = 0, ilen = factors.length - 1; i4 < ilen; i4++) {
+    const factor = factors[i4];
     if (factor > spacing) {
       return factor;
     }
@@ -6566,10 +6567,10 @@ function calculateSpacing(majorIndices, ticks, ticksLimit) {
 }
 function getMajorIndices(ticks) {
   const result = [];
-  let i, ilen;
-  for (i = 0, ilen = ticks.length; i < ilen; i++) {
-    if (ticks[i].major) {
-      result.push(i);
+  let i4, ilen;
+  for (i4 = 0, ilen = ticks.length; i4 < ilen; i4++) {
+    if (ticks[i4].major) {
+      result.push(i4);
     }
   }
   return result;
@@ -6577,11 +6578,11 @@ function getMajorIndices(ticks) {
 function skipMajors(ticks, newTicks, majorIndices, spacing) {
   let count = 0;
   let next = majorIndices[0];
-  let i;
+  let i4;
   spacing = Math.ceil(spacing);
-  for (i = 0; i < ticks.length; i++) {
-    if (i === next) {
-      newTicks.push(ticks[i]);
+  for (i4 = 0; i4 < ticks.length; i4++) {
+    if (i4 === next) {
+      newTicks.push(ticks[i4]);
       count++;
       next = majorIndices[count * spacing];
     }
@@ -6591,7 +6592,7 @@ function skip(ticks, newTicks, spacing, majorStart, majorEnd) {
   const start = valueOrDefault(majorStart, 0);
   const end = Math.min(valueOrDefault(majorEnd, ticks.length), ticks.length);
   let count = 0;
-  let length, i, next;
+  let length, i4, next;
   spacing = Math.ceil(spacing);
   if (majorEnd) {
     length = majorEnd - majorStart;
@@ -6602,9 +6603,9 @@ function skip(ticks, newTicks, spacing, majorStart, majorEnd) {
     count++;
     next = Math.round(start + count * spacing);
   }
-  for (i = Math.max(start, 0); i < end; i++) {
-    if (i === next) {
-      newTicks.push(ticks[i]);
+  for (i4 = Math.max(start, 0); i4 < end; i4++) {
+    if (i4 === next) {
+      newTicks.push(ticks[i4]);
       count++;
       next = Math.round(start + count * spacing);
     }
@@ -6612,12 +6613,12 @@ function skip(ticks, newTicks, spacing, majorStart, majorEnd) {
 }
 function getEvenSpacing(arr) {
   const len = arr.length;
-  let i, diff;
+  let i4, diff;
   if (len < 2) {
     return false;
   }
-  for (diff = arr[0], i = 1; i < len; ++i) {
-    if (arr[i] - arr[i - 1] !== diff) {
+  for (diff = arr[0], i4 = 1; i4 < len; ++i4) {
+    if (arr[i4] - arr[i4 - 1] !== diff) {
       return false;
     }
   }
@@ -6630,9 +6631,9 @@ function sample(arr, numItems) {
   const result = [];
   const increment = arr.length / numItems;
   const len = arr.length;
-  let i = 0;
-  for (; i < len; i += increment) {
-    result.push(arr[Math.floor(i)]);
+  let i4 = 0;
+  for (; i4 < len; i4 += increment) {
+    result.push(arr[Math.floor(i4)]);
   }
   return result;
 }
@@ -6663,10 +6664,10 @@ function garbageCollect(caches, length) {
   each(caches, (cache) => {
     const gc = cache.gc;
     const gcLen = gc.length / 2;
-    let i;
+    let i4;
     if (gcLen > length) {
-      for (i = 0; i < gcLen; ++i) {
-        delete cache.data[gc[i]];
+      for (i4 = 0; i4 < gcLen; ++i4) {
+        delete cache.data[gc[i4]];
       }
       gc.splice(0, gcLen);
     }
@@ -6828,8 +6829,8 @@ var Scale = class _Scale extends Element {
       };
     }
     const metas = this.getMatchingVisibleMetas();
-    for (let i = 0, ilen = metas.length; i < ilen; ++i) {
-      range = metas[i].controller.getMinMax(this, canStack);
+    for (let i4 = 0, ilen = metas.length; i4 < ilen; ++i4) {
+      range = metas[i4].controller.getMinMax(this, canStack);
       if (!minDefined) {
         min = Math.min(min, range.min);
       }
@@ -6998,12 +6999,12 @@ var Scale = class _Scale extends Element {
   }
   generateTickLabels(ticks) {
     const tickOpts = this.options.ticks;
-    let i, ilen, tick;
-    for (i = 0, ilen = ticks.length; i < ilen; i++) {
-      tick = ticks[i];
+    let i4, ilen, tick;
+    for (i4 = 0, ilen = ticks.length; i4 < ilen; i4++) {
+      tick = ticks[i4];
       tick.label = callback(tickOpts.callback, [
         tick.value,
-        i,
+        i4,
         ticks
       ], this);
     }
@@ -7162,12 +7163,12 @@ var Scale = class _Scale extends Element {
   _convertTicksToLabels(ticks) {
     this.beforeTickToLabelConversion();
     this.generateTickLabels(ticks);
-    let i, ilen;
-    for (i = 0, ilen = ticks.length; i < ilen; i++) {
-      if (isNullOrUndef(ticks[i].label)) {
-        ticks.splice(i, 1);
+    let i4, ilen;
+    for (i4 = 0, ilen = ticks.length; i4 < ilen; i4++) {
+      if (isNullOrUndef(ticks[i4].label)) {
+        ticks.splice(i4, 1);
         ilen--;
-        i--;
+        i4--;
       }
     }
     this.afterTickToLabelConversion();
@@ -7191,10 +7192,10 @@ var Scale = class _Scale extends Element {
     const increment = Math.floor(length / getTicksLimit(length, maxTicksLimit));
     let widestLabelSize = 0;
     let highestLabelSize = 0;
-    let i, j, jlen, label, tickFont, fontString, cache, lineHeight, width, height, nestedLabel;
-    for (i = 0; i < length; i += increment) {
-      label = ticks[i].label;
-      tickFont = this._resolveTickFontOptions(i);
+    let i4, j3, jlen, label, tickFont, fontString, cache, lineHeight, width, height, nestedLabel;
+    for (i4 = 0; i4 < length; i4 += increment) {
+      label = ticks[i4].label;
+      tickFont = this._resolveTickFontOptions(i4);
       ctx.font = fontString = tickFont.string;
       cache = caches[fontString] = caches[fontString] || {
         data: {},
@@ -7206,8 +7207,8 @@ var Scale = class _Scale extends Element {
         width = _measureText(ctx, cache.data, cache.gc, width, label);
         height = lineHeight;
       } else if (isArray(label)) {
-        for (j = 0, jlen = label.length; j < jlen; ++j) {
-          nestedLabel = label[j];
+        for (j3 = 0, jlen = label.length; j3 < jlen; ++j3) {
+          nestedLabel = label[j3];
           if (!isNullOrUndef(nestedLabel) && !isArray(nestedLabel)) {
             width = _measureText(ctx, cache.data, cache.gc, width, nestedLabel);
             height += lineHeight;
@@ -7283,9 +7284,9 @@ var Scale = class _Scale extends Element {
     const sin = Math.abs(Math.sin(rot));
     const labelSizes = this._getLabelSizes();
     const padding = optionTicks.autoSkipPadding || 0;
-    const w = labelSizes ? labelSizes.widest.width + padding : 0;
-    const h = labelSizes ? labelSizes.highest.height + padding : 0;
-    return this.isHorizontal() ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
+    const w3 = labelSizes ? labelSizes.widest.width + padding : 0;
+    const h4 = labelSizes ? labelSizes.highest.height + padding : 0;
+    return this.isHorizontal() ? h4 * cos > w3 * sin ? w3 / cos : h4 / sin : h4 * sin < w3 * cos ? h4 / cos : w3 / sin;
   }
   _isVisible() {
     const display = this.options.display;
@@ -7311,18 +7312,18 @@ var Scale = class _Scale extends Element {
     const alignBorderValue = function(pixel) {
       return _alignPixel(chart, pixel, axisWidth);
     };
-    let borderValue, i, lineValue, alignedLineValue;
-    let tx1, ty1, tx2, ty2, x1, y1, x2, y2;
+    let borderValue, i4, lineValue, alignedLineValue;
+    let tx1, ty1, tx2, ty2, x1, y1, x22, y22;
     if (position === "top") {
       borderValue = alignBorderValue(this.bottom);
       ty1 = this.bottom - tl;
       ty2 = borderValue - axisHalfWidth;
       y1 = alignBorderValue(chartArea.top) + axisHalfWidth;
-      y2 = chartArea.bottom;
+      y22 = chartArea.bottom;
     } else if (position === "bottom") {
       borderValue = alignBorderValue(this.top);
       y1 = chartArea.top;
-      y2 = alignBorderValue(chartArea.bottom) - axisHalfWidth;
+      y22 = alignBorderValue(chartArea.bottom) - axisHalfWidth;
       ty1 = borderValue + axisHalfWidth;
       ty2 = this.top + tl;
     } else if (position === "left") {
@@ -7330,11 +7331,11 @@ var Scale = class _Scale extends Element {
       tx1 = this.right - tl;
       tx2 = borderValue - axisHalfWidth;
       x1 = alignBorderValue(chartArea.left) + axisHalfWidth;
-      x2 = chartArea.right;
+      x22 = chartArea.right;
     } else if (position === "right") {
       borderValue = alignBorderValue(this.left);
       x1 = chartArea.left;
-      x2 = alignBorderValue(chartArea.right) - axisHalfWidth;
+      x22 = alignBorderValue(chartArea.right) - axisHalfWidth;
       tx1 = borderValue + axisHalfWidth;
       tx2 = this.left + tl;
     } else if (axis === "x") {
@@ -7346,7 +7347,7 @@ var Scale = class _Scale extends Element {
         borderValue = alignBorderValue(this.chart.scales[positionAxisID].getPixelForValue(value));
       }
       y1 = chartArea.top;
-      y2 = chartArea.bottom;
+      y22 = chartArea.bottom;
       ty1 = borderValue + axisHalfWidth;
       ty2 = ty1 + tl;
     } else if (axis === "y") {
@@ -7360,12 +7361,12 @@ var Scale = class _Scale extends Element {
       tx1 = borderValue - axisHalfWidth;
       tx2 = tx1 - tl;
       x1 = chartArea.left;
-      x2 = chartArea.right;
+      x22 = chartArea.right;
     }
     const limit = valueOrDefault(options.ticks.maxTicksLimit, ticksLength);
     const step = Math.max(1, Math.ceil(ticksLength / limit));
-    for (i = 0; i < ticksLength; i += step) {
-      const context = this.getContext(i);
+    for (i4 = 0; i4 < ticksLength; i4 += step) {
+      const context = this.getContext(i4);
       const optsAtIndex = grid.setContext(context);
       const optsAtIndexBorder = border.setContext(context);
       const lineWidth = optsAtIndex.lineWidth;
@@ -7376,15 +7377,15 @@ var Scale = class _Scale extends Element {
       const tickColor = optsAtIndex.tickColor;
       const tickBorderDash = optsAtIndex.tickBorderDash || [];
       const tickBorderDashOffset = optsAtIndex.tickBorderDashOffset;
-      lineValue = getPixelForGridLine(this, i, offset);
+      lineValue = getPixelForGridLine(this, i4, offset);
       if (lineValue === void 0) {
         continue;
       }
       alignedLineValue = _alignPixel(chart, lineValue, lineWidth);
       if (isHorizontal) {
-        tx1 = tx2 = x1 = x2 = alignedLineValue;
+        tx1 = tx2 = x1 = x22 = alignedLineValue;
       } else {
-        ty1 = ty2 = y1 = y2 = alignedLineValue;
+        ty1 = ty2 = y1 = y22 = alignedLineValue;
       }
       items.push({
         tx1,
@@ -7393,8 +7394,8 @@ var Scale = class _Scale extends Element {
         ty2,
         x1,
         y1,
-        x2,
-        y2,
+        x2: x22,
+        y2: y22,
         width: lineWidth,
         color: lineColor,
         borderDash,
@@ -7421,38 +7422,38 @@ var Scale = class _Scale extends Element {
     const hTickAndPadding = mirror ? -padding : tickAndPadding;
     const rotation = -toRadians(this.labelRotation);
     const items = [];
-    let i, ilen, tick, label, x, y, textAlign, pixel, font, lineHeight, lineCount, textOffset;
+    let i4, ilen, tick, label, x3, y3, textAlign, pixel, font, lineHeight, lineCount, textOffset;
     let textBaseline = "middle";
     if (position === "top") {
-      y = this.bottom - hTickAndPadding;
+      y3 = this.bottom - hTickAndPadding;
       textAlign = this._getXAxisLabelAlignment();
     } else if (position === "bottom") {
-      y = this.top + hTickAndPadding;
+      y3 = this.top + hTickAndPadding;
       textAlign = this._getXAxisLabelAlignment();
     } else if (position === "left") {
       const ret = this._getYAxisLabelAlignment(tl);
       textAlign = ret.textAlign;
-      x = ret.x;
+      x3 = ret.x;
     } else if (position === "right") {
       const ret = this._getYAxisLabelAlignment(tl);
       textAlign = ret.textAlign;
-      x = ret.x;
+      x3 = ret.x;
     } else if (axis === "x") {
       if (position === "center") {
-        y = (chartArea.top + chartArea.bottom) / 2 + tickAndPadding;
+        y3 = (chartArea.top + chartArea.bottom) / 2 + tickAndPadding;
       } else if (isObject(position)) {
         const positionAxisID = Object.keys(position)[0];
         const value = position[positionAxisID];
-        y = this.chart.scales[positionAxisID].getPixelForValue(value) + tickAndPadding;
+        y3 = this.chart.scales[positionAxisID].getPixelForValue(value) + tickAndPadding;
       }
       textAlign = this._getXAxisLabelAlignment();
     } else if (axis === "y") {
       if (position === "center") {
-        x = (chartArea.left + chartArea.right) / 2 - tickAndPadding;
+        x3 = (chartArea.left + chartArea.right) / 2 - tickAndPadding;
       } else if (isObject(position)) {
         const positionAxisID = Object.keys(position)[0];
         const value = position[positionAxisID];
-        x = this.chart.scales[positionAxisID].getPixelForValue(value);
+        x3 = this.chart.scales[positionAxisID].getPixelForValue(value);
       }
       textAlign = this._getYAxisLabelAlignment(tl).textAlign;
     }
@@ -7464,12 +7465,12 @@ var Scale = class _Scale extends Element {
       }
     }
     const labelSizes = this._getLabelSizes();
-    for (i = 0, ilen = ticks.length; i < ilen; ++i) {
-      tick = ticks[i];
+    for (i4 = 0, ilen = ticks.length; i4 < ilen; ++i4) {
+      tick = ticks[i4];
       label = tick.label;
-      const optsAtIndex = optionTicks.setContext(this.getContext(i));
-      pixel = this.getPixelForTick(i) + optionTicks.labelOffset;
-      font = this._resolveTickFontOptions(i);
+      const optsAtIndex = optionTicks.setContext(this.getContext(i4));
+      pixel = this.getPixelForTick(i4) + optionTicks.labelOffset;
+      font = this._resolveTickFontOptions(i4);
       lineHeight = font.lineHeight;
       lineCount = isArray(label) ? label.length : 1;
       const halfCount = lineCount / 2;
@@ -7478,11 +7479,11 @@ var Scale = class _Scale extends Element {
       const strokeWidth = optsAtIndex.textStrokeWidth;
       let tickTextAlign = textAlign;
       if (isHorizontal) {
-        x = pixel;
+        x3 = pixel;
         if (textAlign === "inner") {
-          if (i === ilen - 1) {
+          if (i4 === ilen - 1) {
             tickTextAlign = !this.options.reverse ? "right" : "left";
-          } else if (i === 0) {
+          } else if (i4 === 0) {
             tickTextAlign = !this.options.reverse ? "left" : "right";
           } else {
             tickTextAlign = "center";
@@ -7509,17 +7510,17 @@ var Scale = class _Scale extends Element {
           textOffset *= -1;
         }
         if (rotation !== 0 && !optsAtIndex.showLabelBackdrop) {
-          x += lineHeight / 2 * Math.sin(rotation);
+          x3 += lineHeight / 2 * Math.sin(rotation);
         }
       } else {
-        y = pixel;
+        y3 = pixel;
         textOffset = (1 - lineCount) * lineHeight / 2;
       }
       let backdrop;
       if (optsAtIndex.showLabelBackdrop) {
         const labelPadding = toPadding(optsAtIndex.backdropPadding);
-        const height = labelSizes.heights[i];
-        const width = labelSizes.widths[i];
+        const height = labelSizes.heights[i4];
+        const width = labelSizes.widths[i4];
         let top = textOffset - labelPadding.top;
         let left = 0 - labelPadding.left;
         switch (textBaseline) {
@@ -7538,9 +7539,9 @@ var Scale = class _Scale extends Element {
             left -= width;
             break;
           case "inner":
-            if (i === ilen - 1) {
+            if (i4 === ilen - 1) {
               left -= width;
-            } else if (i > 0) {
+            } else if (i4 > 0) {
               left -= width / 2;
             }
             break;
@@ -7565,8 +7566,8 @@ var Scale = class _Scale extends Element {
           textAlign: tickTextAlign,
           textBaseline,
           translation: [
-            x,
-            y
+            x3,
+            y3
           ],
           backdrop
         }
@@ -7596,53 +7597,53 @@ var Scale = class _Scale extends Element {
     const tickAndPadding = tl + padding;
     const widest = labelSizes.widest.width;
     let textAlign;
-    let x;
+    let x3;
     if (position === "left") {
       if (mirror) {
-        x = this.right + padding;
+        x3 = this.right + padding;
         if (crossAlign === "near") {
           textAlign = "left";
         } else if (crossAlign === "center") {
           textAlign = "center";
-          x += widest / 2;
+          x3 += widest / 2;
         } else {
           textAlign = "right";
-          x += widest;
+          x3 += widest;
         }
       } else {
-        x = this.right - tickAndPadding;
+        x3 = this.right - tickAndPadding;
         if (crossAlign === "near") {
           textAlign = "right";
         } else if (crossAlign === "center") {
           textAlign = "center";
-          x -= widest / 2;
+          x3 -= widest / 2;
         } else {
           textAlign = "left";
-          x = this.left;
+          x3 = this.left;
         }
       }
     } else if (position === "right") {
       if (mirror) {
-        x = this.left + padding;
+        x3 = this.left + padding;
         if (crossAlign === "near") {
           textAlign = "right";
         } else if (crossAlign === "center") {
           textAlign = "center";
-          x -= widest / 2;
+          x3 -= widest / 2;
         } else {
           textAlign = "left";
-          x -= widest;
+          x3 -= widest;
         }
       } else {
-        x = this.left + tickAndPadding;
+        x3 = this.left + tickAndPadding;
         if (crossAlign === "near") {
           textAlign = "left";
         } else if (crossAlign === "center") {
           textAlign = "center";
-          x += widest / 2;
+          x3 += widest / 2;
         } else {
           textAlign = "right";
-          x = this.right;
+          x3 = this.right;
         }
       }
     } else {
@@ -7650,7 +7651,7 @@ var Scale = class _Scale extends Element {
     }
     return {
       textAlign,
-      x
+      x: x3
     };
   }
   _computeLabelArea() {
@@ -7691,7 +7692,7 @@ var Scale = class _Scale extends Element {
       return 0;
     }
     const ticks = this.ticks;
-    const index2 = ticks.findIndex((t) => t.value === value);
+    const index2 = ticks.findIndex((t3) => t3.value === value);
     if (index2 >= 0) {
       const opts = grid.setContext(this.getContext(index2));
       return opts.lineWidth;
@@ -7702,8 +7703,8 @@ var Scale = class _Scale extends Element {
     const grid = this.options.grid;
     const ctx = this.ctx;
     const items = this._gridLineItems || (this._gridLineItems = this._computeGridLineItems(chartArea));
-    let i, ilen;
-    const drawLine = (p1, p2, style) => {
+    let i4, ilen;
+    const drawLine = (p1, p22, style) => {
       if (!style.width || !style.color) {
         return;
       }
@@ -7714,13 +7715,13 @@ var Scale = class _Scale extends Element {
       ctx.lineDashOffset = style.borderDashOffset;
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
+      ctx.lineTo(p22.x, p22.y);
       ctx.stroke();
       ctx.restore();
     };
     if (grid.display) {
-      for (i = 0, ilen = items.length; i < ilen; ++i) {
-        const item = items[i];
+      for (i4 = 0, ilen = items.length; i4 < ilen; ++i4) {
+        const item = items[i4];
         if (grid.drawOnChartArea) {
           drawLine({
             x: item.x1,
@@ -7756,22 +7757,22 @@ var Scale = class _Scale extends Element {
     }
     const lastLineWidth = grid.setContext(this.getContext(0)).lineWidth;
     const borderValue = this._borderValue;
-    let x1, x2, y1, y2;
+    let x1, x22, y1, y22;
     if (this.isHorizontal()) {
       x1 = _alignPixel(chart, this.left, axisWidth) - axisWidth / 2;
-      x2 = _alignPixel(chart, this.right, lastLineWidth) + lastLineWidth / 2;
-      y1 = y2 = borderValue;
+      x22 = _alignPixel(chart, this.right, lastLineWidth) + lastLineWidth / 2;
+      y1 = y22 = borderValue;
     } else {
       y1 = _alignPixel(chart, this.top, axisWidth) - axisWidth / 2;
-      y2 = _alignPixel(chart, this.bottom, lastLineWidth) + lastLineWidth / 2;
-      x1 = x2 = borderValue;
+      y22 = _alignPixel(chart, this.bottom, lastLineWidth) + lastLineWidth / 2;
+      x1 = x22 = borderValue;
     }
     ctx.save();
     ctx.lineWidth = borderOpts.width;
     ctx.strokeStyle = borderOpts.color;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    ctx.lineTo(x22, y22);
     ctx.stroke();
     ctx.restore();
   }
@@ -7790,8 +7791,8 @@ var Scale = class _Scale extends Element {
       const renderTextOptions = item.options;
       const tickFont = item.font;
       const label = item.label;
-      const y = item.textOffset;
-      renderText(ctx, label, 0, y, tickFont, renderTextOptions);
+      const y3 = item.textOffset;
+      renderText(ctx, label, 0, y3, tickFont, renderTextOptions);
     }
     if (area) {
       unclipArea(ctx);
@@ -7879,9 +7880,9 @@ var Scale = class _Scale extends Element {
     const metas = this.chart.getSortedVisibleDatasetMetas();
     const axisID = this.axis + "AxisID";
     const result = [];
-    let i, ilen;
-    for (i = 0, ilen = metas.length; i < ilen; ++i) {
-      const meta = metas[i];
+    let i4, ilen;
+    for (i4 = 0, ilen = metas.length; i4 < ilen; ++i4) {
+      const meta = metas[i4];
       if (meta[axisID] === this.id && (!type || meta.type === type)) {
         result.push(meta);
       }
@@ -8053,8 +8054,8 @@ var Registry = class {
     callback(component["after" + camelMethod], [], component);
   }
   _getRegistryForType(type) {
-    for (let i = 0; i < this._typedRegistries.length; i++) {
-      const reg = this._typedRegistries[i];
+    for (let i4 = 0; i4 < this._typedRegistries.length; i4++) {
+      const reg = this._typedRegistries[i4];
       if (reg.isForType(type)) {
         return reg;
       }
@@ -8130,7 +8131,7 @@ var PluginService = class {
   _notifyStateChanges(chart) {
     const previousDescriptors = this._oldCache || [];
     const descriptors2 = this._cache;
-    const diff = (a, b) => a.filter((x) => !b.some((y) => x.plugin.id === y.plugin.id));
+    const diff = (a3, b) => a3.filter((x3) => !b.some((y3) => x3.plugin.id === y3.plugin.id));
     this._notify(diff(previousDescriptors, descriptors2), chart, "stop");
     this._notify(diff(descriptors2, previousDescriptors), chart, "start");
   }
@@ -8139,12 +8140,12 @@ function allPlugins(config) {
   const localIds = {};
   const plugins2 = [];
   const keys = Object.keys(registry.plugins.items);
-  for (let i = 0; i < keys.length; i++) {
-    plugins2.push(registry.getPlugin(keys[i]));
+  for (let i4 = 0; i4 < keys.length; i4++) {
+    plugins2.push(registry.getPlugin(keys[i4]));
   }
   const local = config.plugins || [];
-  for (let i = 0; i < local.length; i++) {
-    const plugin = local[i];
+  for (let i4 = 0; i4 < local.length; i4++) {
+    const plugin = local[i4];
     if (plugins2.indexOf(plugin) === -1) {
       plugins2.push(plugin);
       localIds[plugin.id] = true;
@@ -8248,7 +8249,7 @@ function getAxisFromDataset(id, axis, dataset) {
 }
 function retrieveAxisFromDatasets(id, config) {
   if (config.data && config.data.datasets) {
-    const boundDs = config.data.datasets.filter((d) => d.xAxisID === id || d.yAxisID === id);
+    const boundDs = config.data.datasets.filter((d3) => d3.xAxisID === id || d3.yAxisID === id);
     if (boundDs.length) {
       return getAxisFromDataset(id, "x", boundDs[0]) || getAxisFromDataset(id, "y", boundDs[0]);
     }
@@ -8509,7 +8510,7 @@ function getResolver(resolverCache, scopes, prefixes) {
     const resolver = _createResolver(scopes, prefixes);
     cached = {
       resolver,
-      subPrefixes: prefixes.filter((p) => !p.toLowerCase().includes("hover"))
+      subPrefixes: prefixes.filter((p3) => !p3.toLowerCase().includes("hover"))
     };
     cache.set(cacheKey, cached);
   }
@@ -8539,9 +8540,9 @@ var KNOWN_POSITIONS = [
 function positionIsHorizontal(position, axis) {
   return position === "top" || position === "bottom" || KNOWN_POSITIONS.indexOf(position) === -1 && axis === "x";
 }
-function compare2Level(l1, l2) {
-  return function(a, b) {
-    return a[l1] === b[l1] ? a[l2] - b[l2] : a[l1] - b[l1];
+function compare2Level(l1, l22) {
+  return function(a3, b) {
+    return a3[l1] === b[l1] ? a3[l22] - b[l22] : a3[l1] - b[l1];
   };
 }
 function onAnimationsComplete(context) {
@@ -8573,7 +8574,7 @@ function getCanvas(item) {
 var instances = {};
 var getChart = (key) => {
   const canvas = getCanvas(key);
-  return Object.values(instances).filter((c) => c.canvas === canvas).pop();
+  return Object.values(instances).filter((c3) => c3.canvas === canvas).pop();
 };
 function moveNumericKeys(obj, start, move) {
   const keys = Object.keys(obj);
@@ -8588,14 +8589,14 @@ function moveNumericKeys(obj, start, move) {
     }
   }
 }
-function determineLastEvent(e, lastEvent, inChartArea, isClick) {
-  if (!inChartArea || e.type === "mouseout") {
+function determineLastEvent(e3, lastEvent, inChartArea, isClick) {
+  if (!inChartArea || e3.type === "mouseout") {
     return null;
   }
   if (isClick) {
     return lastEvent;
   }
-  return e;
+  return e3;
 }
 var Chart = class {
   static register(...items) {
@@ -8806,10 +8807,10 @@ var Chart = class {
     const metasets = this._metasets;
     const numData = this.data.datasets.length;
     const numMeta = metasets.length;
-    metasets.sort((a, b) => a.index - b.index);
+    metasets.sort((a3, b) => a3.index - b.index);
     if (numMeta > numData) {
-      for (let i = numData; i < numMeta; ++i) {
-        this._destroyDatasetMeta(i);
+      for (let i4 = numData; i4 < numMeta; ++i4) {
+        this._destroyDatasetMeta(i4);
       }
       metasets.splice(numData, numMeta - numData);
     }
@@ -8821,7 +8822,7 @@ var Chart = class {
       delete this._stacks;
     }
     metasets.forEach((meta, index2) => {
-      if (datasets.filter((x) => x === meta._dataset).length === 0) {
+      if (datasets.filter((x3) => x3 === meta._dataset).length === 0) {
         this._destroyDatasetMeta(index2);
       }
     });
@@ -8829,24 +8830,24 @@ var Chart = class {
   buildOrUpdateControllers() {
     const newControllers = [];
     const datasets = this.data.datasets;
-    let i, ilen;
+    let i4, ilen;
     this._removeUnreferencedMetasets();
-    for (i = 0, ilen = datasets.length; i < ilen; i++) {
-      const dataset = datasets[i];
-      let meta = this.getDatasetMeta(i);
+    for (i4 = 0, ilen = datasets.length; i4 < ilen; i4++) {
+      const dataset = datasets[i4];
+      let meta = this.getDatasetMeta(i4);
       const type = dataset.type || this.config.type;
       if (meta.type && meta.type !== type) {
-        this._destroyDatasetMeta(i);
-        meta = this.getDatasetMeta(i);
+        this._destroyDatasetMeta(i4);
+        meta = this.getDatasetMeta(i4);
       }
       meta.type = type;
       meta.indexAxis = dataset.indexAxis || getIndexAxis(type, this.options);
       meta.order = dataset.order || 0;
-      meta.index = i;
+      meta.index = i4;
       meta.label = "" + dataset.label;
-      meta.visible = this.isDatasetVisible(i);
+      meta.visible = this.isDatasetVisible(i4);
       if (meta.controller) {
-        meta.controller.updateIndex(i);
+        meta.controller.updateIndex(i4);
         meta.controller.linkScales();
       } else {
         const ControllerClass = registry.getController(type);
@@ -8855,7 +8856,7 @@ var Chart = class {
           dataElementType: registry.getElement(dataElementType),
           datasetElementType: datasetElementType && registry.getElement(datasetElementType)
         });
-        meta.controller = new ControllerClass(this, i);
+        meta.controller = new ControllerClass(this, i4);
         newControllers.push(meta.controller);
       }
     }
@@ -8889,8 +8890,8 @@ var Chart = class {
     const newControllers = this.buildOrUpdateControllers();
     this.notifyPlugins("beforeElementsUpdate");
     let minPadding = 0;
-    for (let i = 0, ilen = this.data.datasets.length; i < ilen; i++) {
-      const { controller } = this.getDatasetMeta(i);
+    for (let i4 = 0, ilen = this.data.datasets.length; i4 < ilen; i4++) {
+      const { controller } = this.getDatasetMeta(i4);
       const reset = !animsDisabled && newControllers.indexOf(controller) === -1;
       controller.buildOrUpdateElements(reset);
       minPadding = Math.max(+controller.getMaxOverflow(), minPadding);
@@ -8946,17 +8947,17 @@ var Chart = class {
     }
     this._dataChanges = [];
     const datasetCount = this.data.datasets.length;
-    const makeSet = (idx) => new Set(_dataChanges.filter((c) => c[0] === idx).map((c, i) => i + "," + c.splice(1).join(",")));
+    const makeSet = (idx) => new Set(_dataChanges.filter((c3) => c3[0] === idx).map((c3, i4) => i4 + "," + c3.splice(1).join(",")));
     const changeSet = makeSet(0);
-    for (let i = 1; i < datasetCount; i++) {
-      if (!setsEqual(changeSet, makeSet(i))) {
+    for (let i4 = 1; i4 < datasetCount; i4++) {
+      if (!setsEqual(changeSet, makeSet(i4))) {
         return;
       }
     }
-    return Array.from(changeSet).map((c) => c.split(",")).map((a) => ({
-      method: a[1],
-      start: +a[2],
-      count: +a[3]
+    return Array.from(changeSet).map((c3) => c3.split(",")).map((a3) => ({
+      method: a3[1],
+      start: +a3[2],
+      count: +a3[3]
     }));
   }
   _updateLayout(minPadding) {
@@ -8990,12 +8991,12 @@ var Chart = class {
     }) === false) {
       return;
     }
-    for (let i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
-      this.getDatasetMeta(i).controller.configure();
+    for (let i4 = 0, ilen = this.data.datasets.length; i4 < ilen; ++i4) {
+      this.getDatasetMeta(i4).controller.configure();
     }
-    for (let i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
-      this._updateDataset(i, isFunction(mode) ? mode({
-        datasetIndex: i
+    for (let i4 = 0, ilen = this.data.datasets.length; i4 < ilen; ++i4) {
+      this._updateDataset(i4, isFunction(mode) ? mode({
+        datasetIndex: i4
       }) : mode);
     }
     this.notifyPlugins("afterDatasetsUpdate", {
@@ -9035,7 +9036,7 @@ var Chart = class {
     }
   }
   draw() {
-    let i;
+    let i4;
     if (this._resizeBeforeDraw) {
       const { width, height } = this._resizeBeforeDraw;
       this._resizeBeforeDraw = null;
@@ -9051,21 +9052,21 @@ var Chart = class {
       return;
     }
     const layers = this._layers;
-    for (i = 0; i < layers.length && layers[i].z <= 0; ++i) {
-      layers[i].draw(this.chartArea);
+    for (i4 = 0; i4 < layers.length && layers[i4].z <= 0; ++i4) {
+      layers[i4].draw(this.chartArea);
     }
     this._drawDatasets();
-    for (; i < layers.length; ++i) {
-      layers[i].draw(this.chartArea);
+    for (; i4 < layers.length; ++i4) {
+      layers[i4].draw(this.chartArea);
     }
     this.notifyPlugins("afterDraw");
   }
   _getSortedDatasetMetas(filterVisible) {
     const metasets = this._sortedMetasets;
     const result = [];
-    let i, ilen;
-    for (i = 0, ilen = metasets.length; i < ilen; ++i) {
-      const meta = metasets[i];
+    let i4, ilen;
+    for (i4 = 0, ilen = metasets.length; i4 < ilen; ++i4) {
+      const meta = metasets[i4];
       if (!filterVisible || meta.visible) {
         result.push(meta);
       }
@@ -9082,8 +9083,8 @@ var Chart = class {
       return;
     }
     const metasets = this.getSortedVisibleDatasetMetas();
-    for (let i = metasets.length - 1; i >= 0; --i) {
-      this._drawDataset(metasets[i]);
+    for (let i4 = metasets.length - 1; i4 >= 0; --i4) {
+      this._drawDataset(metasets[i4]);
     }
     this.notifyPlugins("afterDatasetsDraw");
   }
@@ -9111,17 +9112,17 @@ var Chart = class {
   isPointInArea(point) {
     return _isPointInArea(point, this.chartArea, this._minPadding);
   }
-  getElementsAtEventForMode(e, mode, options, useFinalPosition) {
+  getElementsAtEventForMode(e3, mode, options, useFinalPosition) {
     const method = Interaction.modes[mode];
     if (typeof method === "function") {
-      return method(this, e, options, useFinalPosition);
+      return method(this, e3, options, useFinalPosition);
     }
     return [];
   }
   getDatasetMeta(datasetIndex) {
     const dataset = this.data.datasets[datasetIndex];
     const metasets = this._metasets;
-    let meta = metasets.filter((x) => x && x._dataset === dataset).pop();
+    let meta = metasets.filter((x3) => x3 && x3._dataset === dataset).pop();
     if (!meta) {
       meta = {
         type: null,
@@ -9197,11 +9198,11 @@ var Chart = class {
     delete this._metasets[datasetIndex];
   }
   _stop() {
-    let i, ilen;
+    let i4, ilen;
     this.stop();
     animator.remove(this);
-    for (i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
-      this._destroyDatasetMeta(i);
+    for (i4 = 0, ilen = this.data.datasets.length; i4 < ilen; ++i4) {
+      this._destroyDatasetMeta(i4);
     }
   }
   destroy() {
@@ -9237,10 +9238,10 @@ var Chart = class {
       platform.addEventListener(this, type, listener2);
       listeners[type] = listener2;
     };
-    const listener = (e, x, y) => {
-      e.offsetX = x;
-      e.offsetY = y;
-      this._eventHandler(e);
+    const listener = (e3, x3, y3) => {
+      e3.offsetX = x3;
+      e3.offsetY = y3;
+      this._eventHandler(e3);
     };
     each(this.options.events, (type) => _add(type, listener));
   }
@@ -9298,13 +9299,13 @@ var Chart = class {
   }
   updateHoverStyle(items, mode, enabled) {
     const prefix = enabled ? "set" : "remove";
-    let meta, item, i, ilen;
+    let meta, item, i4, ilen;
     if (mode === "dataset") {
       meta = this.getDatasetMeta(items[0].datasetIndex);
       meta.controller["_" + prefix + "DatasetHoverStyle"]();
     }
-    for (i = 0, ilen = items.length; i < ilen; ++i) {
-      item = items[i];
+    for (i4 = 0, ilen = items.length; i4 < ilen; ++i4) {
+      item = items[i4];
       const controller = item && this.getDatasetMeta(item.datasetIndex).controller;
       if (controller) {
         controller[prefix + "HoverStyle"](item.element, item.datasetIndex, item.index);
@@ -9338,11 +9339,11 @@ var Chart = class {
     return this._plugins.notify(this, hook, args, filter);
   }
   isPluginEnabled(pluginId) {
-    return this._plugins._cache.filter((p) => p.plugin.id === pluginId).length === 1;
+    return this._plugins._cache.filter((p3) => p3.plugin.id === pluginId).length === 1;
   }
   _updateHoverStyles(active, lastActive, replay) {
     const hoverOptions = this.options.hover;
-    const diff = (a, b) => a.filter((x) => !b.some((y) => x.datasetIndex === y.datasetIndex && x.index === y.index));
+    const diff = (a3, b) => a3.filter((x3) => !b.some((y3) => x3.datasetIndex === y3.datasetIndex && x3.index === y3.index));
     const deactivated = diff(lastActive, active);
     const activated = replay ? active : diff(active, lastActive);
     if (deactivated.length) {
@@ -9352,18 +9353,18 @@ var Chart = class {
       this.updateHoverStyle(activated, hoverOptions.mode, true);
     }
   }
-  _eventHandler(e, replay) {
+  _eventHandler(e3, replay) {
     const args = {
-      event: e,
+      event: e3,
       replay,
       cancelable: true,
-      inChartArea: this.isPointInArea(e)
+      inChartArea: this.isPointInArea(e3)
     };
-    const eventFilter = (plugin) => (plugin.options.events || this.options.events).includes(e.native.type);
+    const eventFilter = (plugin) => (plugin.options.events || this.options.events).includes(e3.native.type);
     if (this.notifyPlugins("beforeEvent", args, eventFilter) === false) {
       return;
     }
-    const changed = this._handleEvent(e, replay, args.inChartArea);
+    const changed = this._handleEvent(e3, replay, args.inChartArea);
     args.cancelable = false;
     this.notifyPlugins("afterEvent", args, eventFilter);
     if (changed || args.changed) {
@@ -9371,22 +9372,22 @@ var Chart = class {
     }
     return this;
   }
-  _handleEvent(e, replay, inChartArea) {
+  _handleEvent(e3, replay, inChartArea) {
     const { _active: lastActive = [], options } = this;
     const useFinalPosition = replay;
-    const active = this._getActiveElements(e, lastActive, inChartArea, useFinalPosition);
-    const isClick = _isClickEvent(e);
-    const lastEvent = determineLastEvent(e, this._lastEvent, inChartArea, isClick);
+    const active = this._getActiveElements(e3, lastActive, inChartArea, useFinalPosition);
+    const isClick = _isClickEvent(e3);
+    const lastEvent = determineLastEvent(e3, this._lastEvent, inChartArea, isClick);
     if (inChartArea) {
       this._lastEvent = null;
       callback(options.onHover, [
-        e,
+        e3,
         active,
         this
       ], this);
       if (isClick) {
         callback(options.onClick, [
-          e,
+          e3,
           active,
           this
         ], this);
@@ -9400,15 +9401,15 @@ var Chart = class {
     this._lastEvent = lastEvent;
     return changed;
   }
-  _getActiveElements(e, lastActive, inChartArea, useFinalPosition) {
-    if (e.type === "mouseout") {
+  _getActiveElements(e3, lastActive, inChartArea, useFinalPosition) {
+    if (e3.type === "mouseout") {
       return [];
     }
     if (!inChartArea) {
       return lastActive;
     }
     const hoverOptions = this.options.hover;
-    return this.getElementsAtEventForMode(e, hoverOptions.mode, hoverOptions, useFinalPosition);
+    return this.getElementsAtEventForMode(e3, hoverOptions.mode, hoverOptions, useFinalPosition);
   }
 };
 __publicField(Chart, "defaults", defaults);
@@ -9421,24 +9422,24 @@ function invalidatePlugins() {
   return each(Chart.instances, (chart) => chart._plugins.invalidate());
 }
 function clipSelf(ctx, element, endAngle) {
-  const { startAngle, x, y, outerRadius, innerRadius, options } = element;
+  const { startAngle, x: x3, y: y3, outerRadius, innerRadius, options } = element;
   const { borderWidth, borderJoinStyle } = options;
   const outerAngleClip = Math.min(borderWidth / outerRadius, _normalizeAngle(startAngle - endAngle));
   ctx.beginPath();
-  ctx.arc(x, y, outerRadius - borderWidth / 2, startAngle + outerAngleClip / 2, endAngle - outerAngleClip / 2);
+  ctx.arc(x3, y3, outerRadius - borderWidth / 2, startAngle + outerAngleClip / 2, endAngle - outerAngleClip / 2);
   if (innerRadius > 0) {
     const innerAngleClip = Math.min(borderWidth / innerRadius, _normalizeAngle(startAngle - endAngle));
-    ctx.arc(x, y, innerRadius + borderWidth / 2, endAngle - innerAngleClip / 2, startAngle + innerAngleClip / 2, true);
+    ctx.arc(x3, y3, innerRadius + borderWidth / 2, endAngle - innerAngleClip / 2, startAngle + innerAngleClip / 2, true);
   } else {
     const clipWidth = Math.min(borderWidth / 2, outerRadius * _normalizeAngle(startAngle - endAngle));
     if (borderJoinStyle === "round") {
-      ctx.arc(x, y, clipWidth, endAngle - PI / 2, startAngle + PI / 2, true);
+      ctx.arc(x3, y3, clipWidth, endAngle - PI / 2, startAngle + PI / 2, true);
     } else if (borderJoinStyle === "bevel") {
-      const r = 2 * clipWidth * clipWidth;
-      const endX = -r * Math.cos(endAngle + PI / 2) + x;
-      const endY = -r * Math.sin(endAngle + PI / 2) + y;
-      const startX = r * Math.cos(startAngle + PI / 2) + x;
-      const startY = r * Math.sin(startAngle + PI / 2) + y;
+      const r3 = 2 * clipWidth * clipWidth;
+      const endX = -r3 * Math.cos(endAngle + PI / 2) + x3;
+      const endY = -r3 * Math.sin(endAngle + PI / 2) + y3;
+      const startX = r3 * Math.cos(startAngle + PI / 2) + x3;
+      const startY = r3 * Math.sin(startAngle + PI / 2) + y3;
       ctx.lineTo(endX, endY);
       ctx.lineTo(startX, startY);
     }
@@ -9449,15 +9450,15 @@ function clipSelf(ctx, element, endAngle) {
   ctx.clip("evenodd");
 }
 function clipArc(ctx, element, endAngle) {
-  const { startAngle, pixelMargin, x, y, outerRadius, innerRadius } = element;
+  const { startAngle, pixelMargin, x: x3, y: y3, outerRadius, innerRadius } = element;
   let angleMargin = pixelMargin / outerRadius;
   ctx.beginPath();
-  ctx.arc(x, y, outerRadius, startAngle - angleMargin, endAngle + angleMargin);
+  ctx.arc(x3, y3, outerRadius, startAngle - angleMargin, endAngle + angleMargin);
   if (innerRadius > pixelMargin) {
     angleMargin = pixelMargin / innerRadius;
-    ctx.arc(x, y, innerRadius, endAngle + angleMargin, startAngle - angleMargin, true);
+    ctx.arc(x3, y3, innerRadius, endAngle + angleMargin, startAngle - angleMargin, true);
   } else {
-    ctx.arc(x, y, pixelMargin, endAngle + HALF_PI, startAngle - HALF_PI);
+    ctx.arc(x3, y3, pixelMargin, endAngle + HALF_PI, startAngle - HALF_PI);
   }
   ctx.closePath();
   ctx.clip();
@@ -9471,7 +9472,7 @@ function toRadiusCorners(value) {
   ]);
 }
 function parseBorderRadius$1(arc, innerRadius, outerRadius, angleDelta) {
-  const o = toRadiusCorners(arc.options.borderRadius);
+  const o3 = toRadiusCorners(arc.options.borderRadius);
   const halfThickness = (outerRadius - innerRadius) / 2;
   const innerLimit = Math.min(halfThickness, angleDelta * innerRadius / 2);
   const computeOuterLimit = (val) => {
@@ -9479,20 +9480,20 @@ function parseBorderRadius$1(arc, innerRadius, outerRadius, angleDelta) {
     return _limitValue(val, 0, Math.min(halfThickness, outerArcLimit));
   };
   return {
-    outerStart: computeOuterLimit(o.outerStart),
-    outerEnd: computeOuterLimit(o.outerEnd),
-    innerStart: _limitValue(o.innerStart, 0, innerLimit),
-    innerEnd: _limitValue(o.innerEnd, 0, innerLimit)
+    outerStart: computeOuterLimit(o3.outerStart),
+    outerEnd: computeOuterLimit(o3.outerEnd),
+    innerStart: _limitValue(o3.innerStart, 0, innerLimit),
+    innerEnd: _limitValue(o3.innerEnd, 0, innerLimit)
   };
 }
-function rThetaToXY(r, theta, x, y) {
+function rThetaToXY(r3, theta, x3, y3) {
   return {
-    x: x + r * Math.cos(theta),
-    y: y + r * Math.sin(theta)
+    x: x3 + r3 * Math.cos(theta),
+    y: y3 + r3 * Math.sin(theta)
   };
 }
 function pathArc(ctx, element, offset, spacing, end, circular) {
-  const { x, y, startAngle: start, pixelMargin, innerRadius: innerR } = element;
+  const { x: x3, y: y3, startAngle: start, pixelMargin, innerRadius: innerR } = element;
   const outerRadius = Math.max(element.outerRadius + spacing + offset - pixelMargin, 0);
   const innerRadius = innerR > 0 ? innerR + spacing + offset + pixelMargin : 0;
   let spacingOffset = 0;
@@ -9520,38 +9521,38 @@ function pathArc(ctx, element, offset, spacing, end, circular) {
   ctx.beginPath();
   if (circular) {
     const outerMidAdjustedAngle = (outerStartAdjustedAngle + outerEndAdjustedAngle) / 2;
-    ctx.arc(x, y, outerRadius, outerStartAdjustedAngle, outerMidAdjustedAngle);
-    ctx.arc(x, y, outerRadius, outerMidAdjustedAngle, outerEndAdjustedAngle);
+    ctx.arc(x3, y3, outerRadius, outerStartAdjustedAngle, outerMidAdjustedAngle);
+    ctx.arc(x3, y3, outerRadius, outerMidAdjustedAngle, outerEndAdjustedAngle);
     if (outerEnd > 0) {
-      const pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x, y);
+      const pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x3, y3);
       ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, endAngle + HALF_PI);
     }
-    const p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x, y);
+    const p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x3, y3);
     ctx.lineTo(p4.x, p4.y);
     if (innerEnd > 0) {
-      const pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
+      const pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x3, y3);
       ctx.arc(pCenter.x, pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
     }
     const innerMidAdjustedAngle = (endAngle - innerEnd / innerRadius + (startAngle + innerStart / innerRadius)) / 2;
-    ctx.arc(x, y, innerRadius, endAngle - innerEnd / innerRadius, innerMidAdjustedAngle, true);
-    ctx.arc(x, y, innerRadius, innerMidAdjustedAngle, startAngle + innerStart / innerRadius, true);
+    ctx.arc(x3, y3, innerRadius, endAngle - innerEnd / innerRadius, innerMidAdjustedAngle, true);
+    ctx.arc(x3, y3, innerRadius, innerMidAdjustedAngle, startAngle + innerStart / innerRadius, true);
     if (innerStart > 0) {
-      const pCenter = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
+      const pCenter = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x3, y3);
       ctx.arc(pCenter.x, pCenter.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
     }
-    const p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
+    const p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x3, y3);
     ctx.lineTo(p8.x, p8.y);
     if (outerStart > 0) {
-      const pCenter = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
+      const pCenter = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x3, y3);
       ctx.arc(pCenter.x, pCenter.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
     }
   } else {
-    ctx.moveTo(x, y);
-    const outerStartX = Math.cos(outerStartAdjustedAngle) * outerRadius + x;
-    const outerStartY = Math.sin(outerStartAdjustedAngle) * outerRadius + y;
+    ctx.moveTo(x3, y3);
+    const outerStartX = Math.cos(outerStartAdjustedAngle) * outerRadius + x3;
+    const outerStartY = Math.sin(outerStartAdjustedAngle) * outerRadius + y3;
     ctx.lineTo(outerStartX, outerStartY);
-    const outerEndX = Math.cos(outerEndAdjustedAngle) * outerRadius + x;
-    const outerEndY = Math.sin(outerEndAdjustedAngle) * outerRadius + y;
+    const outerEndX = Math.cos(outerEndAdjustedAngle) * outerRadius + x3;
+    const outerEndY = Math.sin(outerEndAdjustedAngle) * outerRadius + y3;
     ctx.lineTo(outerEndX, outerEndY);
   }
   ctx.closePath();
@@ -9561,7 +9562,7 @@ function drawArc(ctx, element, offset, spacing, circular) {
   let endAngle = element.endAngle;
   if (fullCircles) {
     pathArc(ctx, element, offset, spacing, endAngle, circular);
-    for (let i = 0; i < fullCircles; ++i) {
+    for (let i4 = 0; i4 < fullCircles; ++i4) {
       ctx.fill();
     }
     if (!isNaN(circumference)) {
@@ -9591,7 +9592,7 @@ function drawBorder(ctx, element, offset, spacing, circular) {
   let endAngle = element.endAngle;
   if (fullCircles) {
     pathArc(ctx, element, offset, spacing, endAngle, circular);
-    for (let i = 0; i < fullCircles; ++i) {
+    for (let i4 = 0; i4 < fullCircles; ++i4) {
       ctx.stroke();
     }
     if (!isNaN(circumference)) {
@@ -9655,7 +9656,7 @@ var ArcElement = class extends Element {
     return betweenAngles && withinRadius;
   }
   getCenterPoint(useFinalPosition) {
-    const { x, y, startAngle, endAngle, innerRadius, outerRadius } = this.getProps([
+    const { x: x3, y: y3, startAngle, endAngle, innerRadius, outerRadius } = this.getProps([
       "x",
       "y",
       "startAngle",
@@ -9667,8 +9668,8 @@ var ArcElement = class extends Element {
     const halfAngle = (startAngle + endAngle) / 2;
     const halfRadius = (innerRadius + outerRadius + spacing + offset) / 2;
     return {
-      x: x + Math.cos(halfAngle) * halfRadius,
-      y: y + Math.sin(halfAngle) * halfRadius
+      x: x3 + Math.cos(halfAngle) * halfRadius,
+      y: y3 + Math.sin(halfAngle) * halfRadius
     };
   }
   tooltipPosition(useFinalPosition) {
@@ -9757,9 +9758,9 @@ function pathSegment(ctx, line, segment, params) {
   const { count, start, loop, ilen } = pathVars(points, segment, params);
   const lineMethod = getLineMethod(options);
   let { move = true, reverse } = params || {};
-  let i, point, prev;
-  for (i = 0; i <= ilen; ++i) {
-    point = points[(start + (reverse ? ilen - i : i)) % count];
+  let i4, point, prev;
+  for (i4 = 0; i4 <= ilen; ++i4) {
+    point = points[(start + (reverse ? ilen - i4 : i4)) % count];
     if (point.skip) {
       continue;
     } else if (move) {
@@ -9782,7 +9783,7 @@ function fastPathSegment(ctx, line, segment, params) {
   const { move = true, reverse } = params || {};
   let avgX = 0;
   let countX = 0;
-  let i, point, prevX, minY, maxY, lastY;
+  let i4, point, prevX, minY, maxY, lastY;
   const pointIndex = (index2) => (start + (reverse ? ilen - index2 : index2)) % count;
   const drawX = () => {
     if (minY !== maxY) {
@@ -9795,29 +9796,29 @@ function fastPathSegment(ctx, line, segment, params) {
     point = points[pointIndex(0)];
     ctx.moveTo(point.x, point.y);
   }
-  for (i = 0; i <= ilen; ++i) {
-    point = points[pointIndex(i)];
+  for (i4 = 0; i4 <= ilen; ++i4) {
+    point = points[pointIndex(i4)];
     if (point.skip) {
       continue;
     }
-    const x = point.x;
-    const y = point.y;
-    const truncX = x | 0;
+    const x3 = point.x;
+    const y3 = point.y;
+    const truncX = x3 | 0;
     if (truncX === prevX) {
-      if (y < minY) {
-        minY = y;
-      } else if (y > maxY) {
-        maxY = y;
+      if (y3 < minY) {
+        minY = y3;
+      } else if (y3 > maxY) {
+        maxY = y3;
       }
-      avgX = (countX * avgX + x) / ++countX;
+      avgX = (countX * avgX + x3) / ++countX;
     } else {
       drawX();
-      ctx.lineTo(x, y);
+      ctx.lineTo(x3, y3);
       prevX = truncX;
       countX = 0;
-      minY = maxY = y;
+      minY = maxY = y3;
     }
-    lastY = y;
+    lastY = y3;
   }
   drawX();
 }
@@ -9933,17 +9934,17 @@ var LineElement = class extends Element {
     }
     const result = [];
     const _interpolate = _getInterpolationMethod(options);
-    let i, ilen;
-    for (i = 0, ilen = segments.length; i < ilen; ++i) {
-      const { start, end } = segments[i];
+    let i4, ilen;
+    for (i4 = 0, ilen = segments.length; i4 < ilen; ++i4) {
+      const { start, end } = segments[i4];
       const p1 = points[start];
-      const p2 = points[end];
-      if (p1 === p2) {
+      const p22 = points[end];
+      if (p1 === p22) {
         result.push(p1);
         continue;
       }
-      const t = Math.abs((value - p1[property]) / (p2[property] - p1[property]));
-      const interpolated = _interpolate(p1, p2, t, options.stepped);
+      const t3 = Math.abs((value - p1[property]) / (p22[property] - p1[property]));
+      const interpolated = _interpolate(p1, p22, t3, options.stepped);
       interpolated[property] = point[property];
       result.push(interpolated);
     }
@@ -10026,11 +10027,11 @@ var PointElement = class extends Element {
   }
   inRange(mouseX, mouseY, useFinalPosition) {
     const options = this.options;
-    const { x, y } = this.getProps([
+    const { x: x3, y: y3 } = this.getProps([
       "x",
       "y"
     ], useFinalPosition);
-    return Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2) < Math.pow(options.hitRadius + options.radius, 2);
+    return Math.pow(mouseX - x3, 2) + Math.pow(mouseY - y3, 2) < Math.pow(options.hitRadius + options.radius, 2);
   }
   inXRange(mouseX, useFinalPosition) {
     return inRange$1(this, mouseX, "x", useFinalPosition);
@@ -10039,13 +10040,13 @@ var PointElement = class extends Element {
     return inRange$1(this, mouseY, "y", useFinalPosition);
   }
   getCenterPoint(useFinalPosition) {
-    const { x, y } = this.getProps([
+    const { x: x3, y: y3 } = this.getProps([
       "x",
       "y"
     ], useFinalPosition);
     return {
-      x,
-      y
+      x: x3,
+      y: y3
     };
   }
   size(options) {
@@ -10091,7 +10092,7 @@ __publicField(PointElement, "defaultRoutes", {
   borderColor: "borderColor"
 });
 function getBarBounds(bar, useFinalPosition) {
-  const { x, y, base, width, height } = bar.getProps([
+  const { x: x3, y: y3, base, width, height } = bar.getProps([
     "x",
     "y",
     "base",
@@ -10101,16 +10102,16 @@ function getBarBounds(bar, useFinalPosition) {
   let left, right, top, bottom, half;
   if (bar.horizontal) {
     half = height / 2;
-    left = Math.min(x, base);
-    right = Math.max(x, base);
-    top = y - half;
-    bottom = y + half;
+    left = Math.min(x3, base);
+    right = Math.max(x3, base);
+    top = y3 - half;
+    bottom = y3 + half;
   } else {
     half = width / 2;
-    left = x - half;
-    right = x + half;
-    top = Math.min(y, base);
-    bottom = Math.max(y, base);
+    left = x3 - half;
+    right = x3 + half;
+    top = Math.min(y3, base);
+    bottom = Math.max(y3, base);
   }
   return {
     left,
@@ -10125,12 +10126,12 @@ function skipOrLimit(skip2, value, min, max) {
 function parseBorderWidth(bar, maxW, maxH) {
   const value = bar.options.borderWidth;
   const skip2 = bar.borderSkipped;
-  const o = toTRBL(value);
+  const o3 = toTRBL(value);
   return {
-    t: skipOrLimit(skip2.top, o.top, 0, maxH),
-    r: skipOrLimit(skip2.right, o.right, 0, maxW),
-    b: skipOrLimit(skip2.bottom, o.bottom, 0, maxH),
-    l: skipOrLimit(skip2.left, o.left, 0, maxW)
+    t: skipOrLimit(skip2.top, o3.top, 0, maxH),
+    r: skipOrLimit(skip2.right, o3.right, 0, maxW),
+    b: skipOrLimit(skip2.bottom, o3.bottom, 0, maxH),
+    l: skipOrLimit(skip2.left, o3.left, 0, maxW)
   };
 }
 function parseBorderRadius(bar, maxW, maxH) {
@@ -10138,15 +10139,15 @@ function parseBorderRadius(bar, maxW, maxH) {
     "enableBorderRadius"
   ]);
   const value = bar.options.borderRadius;
-  const o = toTRBLCorners(value);
+  const o3 = toTRBLCorners(value);
   const maxR = Math.min(maxW, maxH);
   const skip2 = bar.borderSkipped;
   const enableBorder = enableBorderRadius || isObject(value);
   return {
-    topLeft: skipOrLimit(!enableBorder || skip2.top || skip2.left, o.topLeft, 0, maxR),
-    topRight: skipOrLimit(!enableBorder || skip2.top || skip2.right, o.topRight, 0, maxR),
-    bottomLeft: skipOrLimit(!enableBorder || skip2.bottom || skip2.left, o.bottomLeft, 0, maxR),
-    bottomRight: skipOrLimit(!enableBorder || skip2.bottom || skip2.right, o.bottomRight, 0, maxR)
+    topLeft: skipOrLimit(!enableBorder || skip2.top || skip2.left, o3.topLeft, 0, maxR),
+    topRight: skipOrLimit(!enableBorder || skip2.top || skip2.right, o3.topRight, 0, maxR),
+    bottomLeft: skipOrLimit(!enableBorder || skip2.bottom || skip2.left, o3.bottomLeft, 0, maxR),
+    bottomRight: skipOrLimit(!enableBorder || skip2.bottom || skip2.right, o3.bottomRight, 0, maxR)
   };
 }
 function boundingRects(bar) {
@@ -10177,12 +10178,12 @@ function boundingRects(bar) {
     }
   };
 }
-function inRange(bar, x, y, useFinalPosition) {
-  const skipX = x === null;
-  const skipY = y === null;
+function inRange(bar, x3, y3, useFinalPosition) {
+  const skipX = x3 === null;
+  const skipY = y3 === null;
   const skipBoth = skipX && skipY;
   const bounds = bar && !skipBoth && getBarBounds(bar, useFinalPosition);
-  return bounds && (skipX || _isBetween(x, bounds.left, bounds.right)) && (skipY || _isBetween(y, bounds.top, bounds.bottom));
+  return bounds && (skipX || _isBetween(x3, bounds.left, bounds.right)) && (skipY || _isBetween(y3, bounds.top, bounds.bottom));
 }
 function hasRadius(radius) {
   return radius.topLeft || radius.topRight || radius.bottomLeft || radius.bottomRight;
@@ -10191,15 +10192,15 @@ function addNormalRectPath(ctx, rect) {
   ctx.rect(rect.x, rect.y, rect.w, rect.h);
 }
 function inflateRect(rect, amount, refRect = {}) {
-  const x = rect.x !== refRect.x ? -amount : 0;
-  const y = rect.y !== refRect.y ? -amount : 0;
-  const w = (rect.x + rect.w !== refRect.x + refRect.w ? amount : 0) - x;
-  const h = (rect.y + rect.h !== refRect.y + refRect.h ? amount : 0) - y;
+  const x3 = rect.x !== refRect.x ? -amount : 0;
+  const y3 = rect.y !== refRect.y ? -amount : 0;
+  const w3 = (rect.x + rect.w !== refRect.x + refRect.w ? amount : 0) - x3;
+  const h4 = (rect.y + rect.h !== refRect.y + refRect.h ? amount : 0) - y3;
   return {
-    x: rect.x + x,
-    y: rect.y + y,
-    w: rect.w + w,
-    h: rect.h + h,
+    x: rect.x + x3,
+    y: rect.y + y3,
+    w: rect.w + w3,
+    h: rect.h + h4,
     radius: rect.radius
   };
 }
@@ -10245,15 +10246,15 @@ var BarElement = class extends Element {
     return inRange(this, null, mouseY, useFinalPosition);
   }
   getCenterPoint(useFinalPosition) {
-    const { x, y, base, horizontal } = this.getProps([
+    const { x: x3, y: y3, base, horizontal } = this.getProps([
       "x",
       "y",
       "base",
       "horizontal"
     ], useFinalPosition);
     return {
-      x: horizontal ? (x + base) / 2 : x,
-      y: horizontal ? y : (y + base) / 2
+      x: horizontal ? (x3 + base) / 2 : x3,
+      y: horizontal ? y3 : (y3 + base) / 2
     };
   }
   getRange(axis) {
@@ -10290,42 +10291,42 @@ var BORDER_COLORS = [
   // grey
 ];
 var BACKGROUND_COLORS = /* @__PURE__ */ BORDER_COLORS.map((color2) => color2.replace("rgb(", "rgba(").replace(")", ", 0.5)"));
-function getBorderColor(i) {
-  return BORDER_COLORS[i % BORDER_COLORS.length];
+function getBorderColor(i4) {
+  return BORDER_COLORS[i4 % BORDER_COLORS.length];
 }
-function getBackgroundColor(i) {
-  return BACKGROUND_COLORS[i % BACKGROUND_COLORS.length];
+function getBackgroundColor(i4) {
+  return BACKGROUND_COLORS[i4 % BACKGROUND_COLORS.length];
 }
-function colorizeDefaultDataset(dataset, i) {
-  dataset.borderColor = getBorderColor(i);
-  dataset.backgroundColor = getBackgroundColor(i);
-  return ++i;
+function colorizeDefaultDataset(dataset, i4) {
+  dataset.borderColor = getBorderColor(i4);
+  dataset.backgroundColor = getBackgroundColor(i4);
+  return ++i4;
 }
-function colorizeDoughnutDataset(dataset, i) {
-  dataset.backgroundColor = dataset.data.map(() => getBorderColor(i++));
-  return i;
+function colorizeDoughnutDataset(dataset, i4) {
+  dataset.backgroundColor = dataset.data.map(() => getBorderColor(i4++));
+  return i4;
 }
-function colorizePolarAreaDataset(dataset, i) {
-  dataset.backgroundColor = dataset.data.map(() => getBackgroundColor(i++));
-  return i;
+function colorizePolarAreaDataset(dataset, i4) {
+  dataset.backgroundColor = dataset.data.map(() => getBackgroundColor(i4++));
+  return i4;
 }
 function getColorizer(chart) {
-  let i = 0;
+  let i4 = 0;
   return (dataset, datasetIndex) => {
     const controller = chart.getDatasetMeta(datasetIndex).controller;
     if (controller instanceof DoughnutController) {
-      i = colorizeDoughnutDataset(dataset, i);
+      i4 = colorizeDoughnutDataset(dataset, i4);
     } else if (controller instanceof PolarAreaController) {
-      i = colorizePolarAreaDataset(dataset, i);
+      i4 = colorizePolarAreaDataset(dataset, i4);
     } else if (controller) {
-      i = colorizeDefaultDataset(dataset, i);
+      i4 = colorizeDefaultDataset(dataset, i4);
     }
   };
 }
 function containsColorsDefinitions(descriptors2) {
-  let k;
-  for (k in descriptors2) {
-    if (descriptors2[k].borderColor || descriptors2[k].backgroundColor) {
+  let k3;
+  for (k3 in descriptors2) {
+    if (descriptors2[k3].borderColor || descriptors2[k3].backgroundColor) {
       return true;
     }
   }
@@ -10366,36 +10367,36 @@ function lttbDecimation(data, start, count, availableWidth, options) {
   const bucketWidth = (count - 2) / (samples - 2);
   let sampledIndex = 0;
   const endIndex = start + count - 1;
-  let a = start;
-  let i, maxAreaPoint, maxArea, area, nextA;
-  decimated[sampledIndex++] = data[a];
-  for (i = 0; i < samples - 2; i++) {
+  let a3 = start;
+  let i4, maxAreaPoint, maxArea, area, nextA;
+  decimated[sampledIndex++] = data[a3];
+  for (i4 = 0; i4 < samples - 2; i4++) {
     let avgX = 0;
     let avgY = 0;
-    let j;
-    const avgRangeStart = Math.floor((i + 1) * bucketWidth) + 1 + start;
-    const avgRangeEnd = Math.min(Math.floor((i + 2) * bucketWidth) + 1, count) + start;
+    let j3;
+    const avgRangeStart = Math.floor((i4 + 1) * bucketWidth) + 1 + start;
+    const avgRangeEnd = Math.min(Math.floor((i4 + 2) * bucketWidth) + 1, count) + start;
     const avgRangeLength = avgRangeEnd - avgRangeStart;
-    for (j = avgRangeStart; j < avgRangeEnd; j++) {
-      avgX += data[j].x;
-      avgY += data[j].y;
+    for (j3 = avgRangeStart; j3 < avgRangeEnd; j3++) {
+      avgX += data[j3].x;
+      avgY += data[j3].y;
     }
     avgX /= avgRangeLength;
     avgY /= avgRangeLength;
-    const rangeOffs = Math.floor(i * bucketWidth) + 1 + start;
-    const rangeTo = Math.min(Math.floor((i + 1) * bucketWidth) + 1, count) + start;
-    const { x: pointAx, y: pointAy } = data[a];
+    const rangeOffs = Math.floor(i4 * bucketWidth) + 1 + start;
+    const rangeTo = Math.min(Math.floor((i4 + 1) * bucketWidth) + 1, count) + start;
+    const { x: pointAx, y: pointAy } = data[a3];
     maxArea = area = -1;
-    for (j = rangeOffs; j < rangeTo; j++) {
-      area = 0.5 * Math.abs((pointAx - avgX) * (data[j].y - pointAy) - (pointAx - data[j].x) * (avgY - pointAy));
+    for (j3 = rangeOffs; j3 < rangeTo; j3++) {
+      area = 0.5 * Math.abs((pointAx - avgX) * (data[j3].y - pointAy) - (pointAx - data[j3].x) * (avgY - pointAy));
       if (area > maxArea) {
         maxArea = area;
-        maxAreaPoint = data[j];
-        nextA = j;
+        maxAreaPoint = data[j3];
+        nextA = j3;
       }
     }
     decimated[sampledIndex++] = maxAreaPoint;
-    a = nextA;
+    a3 = nextA;
   }
   decimated[sampledIndex++] = data[endIndex];
   return decimated;
@@ -10403,28 +10404,28 @@ function lttbDecimation(data, start, count, availableWidth, options) {
 function minMaxDecimation(data, start, count, availableWidth) {
   let avgX = 0;
   let countX = 0;
-  let i, point, x, y, prevX, minIndex, maxIndex, startIndex, minY, maxY;
+  let i4, point, x3, y3, prevX, minIndex, maxIndex, startIndex, minY, maxY;
   const decimated = [];
   const endIndex = start + count - 1;
   const xMin = data[start].x;
   const xMax = data[endIndex].x;
   const dx = xMax - xMin;
-  for (i = start; i < start + count; ++i) {
-    point = data[i];
-    x = (point.x - xMin) / dx * availableWidth;
-    y = point.y;
-    const truncX = x | 0;
+  for (i4 = start; i4 < start + count; ++i4) {
+    point = data[i4];
+    x3 = (point.x - xMin) / dx * availableWidth;
+    y3 = point.y;
+    const truncX = x3 | 0;
     if (truncX === prevX) {
-      if (y < minY) {
-        minY = y;
-        minIndex = i;
-      } else if (y > maxY) {
-        maxY = y;
-        maxIndex = i;
+      if (y3 < minY) {
+        minY = y3;
+        minIndex = i4;
+      } else if (y3 > maxY) {
+        maxY = y3;
+        maxIndex = i4;
       }
       avgX = (countX * avgX + point.x) / ++countX;
     } else {
-      const lastIndex = i - 1;
+      const lastIndex = i4 - 1;
       if (!isNullOrUndef(minIndex) && !isNullOrUndef(maxIndex)) {
         const intermediateIndex1 = Math.min(minIndex, maxIndex);
         const intermediateIndex2 = Math.max(minIndex, maxIndex);
@@ -10441,14 +10442,14 @@ function minMaxDecimation(data, start, count, availableWidth) {
           });
         }
       }
-      if (i > 0 && lastIndex !== startIndex) {
+      if (i4 > 0 && lastIndex !== startIndex) {
         decimated.push(data[lastIndex]);
       }
       decimated.push(point);
       prevX = truncX;
       countX = 0;
-      minY = maxY = y;
-      minIndex = maxIndex = startIndex = i;
+      minY = maxY = y3;
+      minIndex = maxIndex = startIndex = i4;
     }
   }
   return decimated;
@@ -10537,8 +10538,8 @@ var plugin_decimation = {
           get: function() {
             return this._decimated;
           },
-          set: function(d) {
-            this._data = d;
+          set: function(d3) {
+            this._data = d3;
           }
         });
       }
@@ -10615,29 +10616,29 @@ function _getBounds(property, first, last, loop) {
   };
 }
 function _pointsFromSegments(boundary, line) {
-  const { x = null, y = null } = boundary || {};
+  const { x: x3 = null, y: y3 = null } = boundary || {};
   const linePoints = line.points;
   const points = [];
   line.segments.forEach(({ start, end }) => {
     end = _findSegmentEnd(start, end, linePoints);
     const first = linePoints[start];
     const last = linePoints[end];
-    if (y !== null) {
+    if (y3 !== null) {
       points.push({
         x: first.x,
-        y
+        y: y3
       });
       points.push({
         x: last.x,
-        y
+        y: y3
       });
-    } else if (x !== null) {
+    } else if (x3 !== null) {
       points.push({
-        x,
+        x: x3,
         y: first.y
       });
       points.push({
-        x,
+        x: x3,
         y: last.y
       });
     }
@@ -10653,11 +10654,11 @@ function _findSegmentEnd(start, end, points) {
   }
   return end;
 }
-function _getEdge(a, b, prop, fn) {
-  if (a && b) {
-    return fn(a[prop], b[prop]);
+function _getEdge(a3, b, prop, fn) {
+  if (a3 && b) {
+    return fn(a3[prop], b[prop]);
   }
-  return a ? a[prop] : b ? b[prop] : 0;
+  return a3 ? a3[prop] : b ? b[prop] : 0;
 }
 function _createBoundaryLine(boundary, line) {
   let points = [];
@@ -10783,10 +10784,10 @@ function _buildStackLine(source) {
     x: null,
     y: scale.bottom
   }, line));
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
-    for (let j = segment.start; j <= segment.end; j++) {
-      addPointsBelow(points, sourcePoints[j], linesBelow);
+  for (let i4 = 0; i4 < segments.length; i4++) {
+    const segment = segments[i4];
+    for (let j3 = segment.start; j3 <= segment.end; j3++) {
+      addPointsBelow(points, sourcePoints[j3], linesBelow);
     }
   }
   return new LineElement({
@@ -10797,8 +10798,8 @@ function _buildStackLine(source) {
 function getLinesBelow(scale, index2) {
   const below = [];
   const metas = scale.getMatchingVisibleMetas("line");
-  for (let i = 0; i < metas.length; i++) {
-    const meta = metas[i];
+  for (let i4 = 0; i4 < metas.length; i4++) {
+    const meta = metas[i4];
     if (meta.index === index2) {
       break;
     }
@@ -10810,8 +10811,8 @@ function getLinesBelow(scale, index2) {
 }
 function addPointsBelow(points, sourcePoint, linesBelow) {
   const postponed = [];
-  for (let j = 0; j < linesBelow.length; j++) {
-    const line = linesBelow[j];
+  for (let j3 = 0; j3 < linesBelow.length; j3++) {
+    const line = linesBelow[j3];
     const { first, last, point } = findPoint(line, sourcePoint, "x");
     if (!point || first && last) {
       continue;
@@ -10837,8 +10838,8 @@ function findPoint(line, sourcePoint, property) {
   const linePoints = line.points;
   let first = false;
   let last = false;
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
+  for (let i4 = 0; i4 < segments.length; i4++) {
+    const segment = segments[i4];
     const firstValue = linePoints[segment.start][property];
     const lastValue = linePoints[segment.end][property];
     if (_isBetween(pointValue, firstValue, lastValue)) {
@@ -10860,20 +10861,20 @@ var simpleArc = class {
     this.radius = opts.radius;
   }
   pathSegment(ctx, bounds, opts) {
-    const { x, y, radius } = this;
+    const { x: x3, y: y3, radius } = this;
     bounds = bounds || {
       start: 0,
       end: TAU
     };
-    ctx.arc(x, y, radius, bounds.end, bounds.start, true);
+    ctx.arc(x3, y3, radius, bounds.end, bounds.start, true);
     return !opts.bounds;
   }
   interpolate(point) {
-    const { x, y, radius } = this;
+    const { x: x3, y: y3, radius } = this;
     const angle = point.angle;
     return {
-      x: x + Math.cos(angle) * radius,
-      y: y + Math.sin(angle) * radius,
+      x: x3 + Math.cos(angle) * radius,
+      y: y3 + Math.sin(angle) * radius,
       angle
     };
   }
@@ -10934,8 +10935,8 @@ function computeCircularBoundary(source) {
       radius: scale.getDistanceFromCenterForValue(value)
     });
   }
-  for (let i = 0; i < length; ++i) {
-    target.push(scale.getPointPositionForValue(i, value));
+  for (let i4 = 0; i4 < length; ++i4) {
+    target.push(scale.getPointPositionForValue(i4, value));
   }
   return target;
 }
@@ -11136,16 +11137,16 @@ var index = {
   afterDatasetsUpdate(chart, _args, options) {
     const count = (chart.data.datasets || []).length;
     const sources = [];
-    let meta, i, line, source;
-    for (i = 0; i < count; ++i) {
-      meta = chart.getDatasetMeta(i);
+    let meta, i4, line, source;
+    for (i4 = 0; i4 < count; ++i4) {
+      meta = chart.getDatasetMeta(i4);
       line = meta.dataset;
       source = null;
       if (line && line.options && line instanceof LineElement) {
         source = {
-          visible: chart.isDatasetVisible(i),
-          index: i,
-          fill: _decodeFill(line, i, count),
+          visible: chart.isDatasetVisible(i4),
+          index: i4,
+          fill: _decodeFill(line, i4, count),
           chart,
           axis: meta.controller.options.indexAxis,
           scale: meta.vScale,
@@ -11155,20 +11156,20 @@ var index = {
       meta.$filler = source;
       sources.push(source);
     }
-    for (i = 0; i < count; ++i) {
-      source = sources[i];
+    for (i4 = 0; i4 < count; ++i4) {
+      source = sources[i4];
       if (!source || source.fill === false) {
         continue;
       }
-      source.fill = _resolveTarget(sources, i, options.propagate);
+      source.fill = _resolveTarget(sources, i4, options.propagate);
     }
   },
   beforeDraw(chart, _args, options) {
     const draw2 = options.drawTime === "beforeDraw";
     const metasets = chart.getSortedVisibleDatasetMetas();
     const area = chart.chartArea;
-    for (let i = metasets.length - 1; i >= 0; --i) {
-      const source = metasets[i].$filler;
+    for (let i4 = metasets.length - 1; i4 >= 0; --i4) {
+      const source = metasets[i4].$filler;
       if (!source) {
         continue;
       }
@@ -11183,8 +11184,8 @@ var index = {
       return;
     }
     const metasets = chart.getSortedVisibleDatasetMetas();
-    for (let i = metasets.length - 1; i >= 0; --i) {
-      const source = metasets[i].$filler;
+    for (let i4 = metasets.length - 1; i4 >= 0; --i4) {
+      const source = metasets[i4].$filler;
       if (_shouldApplyFill(source)) {
         _drawfill(chart.ctx, source, chart.chartArea);
       }
@@ -11214,7 +11215,7 @@ var getBoxSize = (labelOpts, fontSize) => {
     itemHeight: Math.max(fontSize, boxHeight)
   };
 };
-var itemsEqual = (a, b) => a !== null && b !== null && a.datasetIndex === b.datasetIndex && a.index === b.index;
+var itemsEqual = (a3, b) => a3 !== null && b !== null && a3.datasetIndex === b.datasetIndex && a3.index === b.index;
 var Legend = class extends Element {
   constructor(config) {
     super();
@@ -11269,7 +11270,7 @@ var Legend = class extends Element {
       legendItems = legendItems.filter((item) => labelOpts.filter(item, this.chart.data));
     }
     if (labelOpts.sort) {
-      legendItems = legendItems.sort((a, b) => labelOpts.sort(a, b, this.chart.data));
+      legendItems = legendItems.sort((a3, b) => labelOpts.sort(a3, b, this.chart.data));
     }
     if (this.options.reverse) {
       legendItems.reverse();
@@ -11311,15 +11312,15 @@ var Legend = class extends Element {
     ctx.textBaseline = "middle";
     let row = -1;
     let top = -lineHeight;
-    this.legendItems.forEach((legendItem, i) => {
+    this.legendItems.forEach((legendItem, i4) => {
       const itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
-      if (i === 0 || lineWidths[lineWidths.length - 1] + itemWidth + 2 * padding > maxWidth) {
+      if (i4 === 0 || lineWidths[lineWidths.length - 1] + itemWidth + 2 * padding > maxWidth) {
         totalHeight += lineHeight;
-        lineWidths[lineWidths.length - (i > 0 ? 0 : 1)] = 0;
+        lineWidths[lineWidths.length - (i4 > 0 ? 0 : 1)] = 0;
         top += lineHeight;
         row++;
       }
-      hitboxes[i] = {
+      hitboxes[i4] = {
         left: 0,
         top,
         row,
@@ -11340,9 +11341,9 @@ var Legend = class extends Element {
     let currentColHeight = 0;
     let left = 0;
     let col = 0;
-    this.legendItems.forEach((legendItem, i) => {
+    this.legendItems.forEach((legendItem, i4) => {
       const { itemWidth, itemHeight } = calculateItemSize(boxWidth, labelFont, ctx, legendItem, _itemHeight);
-      if (i > 0 && currentColHeight + itemHeight + 2 * padding > heightLimit) {
+      if (i4 > 0 && currentColHeight + itemHeight + 2 * padding > heightLimit) {
         totalWidth += currentColWidth + padding;
         columnSizes.push({
           width: currentColWidth,
@@ -11352,7 +11353,7 @@ var Legend = class extends Element {
         col++;
         currentColWidth = currentColHeight = 0;
       }
-      hitboxes[i] = {
+      hitboxes[i4] = {
         left,
         top: currentColHeight,
         col,
@@ -11430,7 +11431,7 @@ var Legend = class extends Element {
     ctx.lineWidth = 0.5;
     ctx.font = labelFont.string;
     const { boxWidth, boxHeight, itemHeight } = getBoxSize(labelOpts, fontSize);
-    const drawLegendBox = function(x, y, legendItem) {
+    const drawLegendBox = function(x3, y3, legendItem) {
       if (isNaN(boxWidth) || boxWidth <= 0 || isNaN(boxHeight) || boxHeight < 0) {
         return;
       }
@@ -11450,15 +11451,15 @@ var Legend = class extends Element {
           rotation: legendItem.rotation,
           borderWidth: lineWidth
         };
-        const centerX = rtlHelper.xPlus(x, boxWidth / 2);
-        const centerY = y + halfFontSize;
+        const centerX = rtlHelper.xPlus(x3, boxWidth / 2);
+        const centerY = y3 + halfFontSize;
         drawPointLegend(ctx, drawOptions, centerX, centerY, labelOpts.pointStyleWidth && boxWidth);
       } else {
-        const yBoxTop = y + Math.max((fontSize - boxHeight) / 2, 0);
-        const xBoxLeft = rtlHelper.leftForLtr(x, boxWidth);
+        const yBoxTop = y3 + Math.max((fontSize - boxHeight) / 2, 0);
+        const xBoxLeft = rtlHelper.leftForLtr(x3, boxWidth);
         const borderRadius = toTRBLCorners(legendItem.borderRadius);
         ctx.beginPath();
-        if (Object.values(borderRadius).some((v) => v !== 0)) {
+        if (Object.values(borderRadius).some((v3) => v3 !== 0)) {
           addRoundedRectPath(ctx, {
             x: xBoxLeft,
             y: yBoxTop,
@@ -11476,8 +11477,8 @@ var Legend = class extends Element {
       }
       ctx.restore();
     };
-    const fillText = function(x, y, legendItem) {
-      renderText(ctx, legendItem.text, x, y + itemHeight / 2, labelFont, {
+    const fillText = function(x3, y3, legendItem) {
+      renderText(ctx, legendItem.text, x3, y3 + itemHeight / 2, labelFont, {
         strikethrough: legendItem.hidden,
         textAlign: rtlHelper.textAlign(legendItem.textAlign)
       });
@@ -11499,30 +11500,30 @@ var Legend = class extends Element {
     }
     overrideTextDirection(this.ctx, opts.textDirection);
     const lineHeight = itemHeight + padding;
-    this.legendItems.forEach((legendItem, i) => {
+    this.legendItems.forEach((legendItem, i4) => {
       ctx.strokeStyle = legendItem.fontColor;
       ctx.fillStyle = legendItem.fontColor;
       const textWidth = ctx.measureText(legendItem.text).width;
       const textAlign = rtlHelper.textAlign(legendItem.textAlign || (legendItem.textAlign = labelOpts.textAlign));
       const width = boxWidth + halfFontSize + textWidth;
-      let x = cursor.x;
-      let y = cursor.y;
+      let x3 = cursor.x;
+      let y3 = cursor.y;
       rtlHelper.setWidth(this.width);
       if (isHorizontal) {
-        if (i > 0 && x + width + padding > this.right) {
-          y = cursor.y += lineHeight;
+        if (i4 > 0 && x3 + width + padding > this.right) {
+          y3 = cursor.y += lineHeight;
           cursor.line++;
-          x = cursor.x = _alignStartEnd(align, this.left + padding, this.right - lineWidths[cursor.line]);
+          x3 = cursor.x = _alignStartEnd(align, this.left + padding, this.right - lineWidths[cursor.line]);
         }
-      } else if (i > 0 && y + lineHeight > this.bottom) {
-        x = cursor.x = x + columnSizes[cursor.line].width + padding;
+      } else if (i4 > 0 && y3 + lineHeight > this.bottom) {
+        x3 = cursor.x = x3 + columnSizes[cursor.line].width + padding;
         cursor.line++;
-        y = cursor.y = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - columnSizes[cursor.line].height);
+        y3 = cursor.y = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - columnSizes[cursor.line].height);
       }
-      const realX = rtlHelper.x(x);
-      drawLegendBox(realX, y, legendItem);
-      x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : this.right, opts.rtl);
-      fillText(rtlHelper.x(x), y, legendItem);
+      const realX = rtlHelper.x(x3);
+      drawLegendBox(realX, y3, legendItem);
+      x3 = _textX(textAlign, x3 + boxWidth + halfFontSize, isHorizontal ? x3 + width : this.right, opts.rtl);
+      fillText(rtlHelper.x(x3), y3, legendItem);
       if (isHorizontal) {
         cursor.x += width + padding;
       } else if (typeof legendItem.text !== "string") {
@@ -11547,24 +11548,24 @@ var Legend = class extends Element {
     const position = titleOpts.position;
     const halfFontSize = titleFont.size / 2;
     const topPaddingPlusHalfFontSize = titlePadding.top + halfFontSize;
-    let y;
+    let y3;
     let left = this.left;
     let maxWidth = this.width;
     if (this.isHorizontal()) {
       maxWidth = Math.max(...this.lineWidths);
-      y = this.top + topPaddingPlusHalfFontSize;
+      y3 = this.top + topPaddingPlusHalfFontSize;
       left = _alignStartEnd(opts.align, left, this.right - maxWidth);
     } else {
       const maxHeight = this.columnSizes.reduce((acc, size) => Math.max(acc, size.height), 0);
-      y = topPaddingPlusHalfFontSize + _alignStartEnd(opts.align, this.top, this.bottom - maxHeight - opts.labels.padding - this._computeTitleHeight());
+      y3 = topPaddingPlusHalfFontSize + _alignStartEnd(opts.align, this.top, this.bottom - maxHeight - opts.labels.padding - this._computeTitleHeight());
     }
-    const x = _alignStartEnd(position, left, left + maxWidth);
+    const x3 = _alignStartEnd(position, left, left + maxWidth);
     ctx.textAlign = rtlHelper.textAlign(_toLeftRightCenter(position));
     ctx.textBaseline = "middle";
     ctx.strokeStyle = titleOpts.color;
     ctx.fillStyle = titleOpts.color;
     ctx.font = titleFont.string;
-    renderText(ctx, titleOpts.text, x, y, titleFont);
+    renderText(ctx, titleOpts.text, x3, y3, titleFont);
   }
   _computeTitleHeight() {
     const titleOpts = this.options.title;
@@ -11572,31 +11573,31 @@ var Legend = class extends Element {
     const titlePadding = toPadding(titleOpts.padding);
     return titleOpts.display ? titleFont.lineHeight + titlePadding.height : 0;
   }
-  _getLegendItemAt(x, y) {
-    let i, hitBox, lh;
-    if (_isBetween(x, this.left, this.right) && _isBetween(y, this.top, this.bottom)) {
+  _getLegendItemAt(x3, y3) {
+    let i4, hitBox, lh;
+    if (_isBetween(x3, this.left, this.right) && _isBetween(y3, this.top, this.bottom)) {
       lh = this.legendHitBoxes;
-      for (i = 0; i < lh.length; ++i) {
-        hitBox = lh[i];
-        if (_isBetween(x, hitBox.left, hitBox.left + hitBox.width) && _isBetween(y, hitBox.top, hitBox.top + hitBox.height)) {
-          return this.legendItems[i];
+      for (i4 = 0; i4 < lh.length; ++i4) {
+        hitBox = lh[i4];
+        if (_isBetween(x3, hitBox.left, hitBox.left + hitBox.width) && _isBetween(y3, hitBox.top, hitBox.top + hitBox.height)) {
+          return this.legendItems[i4];
         }
       }
     }
     return null;
   }
-  handleEvent(e) {
+  handleEvent(e3) {
     const opts = this.options;
-    if (!isListened(e.type, opts)) {
+    if (!isListened(e3.type, opts)) {
       return;
     }
-    const hoveredItem = this._getLegendItemAt(e.x, e.y);
-    if (e.type === "mousemove" || e.type === "mouseout") {
+    const hoveredItem = this._getLegendItemAt(e3.x, e3.y);
+    if (e3.type === "mousemove" || e3.type === "mouseout") {
       const previous = this._hoveredItem;
       const sameItem = itemsEqual(previous, hoveredItem);
       if (previous && !sameItem) {
         callback(opts.onLeave, [
-          e,
+          e3,
           previous,
           this
         ], this);
@@ -11604,14 +11605,14 @@ var Legend = class extends Element {
       this._hoveredItem = hoveredItem;
       if (hoveredItem && !sameItem) {
         callback(opts.onHover, [
-          e,
+          e3,
           hoveredItem,
           this
         ], this);
       }
     } else if (hoveredItem) {
       callback(opts.onClick, [
-        e,
+        e3,
         hoveredItem,
         this
       ], this);
@@ -11629,7 +11630,7 @@ function calculateItemSize(boxWidth, labelFont, ctx, legendItem, _itemHeight) {
 function calculateItemWidth(legendItem, boxWidth, labelFont, ctx) {
   let legendItemText = legendItem.text;
   if (legendItemText && typeof legendItemText !== "string") {
-    legendItemText = legendItemText.reduce((a, b) => a.length > b.length ? a : b);
+    legendItemText = legendItemText.reduce((a3, b) => a3.length > b.length ? a3 : b);
   }
   return boxWidth + labelFont.size / 2 + ctx.measureText(legendItemText).width;
 }
@@ -11691,7 +11692,7 @@ var plugin_legend = {
     fullSize: true,
     reverse: false,
     weight: 1e3,
-    onClick(e, legendItem, legend) {
+    onClick(e3, legendItem, legend) {
       const index2 = legendItem.datasetIndex;
       const ci = legend.chart;
       if (ci.isDatasetVisible(index2)) {
@@ -11936,16 +11937,16 @@ var positioners = {
     if (!items.length) {
       return false;
     }
-    let i, len;
+    let i4, len;
     let xSet = /* @__PURE__ */ new Set();
-    let y = 0;
+    let y3 = 0;
     let count = 0;
-    for (i = 0, len = items.length; i < len; ++i) {
-      const el = items[i].element;
+    for (i4 = 0, len = items.length; i4 < len; ++i4) {
+      const el = items[i4].element;
       if (el && el.hasValue()) {
         const pos = el.tooltipPosition();
         xSet.add(pos.x);
-        y += pos.y;
+        y3 += pos.y;
         ++count;
       }
     }
@@ -11954,39 +11955,39 @@ var positioners = {
     }
     const xAverage = [
       ...xSet
-    ].reduce((a, b) => a + b) / xSet.size;
+    ].reduce((a3, b) => a3 + b) / xSet.size;
     return {
       x: xAverage,
-      y: y / count
+      y: y3 / count
     };
   },
   nearest(items, eventPosition) {
     if (!items.length) {
       return false;
     }
-    let x = eventPosition.x;
-    let y = eventPosition.y;
+    let x3 = eventPosition.x;
+    let y3 = eventPosition.y;
     let minDistance = Number.POSITIVE_INFINITY;
-    let i, len, nearestElement;
-    for (i = 0, len = items.length; i < len; ++i) {
-      const el = items[i].element;
+    let i4, len, nearestElement;
+    for (i4 = 0, len = items.length; i4 < len; ++i4) {
+      const el = items[i4].element;
       if (el && el.hasValue()) {
         const center = el.getCenterPoint();
-        const d = distanceBetweenPoints(eventPosition, center);
-        if (d < minDistance) {
-          minDistance = d;
+        const d3 = distanceBetweenPoints(eventPosition, center);
+        if (d3 < minDistance) {
+          minDistance = d3;
           nearestElement = el;
         }
       }
     }
     if (nearestElement) {
       const tp = nearestElement.tooltipPosition();
-      x = tp.x;
-      y = tp.y;
+      x3 = tp.x;
+      y3 = tp.y;
     }
     return {
-      x,
-      y
+      x: x3,
+      y: y3
     };
   }
 };
@@ -12073,33 +12074,33 @@ function getTooltipSize(tooltip, options) {
   };
 }
 function determineYAlign(chart, size) {
-  const { y, height } = size;
-  if (y < height / 2) {
+  const { y: y3, height } = size;
+  if (y3 < height / 2) {
     return "top";
-  } else if (y > chart.height - height / 2) {
+  } else if (y3 > chart.height - height / 2) {
     return "bottom";
   }
   return "center";
 }
 function doesNotFitWithAlign(xAlign, chart, options, size) {
-  const { x, width } = size;
+  const { x: x3, width } = size;
   const caret = options.caretSize + options.caretPadding;
-  if (xAlign === "left" && x + width + caret > chart.width) {
+  if (xAlign === "left" && x3 + width + caret > chart.width) {
     return true;
   }
-  if (xAlign === "right" && x - width - caret < 0) {
+  if (xAlign === "right" && x3 - width - caret < 0) {
     return true;
   }
 }
 function determineXAlign(chart, options, size, yAlign) {
-  const { x, width } = size;
+  const { x: x3, width } = size;
   const { width: chartWidth, chartArea: { left, right } } = chart;
   let xAlign = "center";
   if (yAlign === "center") {
-    xAlign = x <= (left + right) / 2 ? "left" : "right";
-  } else if (x <= width / 2) {
+    xAlign = x3 <= (left + right) / 2 ? "left" : "right";
+  } else if (x3 <= width / 2) {
     xAlign = "left";
-  } else if (x >= chartWidth - width / 2) {
+  } else if (x3 >= chartWidth - width / 2) {
     xAlign = "right";
   }
   if (doesNotFitWithAlign(xAlign, chart, options, size)) {
@@ -12115,46 +12116,46 @@ function determineAlignment(chart, options, size) {
   };
 }
 function alignX(size, xAlign) {
-  let { x, width } = size;
+  let { x: x3, width } = size;
   if (xAlign === "right") {
-    x -= width;
+    x3 -= width;
   } else if (xAlign === "center") {
-    x -= width / 2;
+    x3 -= width / 2;
   }
-  return x;
+  return x3;
 }
 function alignY(size, yAlign, paddingAndSize) {
-  let { y, height } = size;
+  let { y: y3, height } = size;
   if (yAlign === "top") {
-    y += paddingAndSize;
+    y3 += paddingAndSize;
   } else if (yAlign === "bottom") {
-    y -= height + paddingAndSize;
+    y3 -= height + paddingAndSize;
   } else {
-    y -= height / 2;
+    y3 -= height / 2;
   }
-  return y;
+  return y3;
 }
 function getBackgroundPoint(options, size, alignment, chart) {
   const { caretSize, caretPadding, cornerRadius } = options;
   const { xAlign, yAlign } = alignment;
   const paddingAndSize = caretSize + caretPadding;
   const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(cornerRadius);
-  let x = alignX(size, xAlign);
-  const y = alignY(size, yAlign, paddingAndSize);
+  let x3 = alignX(size, xAlign);
+  const y3 = alignY(size, yAlign, paddingAndSize);
   if (yAlign === "center") {
     if (xAlign === "left") {
-      x += paddingAndSize;
+      x3 += paddingAndSize;
     } else if (xAlign === "right") {
-      x -= paddingAndSize;
+      x3 -= paddingAndSize;
     }
   } else if (xAlign === "left") {
-    x -= Math.max(topLeft, bottomLeft) + caretSize;
+    x3 -= Math.max(topLeft, bottomLeft) + caretSize;
   } else if (xAlign === "right") {
-    x += Math.max(topRight, bottomRight) + caretSize;
+    x3 += Math.max(topRight, bottomRight) + caretSize;
   }
   return {
-    x: _limitValue(x, 0, chart.width - size.width),
-    y: _limitValue(y, 0, chart.height - size.height)
+    x: _limitValue(x3, 0, chart.width - size.width),
+    y: _limitValue(y3, 0, chart.height - size.height)
   };
 }
 function getAlignedX(tooltip, align, options) {
@@ -12350,15 +12351,15 @@ var Tooltip = class extends Element {
     const labelPointStyles = [];
     const labelTextColors = [];
     let tooltipItems = [];
-    let i, len;
-    for (i = 0, len = active.length; i < len; ++i) {
-      tooltipItems.push(createTooltipItem(this.chart, active[i]));
+    let i4, len;
+    for (i4 = 0, len = active.length; i4 < len; ++i4) {
+      tooltipItems.push(createTooltipItem(this.chart, active[i4]));
     }
     if (options.filter) {
       tooltipItems = tooltipItems.filter((element, index2, array) => options.filter(element, index2, array, data));
     }
     if (options.itemSort) {
-      tooltipItems = tooltipItems.sort((a, b) => options.itemSort(a, b, data));
+      tooltipItems = tooltipItems.sort((a3, b) => options.itemSort(a3, b, data));
     }
     each(tooltipItems, (context) => {
       const scoped = overrideCallbacks(options.callbacks, context);
@@ -12432,55 +12433,55 @@ var Tooltip = class extends Element {
     const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(cornerRadius);
     const { x: ptX, y: ptY } = tooltipPoint;
     const { width, height } = size;
-    let x1, x2, x3, y1, y2, y3;
+    let x1, x22, x3, y1, y22, y3;
     if (yAlign === "center") {
-      y2 = ptY + height / 2;
+      y22 = ptY + height / 2;
       if (xAlign === "left") {
         x1 = ptX;
-        x2 = x1 - caretSize;
-        y1 = y2 + caretSize;
-        y3 = y2 - caretSize;
+        x22 = x1 - caretSize;
+        y1 = y22 + caretSize;
+        y3 = y22 - caretSize;
       } else {
         x1 = ptX + width;
-        x2 = x1 + caretSize;
-        y1 = y2 - caretSize;
-        y3 = y2 + caretSize;
+        x22 = x1 + caretSize;
+        y1 = y22 - caretSize;
+        y3 = y22 + caretSize;
       }
       x3 = x1;
     } else {
       if (xAlign === "left") {
-        x2 = ptX + Math.max(topLeft, bottomLeft) + caretSize;
+        x22 = ptX + Math.max(topLeft, bottomLeft) + caretSize;
       } else if (xAlign === "right") {
-        x2 = ptX + width - Math.max(topRight, bottomRight) - caretSize;
+        x22 = ptX + width - Math.max(topRight, bottomRight) - caretSize;
       } else {
-        x2 = this.caretX;
+        x22 = this.caretX;
       }
       if (yAlign === "top") {
         y1 = ptY;
-        y2 = y1 - caretSize;
-        x1 = x2 - caretSize;
-        x3 = x2 + caretSize;
+        y22 = y1 - caretSize;
+        x1 = x22 - caretSize;
+        x3 = x22 + caretSize;
       } else {
         y1 = ptY + height;
-        y2 = y1 + caretSize;
-        x1 = x2 + caretSize;
-        x3 = x2 - caretSize;
+        y22 = y1 + caretSize;
+        x1 = x22 + caretSize;
+        x3 = x22 - caretSize;
       }
       y3 = y1;
     }
     return {
       x1,
-      x2,
+      x2: x22,
       x3,
       y1,
-      y2,
+      y2: y22,
       y3
     };
   }
   drawTitle(pt, ctx, options) {
     const title = this.title;
     const length = title.length;
-    let titleFont, titleSpacing, i;
+    let titleFont, titleSpacing, i4;
     if (length) {
       const rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
       pt.x = getAlignedX(this, options.titleAlign, options);
@@ -12490,18 +12491,18 @@ var Tooltip = class extends Element {
       titleSpacing = options.titleSpacing;
       ctx.fillStyle = options.titleColor;
       ctx.font = titleFont.string;
-      for (i = 0; i < length; ++i) {
-        ctx.fillText(title[i], rtlHelper.x(pt.x), pt.y + titleFont.lineHeight / 2);
+      for (i4 = 0; i4 < length; ++i4) {
+        ctx.fillText(title[i4], rtlHelper.x(pt.x), pt.y + titleFont.lineHeight / 2);
         pt.y += titleFont.lineHeight + titleSpacing;
-        if (i + 1 === length) {
+        if (i4 + 1 === length) {
           pt.y += options.titleMarginBottom - titleSpacing;
         }
       }
     }
   }
-  _drawColorBox(ctx, pt, i, rtlHelper, options) {
-    const labelColor = this.labelColors[i];
-    const labelPointStyle = this.labelPointStyles[i];
+  _drawColorBox(ctx, pt, i4, rtlHelper, options) {
+    const labelColor = this.labelColors[i4];
+    const labelPointStyle = this.labelPointStyles[i4];
     const { boxHeight, boxWidth } = options;
     const bodyFont = toFont(options.bodyFont);
     const colorX = getAlignedX(this, "left", options);
@@ -12531,7 +12532,7 @@ var Tooltip = class extends Element {
       const outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth);
       const innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - 2);
       const borderRadius = toTRBLCorners(labelColor.borderRadius);
-      if (Object.values(borderRadius).some((v) => v !== 0)) {
+      if (Object.values(borderRadius).some((v3) => v3 !== 0)) {
         ctx.beginPath();
         ctx.fillStyle = options.multiKeyBackground;
         addRoundedRectPath(ctx, {
@@ -12561,7 +12562,7 @@ var Tooltip = class extends Element {
         ctx.fillRect(innerX, colorY + 1, boxWidth - 2, boxHeight - 2);
       }
     }
-    ctx.fillStyle = this.labelTextColors[i];
+    ctx.fillStyle = this.labelTextColors[i4];
   }
   drawBody(pt, ctx, options) {
     const { body } = this;
@@ -12575,7 +12576,7 @@ var Tooltip = class extends Element {
       pt.y += bodyLineHeight + bodySpacing;
     };
     const bodyAlignForCalculation = rtlHelper.textAlign(bodyAlign);
-    let bodyItem, textColor, lines, i, j, ilen, jlen;
+    let bodyItem, textColor, lines, i4, j3, ilen, jlen;
     ctx.textAlign = bodyAlign;
     ctx.textBaseline = "middle";
     ctx.font = bodyFont.string;
@@ -12583,18 +12584,18 @@ var Tooltip = class extends Element {
     ctx.fillStyle = options.bodyColor;
     each(this.beforeBody, fillLineOfText);
     xLinePadding = displayColors && bodyAlignForCalculation !== "right" ? bodyAlign === "center" ? boxWidth / 2 + boxPadding : boxWidth + 2 + boxPadding : 0;
-    for (i = 0, ilen = body.length; i < ilen; ++i) {
-      bodyItem = body[i];
-      textColor = this.labelTextColors[i];
+    for (i4 = 0, ilen = body.length; i4 < ilen; ++i4) {
+      bodyItem = body[i4];
+      textColor = this.labelTextColors[i4];
       ctx.fillStyle = textColor;
       each(bodyItem.before, fillLineOfText);
       lines = bodyItem.lines;
       if (displayColors && lines.length) {
-        this._drawColorBox(ctx, pt, i, rtlHelper, options);
+        this._drawColorBox(ctx, pt, i4, rtlHelper, options);
         bodyLineHeight = Math.max(bodyFont.lineHeight, boxHeight);
       }
-      for (j = 0, jlen = lines.length; j < jlen; ++j) {
-        fillLineOfText(lines[j]);
+      for (j3 = 0, jlen = lines.length; j3 < jlen; ++j3) {
+        fillLineOfText(lines[j3]);
         bodyLineHeight = bodyFont.lineHeight;
       }
       each(bodyItem.after, fillLineOfText);
@@ -12607,7 +12608,7 @@ var Tooltip = class extends Element {
   drawFooter(pt, ctx, options) {
     const footer = this.footer;
     const length = footer.length;
-    let footerFont, i;
+    let footerFont, i4;
     if (length) {
       const rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
       pt.x = getAlignedX(this, options.footerAlign, options);
@@ -12617,42 +12618,42 @@ var Tooltip = class extends Element {
       footerFont = toFont(options.footerFont);
       ctx.fillStyle = options.footerColor;
       ctx.font = footerFont.string;
-      for (i = 0; i < length; ++i) {
-        ctx.fillText(footer[i], rtlHelper.x(pt.x), pt.y + footerFont.lineHeight / 2);
+      for (i4 = 0; i4 < length; ++i4) {
+        ctx.fillText(footer[i4], rtlHelper.x(pt.x), pt.y + footerFont.lineHeight / 2);
         pt.y += footerFont.lineHeight + options.footerSpacing;
       }
     }
   }
   drawBackground(pt, ctx, tooltipSize, options) {
     const { xAlign, yAlign } = this;
-    const { x, y } = pt;
+    const { x: x3, y: y3 } = pt;
     const { width, height } = tooltipSize;
     const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(options.cornerRadius);
     ctx.fillStyle = options.backgroundColor;
     ctx.strokeStyle = options.borderColor;
     ctx.lineWidth = options.borderWidth;
     ctx.beginPath();
-    ctx.moveTo(x + topLeft, y);
+    ctx.moveTo(x3 + topLeft, y3);
     if (yAlign === "top") {
       this.drawCaret(pt, ctx, tooltipSize, options);
     }
-    ctx.lineTo(x + width - topRight, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + topRight);
+    ctx.lineTo(x3 + width - topRight, y3);
+    ctx.quadraticCurveTo(x3 + width, y3, x3 + width, y3 + topRight);
     if (yAlign === "center" && xAlign === "right") {
       this.drawCaret(pt, ctx, tooltipSize, options);
     }
-    ctx.lineTo(x + width, y + height - bottomRight);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - bottomRight, y + height);
+    ctx.lineTo(x3 + width, y3 + height - bottomRight);
+    ctx.quadraticCurveTo(x3 + width, y3 + height, x3 + width - bottomRight, y3 + height);
     if (yAlign === "bottom") {
       this.drawCaret(pt, ctx, tooltipSize, options);
     }
-    ctx.lineTo(x + bottomLeft, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - bottomLeft);
+    ctx.lineTo(x3 + bottomLeft, y3 + height);
+    ctx.quadraticCurveTo(x3, y3 + height, x3, y3 + height - bottomLeft);
     if (yAlign === "center" && xAlign === "left") {
       this.drawCaret(pt, ctx, tooltipSize, options);
     }
-    ctx.lineTo(x, y + topLeft);
-    ctx.quadraticCurveTo(x, y, x + topLeft, y);
+    ctx.lineTo(x3, y3 + topLeft);
+    ctx.quadraticCurveTo(x3, y3, x3 + topLeft, y3);
     ctx.closePath();
     ctx.fill();
     if (options.borderWidth > 0) {
@@ -12743,45 +12744,45 @@ var Tooltip = class extends Element {
       this.update(true);
     }
   }
-  handleEvent(e, replay, inChartArea = true) {
+  handleEvent(e3, replay, inChartArea = true) {
     if (replay && this._ignoreReplayEvents) {
       return false;
     }
     this._ignoreReplayEvents = false;
     const options = this.options;
     const lastActive = this._active || [];
-    const active = this._getActiveElements(e, lastActive, replay, inChartArea);
-    const positionChanged = this._positionChanged(active, e);
+    const active = this._getActiveElements(e3, lastActive, replay, inChartArea);
+    const positionChanged = this._positionChanged(active, e3);
     const changed = replay || !_elementsEqual(active, lastActive) || positionChanged;
     if (changed) {
       this._active = active;
       if (options.enabled || options.external) {
         this._eventPosition = {
-          x: e.x,
-          y: e.y
+          x: e3.x,
+          y: e3.y
         };
         this.update(true, replay);
       }
     }
     return changed;
   }
-  _getActiveElements(e, lastActive, replay, inChartArea) {
+  _getActiveElements(e3, lastActive, replay, inChartArea) {
     const options = this.options;
-    if (e.type === "mouseout") {
+    if (e3.type === "mouseout") {
       return [];
     }
     if (!inChartArea) {
-      return lastActive.filter((i) => this.chart.data.datasets[i.datasetIndex] && this.chart.getDatasetMeta(i.datasetIndex).controller.getParsed(i.index) !== void 0);
+      return lastActive.filter((i4) => this.chart.data.datasets[i4.datasetIndex] && this.chart.getDatasetMeta(i4.datasetIndex).controller.getParsed(i4.index) !== void 0);
     }
-    const active = this.chart.getElementsAtEventForMode(e, options.mode, options, replay);
+    const active = this.chart.getElementsAtEventForMode(e3, options.mode, options, replay);
     if (options.reverse) {
       active.reverse();
     }
     return active;
   }
-  _positionChanged(active, e) {
+  _positionChanged(active, e3) {
     const { caretX, caretY, options } = this;
-    const position = positioners[options.position].call(this, active, e);
+    const position = positioners[options.position].call(this, active, e3);
     return position !== false && (caretX !== position.x || caretY !== position.y);
   }
 };
@@ -13103,24 +13104,24 @@ function generateTicks$1(generationOptions, dataRange) {
   factor = Math.pow(10, isNullOrUndef(precision) ? decimalPlaces : precision);
   niceMin = Math.round(niceMin * factor) / factor;
   niceMax = Math.round(niceMax * factor) / factor;
-  let j = 0;
+  let j3 = 0;
   if (minDefined) {
     if (includeBounds && niceMin !== min) {
       ticks.push({
         value: min
       });
       if (niceMin < min) {
-        j++;
+        j3++;
       }
-      if (almostEquals(Math.round((niceMin + j * spacing) * factor) / factor, min, relativeLabelSize(min, minSpacing, generationOptions))) {
-        j++;
+      if (almostEquals(Math.round((niceMin + j3 * spacing) * factor) / factor, min, relativeLabelSize(min, minSpacing, generationOptions))) {
+        j3++;
       }
     } else if (niceMin < min) {
-      j++;
+      j3++;
     }
   }
-  for (; j < numSpaces; ++j) {
-    const tickValue = Math.round((niceMin + j * spacing) * factor) / factor;
+  for (; j3 < numSpaces; ++j3) {
+    const tickValue = Math.round((niceMin + j3 * spacing) * factor) / factor;
     if (maxDefined && tickValue > max) {
       break;
     }
@@ -13171,8 +13172,8 @@ var LinearScaleBase = class extends Scale {
     const { beginAtZero } = this.options;
     const { minDefined, maxDefined } = this.getUserBounds();
     let { min, max } = this;
-    const setMin = (v) => min = minDefined ? min : v;
-    const setMax = (v) => max = maxDefined ? max : v;
+    const setMin = (v3) => min = minDefined ? min : v3;
+    const setMax = (v3) => max = maxDefined ? max : v3;
     if (beginAtZero) {
       const minSign = sign(min);
       const maxSign = sign(max);
@@ -13293,8 +13294,8 @@ __publicField(LinearScale, "defaults", {
     callback: Ticks.formatters.numeric
   }
 });
-var log10Floor = (v) => Math.floor(log10(v));
-var changeExponent = (v, m) => Math.pow(10, log10Floor(v) + m);
+var log10Floor = (v3) => Math.floor(log10(v3));
+var changeExponent = (v3, m3) => Math.pow(10, log10Floor(v3) + m3);
 function isMajor(tickVal) {
   const remain = tickVal / Math.pow(10, log10Floor(tickVal));
   return remain === 1;
@@ -13389,8 +13390,8 @@ var LogarithmicScale = class extends Scale {
     const { minDefined, maxDefined } = this.getUserBounds();
     let min = this.min;
     let max = this.max;
-    const setMin = (v) => min = minDefined ? min : v;
-    const setMax = (v) => max = maxDefined ? max : v;
+    const setMin = (v3) => min = minDefined ? min : v3;
+    const setMax = (v3) => max = maxDefined ? max : v3;
     if (min === max) {
       if (min <= 0) {
         setMin(1);
@@ -13508,14 +13509,14 @@ function fitWithPointLabels(scale) {
   const valueCount = scale._pointLabels.length;
   const pointLabelOpts = scale.options.pointLabels;
   const additionalAngle = pointLabelOpts.centerPointLabels ? PI / valueCount : 0;
-  for (let i = 0; i < valueCount; i++) {
-    const opts = pointLabelOpts.setContext(scale.getPointLabelContext(i));
-    padding[i] = opts.padding;
-    const pointPosition = scale.getPointPosition(i, scale.drawingArea + padding[i], additionalAngle);
+  for (let i4 = 0; i4 < valueCount; i4++) {
+    const opts = pointLabelOpts.setContext(scale.getPointLabelContext(i4));
+    padding[i4] = opts.padding;
+    const pointPosition = scale.getPointPosition(i4, scale.drawingArea + padding[i4], additionalAngle);
     const plFont = toFont(opts.font);
-    const textSize = measureLabelSize(scale.ctx, plFont, scale._pointLabels[i]);
-    labelSizes[i] = textSize;
-    const angleRadians = _normalizeAngle(scale.getIndexAngle(i) + additionalAngle);
+    const textSize = measureLabelSize(scale.ctx, plFont, scale._pointLabels[i4]);
+    labelSizes[i4] = textSize;
+    const angleRadians = _normalizeAngle(scale.getIndexAngle(i4) + additionalAngle);
     const angle = Math.round(toDegrees(angleRadians));
     const hLimits = determineLimits(angle, pointPosition.x, textSize.w, 0, 180);
     const vLimits = determineLimits(angle, pointPosition.y, textSize.h, 90, 270);
@@ -13527,21 +13528,21 @@ function fitWithPointLabels(scale) {
 function updateLimits(limits, orig, angle, hLimits, vLimits) {
   const sin = Math.abs(Math.sin(angle));
   const cos = Math.abs(Math.cos(angle));
-  let x = 0;
-  let y = 0;
+  let x3 = 0;
+  let y3 = 0;
   if (hLimits.start < orig.l) {
-    x = (orig.l - hLimits.start) / sin;
-    limits.l = Math.min(limits.l, orig.l - x);
+    x3 = (orig.l - hLimits.start) / sin;
+    limits.l = Math.min(limits.l, orig.l - x3);
   } else if (hLimits.end > orig.r) {
-    x = (hLimits.end - orig.r) / sin;
-    limits.r = Math.max(limits.r, orig.r + x);
+    x3 = (hLimits.end - orig.r) / sin;
+    limits.r = Math.max(limits.r, orig.r + x3);
   }
   if (vLimits.start < orig.t) {
-    y = (orig.t - vLimits.start) / cos;
-    limits.t = Math.min(limits.t, orig.t - y);
+    y3 = (orig.t - vLimits.start) / cos;
+    limits.t = Math.min(limits.t, orig.t - y3);
   } else if (vLimits.end > orig.b) {
-    y = (vLimits.end - orig.b) / cos;
-    limits.b = Math.max(limits.b, orig.b + y);
+    y3 = (vLimits.end - orig.b) / cos;
+    limits.b = Math.max(limits.b, orig.b + y3);
   }
 }
 function createPointLabelItem(scale, index2, itemOpts) {
@@ -13549,18 +13550,18 @@ function createPointLabelItem(scale, index2, itemOpts) {
   const { extra, additionalAngle, padding, size } = itemOpts;
   const pointLabelPosition = scale.getPointPosition(index2, outerDistance + extra + padding, additionalAngle);
   const angle = Math.round(toDegrees(_normalizeAngle(pointLabelPosition.angle + HALF_PI)));
-  const y = yForAngle(pointLabelPosition.y, size.h, angle);
+  const y3 = yForAngle(pointLabelPosition.y, size.h, angle);
   const textAlign = getTextAlignForAngle(angle);
   const left = leftForTextAlign(pointLabelPosition.x, size.w, textAlign);
   return {
     visible: true,
     x: pointLabelPosition.x,
-    y,
+    y: y3,
     textAlign,
     left,
-    top: y,
+    top: y3,
     right: left + size.w,
-    bottom: y + size.h
+    bottom: y3 + size.h
   };
 }
 function isNotOverlapped(item, area) {
@@ -13593,10 +13594,10 @@ function buildPointLabelItems(scale, labelSizes, padding) {
     additionalAngle: centerPointLabels ? PI / valueCount : 0
   };
   let area;
-  for (let i = 0; i < valueCount; i++) {
-    itemOpts.padding = padding[i];
-    itemOpts.size = labelSizes[i];
-    const item = createPointLabelItem(scale, i, itemOpts);
+  for (let i4 = 0; i4 < valueCount; i4++) {
+    itemOpts.padding = padding[i4];
+    itemOpts.size = labelSizes[i4];
+    const item = createPointLabelItem(scale, i4, itemOpts);
     items.push(item);
     if (display === "auto") {
       item.visible = isNotOverlapped(item, area);
@@ -13615,21 +13616,21 @@ function getTextAlignForAngle(angle) {
   }
   return "right";
 }
-function leftForTextAlign(x, w, align) {
+function leftForTextAlign(x3, w3, align) {
   if (align === "right") {
-    x -= w;
+    x3 -= w3;
   } else if (align === "center") {
-    x -= w / 2;
+    x3 -= w3 / 2;
   }
-  return x;
+  return x3;
 }
-function yForAngle(y, h, angle) {
+function yForAngle(y3, h4, angle) {
   if (angle === 90 || angle === 270) {
-    y -= h / 2;
+    y3 -= h4 / 2;
   } else if (angle > 270 || angle < 90) {
-    y -= h;
+    y3 -= h4;
   }
-  return y;
+  return y3;
 }
 function drawPointLabelBox(ctx, opts, item) {
   const { left, top, right, bottom } = item;
@@ -13642,7 +13643,7 @@ function drawPointLabelBox(ctx, opts, item) {
     const backdropTop = top - padding.top;
     const backdropWidth = right - left + padding.width;
     const backdropHeight = bottom - top + padding.height;
-    if (Object.values(borderRadius).some((v) => v !== 0)) {
+    if (Object.values(borderRadius).some((v3) => v3 !== 0)) {
       ctx.beginPath();
       addRoundedRectPath(ctx, {
         x: backdropLeft,
@@ -13659,16 +13660,16 @@ function drawPointLabelBox(ctx, opts, item) {
 }
 function drawPointLabels(scale, labelCount) {
   const { ctx, options: { pointLabels } } = scale;
-  for (let i = labelCount - 1; i >= 0; i--) {
-    const item = scale._pointLabelItems[i];
+  for (let i4 = labelCount - 1; i4 >= 0; i4--) {
+    const item = scale._pointLabelItems[i4];
     if (!item.visible) {
       continue;
     }
-    const optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i));
+    const optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i4));
     drawPointLabelBox(ctx, optsAtIndex, item);
     const plFont = toFont(optsAtIndex.font);
-    const { x, y, textAlign } = item;
-    renderText(ctx, scale._pointLabels[i], x, y + plFont.lineHeight / 2, plFont, {
+    const { x: x3, y: y3, textAlign } = item;
+    renderText(ctx, scale._pointLabels[i4], x3, y3 + plFont.lineHeight / 2, plFont, {
       color: optsAtIndex.color,
       textAlign,
       textBaseline: "middle"
@@ -13682,8 +13683,8 @@ function pathRadiusLine(scale, radius, circular, labelCount) {
   } else {
     let pointPosition = scale.getPointPosition(0, radius);
     ctx.moveTo(pointPosition.x, pointPosition.y);
-    for (let i = 1; i < labelCount; i++) {
-      pointPosition = scale.getPointPosition(i, radius);
+    for (let i4 = 1; i4 < labelCount; i4++) {
+      pointPosition = scale.getPointPosition(i4, radius);
       ctx.lineTo(pointPosition.x, pointPosition.y);
     }
   }
@@ -13724,11 +13725,11 @@ var RadialLinearScale = class extends LinearScaleBase {
   }
   setDimensions() {
     const padding = this._padding = toPadding(getTickBackdropHeight(this.options) / 2);
-    const w = this.width = this.maxWidth - padding.width;
-    const h = this.height = this.maxHeight - padding.height;
-    this.xCenter = Math.floor(this.left + w / 2 + padding.left);
-    this.yCenter = Math.floor(this.top + h / 2 + padding.top);
-    this.drawingArea = Math.floor(Math.min(w, h) / 2);
+    const w3 = this.width = this.maxWidth - padding.width;
+    const h4 = this.height = this.maxHeight - padding.height;
+    this.xCenter = Math.floor(this.left + w3 / 2 + padding.left);
+    this.yCenter = Math.floor(this.top + h4 / 2 + padding.top);
+    this.drawingArea = Math.floor(Math.min(w3, h4) / 2);
   }
   determineDataLimits() {
     const { min, max } = this.getMinMax(false);
@@ -13747,7 +13748,7 @@ var RadialLinearScale = class extends LinearScaleBase {
         index2
       ], this);
       return label || label === 0 ? label : "";
-    }).filter((v, i) => this.chart.getDataVisibility(i));
+    }).filter((v3, i4) => this.chart.getDataVisibility(i4));
   }
   fit() {
     const opts = this.options;
@@ -13832,7 +13833,7 @@ var RadialLinearScale = class extends LinearScaleBase {
     const opts = this.options;
     const { angleLines, grid, border } = opts;
     const labelCount = this._pointLabels.length;
-    let i, offset, position;
+    let i4, offset, position;
     if (opts.pointLabels.display) {
       drawPointLabels(this, labelCount);
     }
@@ -13849,8 +13850,8 @@ var RadialLinearScale = class extends LinearScaleBase {
     }
     if (angleLines.display) {
       ctx.save();
-      for (i = labelCount - 1; i >= 0; i--) {
-        const optsAtIndex = angleLines.setContext(this.getPointLabelContext(i));
+      for (i4 = labelCount - 1; i4 >= 0; i4--) {
+        const optsAtIndex = angleLines.setContext(this.getPointLabelContext(i4));
         const { color: color2, lineWidth } = optsAtIndex;
         if (!lineWidth || !color2) {
           continue;
@@ -13860,7 +13861,7 @@ var RadialLinearScale = class extends LinearScaleBase {
         ctx.setLineDash(optsAtIndex.borderDash);
         ctx.lineDashOffset = optsAtIndex.borderDashOffset;
         offset = this.getDistanceFromCenterForValue(opts.reverse ? this.min : this.max);
-        position = this.getPointPosition(i, offset);
+        position = this.getPointPosition(i4, offset);
         ctx.beginPath();
         ctx.moveTo(this.xCenter, this.yCenter);
         ctx.lineTo(position.x, position.y);
@@ -14000,8 +14001,8 @@ var INTERVALS = {
   }
 };
 var UNITS = /* @__PURE__ */ Object.keys(INTERVALS);
-function sorter(a, b) {
-  return a - b;
+function sorter(a3, b) {
+  return a3 - b;
 }
 function parse(scale, input) {
   if (isNullOrUndef(input)) {
@@ -14026,18 +14027,18 @@ function parse(scale, input) {
 }
 function determineUnitForAutoTicks(minUnit, min, max, capacity) {
   const ilen = UNITS.length;
-  for (let i = UNITS.indexOf(minUnit); i < ilen - 1; ++i) {
-    const interval = INTERVALS[UNITS[i]];
+  for (let i4 = UNITS.indexOf(minUnit); i4 < ilen - 1; ++i4) {
+    const interval = INTERVALS[UNITS[i4]];
     const factor = interval.steps ? interval.steps : Number.MAX_SAFE_INTEGER;
     if (interval.common && Math.ceil((max - min) / (factor * interval.size)) <= capacity) {
-      return UNITS[i];
+      return UNITS[i4];
     }
   }
   return UNITS[ilen - 1];
 }
 function determineUnitForFormatting(scale, numTicks, minUnit, min, max) {
-  for (let i = UNITS.length - 1; i >= UNITS.indexOf(minUnit); i--) {
-    const unit = UNITS[i];
+  for (let i4 = UNITS.length - 1; i4 >= UNITS.indexOf(minUnit); i4--) {
+    const unit = UNITS[i4];
     if (INTERVALS[unit].common && scale._adapter.diff(max, min, unit) >= numTicks - 1) {
       return unit;
     }
@@ -14045,9 +14046,9 @@ function determineUnitForFormatting(scale, numTicks, minUnit, min, max) {
   return UNITS[minUnit ? UNITS.indexOf(minUnit) : 0];
 }
 function determineMajorUnit(unit) {
-  for (let i = UNITS.indexOf(unit) + 1, ilen = UNITS.length; i < ilen; ++i) {
-    if (INTERVALS[UNITS[i]].common) {
-      return UNITS[i];
+  for (let i4 = UNITS.indexOf(unit) + 1, ilen = UNITS.length; i4 < ilen; ++i4) {
+    if (INTERVALS[UNITS[i4]].common) {
+      return UNITS[i4];
     }
   }
 }
@@ -14077,10 +14078,10 @@ function ticksFromTimestamps(scale, values, majorUnit) {
   const ticks = [];
   const map3 = {};
   const ilen = values.length;
-  let i, value;
-  for (i = 0; i < ilen; ++i) {
-    value = values[i];
-    map3[value] = i;
+  let i4, value;
+  for (i4 = 0; i4 < ilen; ++i4) {
+    value = values[i4];
+    map3[value] = i4;
     ticks.push({
       value,
       major: false
@@ -14245,7 +14246,7 @@ var TimeScale = class extends Scale {
     if (time === max || options.bounds === "ticks" || count === 1) {
       addTick(ticks, time, timestamps);
     }
-    return Object.keys(ticks).sort(sorter).map((x) => +x);
+    return Object.keys(ticks).sort(sorter).map((x3) => +x3);
   }
   getLabelForValue(value) {
     const adapter = this._adapter;
@@ -14282,10 +14283,10 @@ var TimeScale = class extends Scale {
     return this._adapter.format(time, format || (major ? majorFormat : minorFormat));
   }
   generateTickLabels(ticks) {
-    let i, ilen, tick;
-    for (i = 0, ilen = ticks.length; i < ilen; ++i) {
-      tick = ticks[i];
-      tick.label = this._tickFormatFunction(tick.value, i, ticks);
+    let i4, ilen, tick;
+    for (i4 = 0, ilen = ticks.length; i4 < ilen; ++i4) {
+      tick = ticks[i4];
+      tick.label = this._tickFormatFunction(tick.value, i4, ticks);
     }
   }
   getDecimalForValue(value) {
@@ -14326,7 +14327,7 @@ var TimeScale = class extends Scale {
   }
   getDataTimestamps() {
     let timestamps = this._cache.data || [];
-    let i, ilen;
+    let i4, ilen;
     if (timestamps.length) {
       return timestamps;
     }
@@ -14334,20 +14335,20 @@ var TimeScale = class extends Scale {
     if (this._normalized && metas.length) {
       return this._cache.data = metas[0].controller.getAllParsedValues(this);
     }
-    for (i = 0, ilen = metas.length; i < ilen; ++i) {
-      timestamps = timestamps.concat(metas[i].controller.getAllParsedValues(this));
+    for (i4 = 0, ilen = metas.length; i4 < ilen; ++i4) {
+      timestamps = timestamps.concat(metas[i4].controller.getAllParsedValues(this));
     }
     return this._cache.data = this.normalize(timestamps);
   }
   getLabelTimestamps() {
     const timestamps = this._cache.labels || [];
-    let i, ilen;
+    let i4, ilen;
     if (timestamps.length) {
       return timestamps;
     }
     const labels = this.getLabels();
-    for (i = 0, ilen = labels.length; i < ilen; ++i) {
-      timestamps.push(parse(this, labels[i]));
+    for (i4 = 0, ilen = labels.length; i4 < ilen; ++i4) {
+      timestamps.push(parse(this, labels[i4]));
     }
     return this._cache.labels = this._normalized ? timestamps : this.normalize(timestamps);
   }
@@ -14413,9 +14414,9 @@ var TimeSeriesScale = class extends TimeScale {
     const { min, max } = this;
     const items = [];
     const table = [];
-    let i, ilen, prev, curr, next;
-    for (i = 0, ilen = timestamps.length; i < ilen; ++i) {
-      curr = timestamps[i];
+    let i4, ilen, prev, curr, next;
+    for (i4 = 0, ilen = timestamps.length; i4 < ilen; ++i4) {
+      curr = timestamps[i4];
       if (curr >= min && curr <= max) {
         items.push(curr);
       }
@@ -14432,14 +14433,14 @@ var TimeSeriesScale = class extends TimeScale {
         }
       ];
     }
-    for (i = 0, ilen = items.length; i < ilen; ++i) {
-      next = items[i + 1];
-      prev = items[i - 1];
-      curr = items[i];
+    for (i4 = 0, ilen = items.length; i4 < ilen; ++i4) {
+      next = items[i4 + 1];
+      prev = items[i4 - 1];
+      curr = items[i4];
       if (Math.round((next + prev) / 2) !== curr) {
         table.push({
           time: curr,
-          pos: i / (ilen - 1)
+          pos: i4 / (ilen - 1)
         });
       }
     }
@@ -14455,7 +14456,7 @@ var TimeSeriesScale = class extends TimeScale {
     if (!timestamps.includes(max) || timestamps.length === 1) {
       timestamps.push(max);
     }
-    return timestamps.sort((a, b) => a - b);
+    return timestamps.sort((a3, b) => a3 - b);
   }
   _getTimestampsForTable() {
     let timestamps = this._cache.all || [];
@@ -14499,8 +14500,289 @@ var registerables = [
   scales
 ];
 
-// src/ui/tracker-block-render-child.ts
+// src/ui/tracker-block-render-child.tsx
 var import_obsidian = require("obsidian");
+
+// node_modules/preact/dist/preact.module.js
+var n;
+var l;
+var u;
+var t;
+var i;
+var r;
+var o;
+var e;
+var f;
+var c;
+var s;
+var a;
+var h;
+var p = {};
+var v = [];
+var y = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i;
+var w = Array.isArray;
+function d(n2, l3) {
+  for (var u4 in l3) n2[u4] = l3[u4];
+  return n2;
+}
+function g(n2) {
+  n2 && n2.parentNode && n2.parentNode.removeChild(n2);
+}
+function _(l3, u4, t3) {
+  var i4, r3, o3, e3 = {};
+  for (o3 in u4) "key" == o3 ? i4 = u4[o3] : "ref" == o3 ? r3 = u4[o3] : e3[o3] = u4[o3];
+  if (arguments.length > 2 && (e3.children = arguments.length > 3 ? n.call(arguments, 2) : t3), "function" == typeof l3 && null != l3.defaultProps) for (o3 in l3.defaultProps) void 0 === e3[o3] && (e3[o3] = l3.defaultProps[o3]);
+  return m(l3, e3, i4, r3, null);
+}
+function m(n2, t3, i4, r3, o3) {
+  var e3 = { type: n2, props: t3, key: i4, ref: r3, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: null == o3 ? ++u : o3, __i: -1, __u: 0 };
+  return null == o3 && null != l.vnode && l.vnode(e3), e3;
+}
+function k(n2) {
+  return n2.children;
+}
+function x(n2, l3) {
+  this.props = n2, this.context = l3;
+}
+function S(n2, l3) {
+  if (null == l3) return n2.__ ? S(n2.__, n2.__i + 1) : null;
+  for (var u4; l3 < n2.__k.length; l3++) if (null != (u4 = n2.__k[l3]) && null != u4.__e) return u4.__e;
+  return "function" == typeof n2.type ? S(n2) : null;
+}
+function C(n2) {
+  var l3, u4;
+  if (null != (n2 = n2.__) && null != n2.__c) {
+    for (n2.__e = n2.__c.base = null, l3 = 0; l3 < n2.__k.length; l3++) if (null != (u4 = n2.__k[l3]) && null != u4.__e) {
+      n2.__e = n2.__c.base = u4.__e;
+      break;
+    }
+    return C(n2);
+  }
+}
+function M(n2) {
+  (!n2.__d && (n2.__d = true) && i.push(n2) && !$.__r++ || r != l.debounceRendering) && ((r = l.debounceRendering) || o)($);
+}
+function $() {
+  for (var n2, u4, t3, r3, o3, f4, c3, s3 = 1; i.length; ) i.length > s3 && i.sort(e), n2 = i.shift(), s3 = i.length, n2.__d && (t3 = void 0, r3 = void 0, o3 = (r3 = (u4 = n2).__v).__e, f4 = [], c3 = [], u4.__P && ((t3 = d({}, r3)).__v = r3.__v + 1, l.vnode && l.vnode(t3), O(u4.__P, t3, r3, u4.__n, u4.__P.namespaceURI, 32 & r3.__u ? [o3] : null, f4, null == o3 ? S(r3) : o3, !!(32 & r3.__u), c3), t3.__v = r3.__v, t3.__.__k[t3.__i] = t3, N(f4, t3, c3), r3.__e = r3.__ = null, t3.__e != o3 && C(t3)));
+  $.__r = 0;
+}
+function I(n2, l3, u4, t3, i4, r3, o3, e3, f4, c3, s3) {
+  var a3, h4, y3, w3, d3, g2, _2, m3 = t3 && t3.__k || v, b = l3.length;
+  for (f4 = P(u4, l3, m3, f4, b), a3 = 0; a3 < b; a3++) null != (y3 = u4.__k[a3]) && (h4 = -1 == y3.__i ? p : m3[y3.__i] || p, y3.__i = a3, g2 = O(n2, y3, h4, i4, r3, o3, e3, f4, c3, s3), w3 = y3.__e, y3.ref && h4.ref != y3.ref && (h4.ref && B(h4.ref, null, y3), s3.push(y3.ref, y3.__c || w3, y3)), null == d3 && null != w3 && (d3 = w3), (_2 = !!(4 & y3.__u)) || h4.__k === y3.__k ? f4 = A(y3, f4, n2, _2) : "function" == typeof y3.type && void 0 !== g2 ? f4 = g2 : w3 && (f4 = w3.nextSibling), y3.__u &= -7);
+  return u4.__e = d3, f4;
+}
+function P(n2, l3, u4, t3, i4) {
+  var r3, o3, e3, f4, c3, s3 = u4.length, a3 = s3, h4 = 0;
+  for (n2.__k = new Array(i4), r3 = 0; r3 < i4; r3++) null != (o3 = l3[r3]) && "boolean" != typeof o3 && "function" != typeof o3 ? (f4 = r3 + h4, (o3 = n2.__k[r3] = "string" == typeof o3 || "number" == typeof o3 || "bigint" == typeof o3 || o3.constructor == String ? m(null, o3, null, null, null) : w(o3) ? m(k, { children: o3 }, null, null, null) : null == o3.constructor && o3.__b > 0 ? m(o3.type, o3.props, o3.key, o3.ref ? o3.ref : null, o3.__v) : o3).__ = n2, o3.__b = n2.__b + 1, e3 = null, -1 != (c3 = o3.__i = L(o3, u4, f4, a3)) && (a3--, (e3 = u4[c3]) && (e3.__u |= 2)), null == e3 || null == e3.__v ? (-1 == c3 && (i4 > s3 ? h4-- : i4 < s3 && h4++), "function" != typeof o3.type && (o3.__u |= 4)) : c3 != f4 && (c3 == f4 - 1 ? h4-- : c3 == f4 + 1 ? h4++ : (c3 > f4 ? h4-- : h4++, o3.__u |= 4))) : n2.__k[r3] = null;
+  if (a3) for (r3 = 0; r3 < s3; r3++) null != (e3 = u4[r3]) && 0 == (2 & e3.__u) && (e3.__e == t3 && (t3 = S(e3)), D(e3, e3));
+  return t3;
+}
+function A(n2, l3, u4, t3) {
+  var i4, r3;
+  if ("function" == typeof n2.type) {
+    for (i4 = n2.__k, r3 = 0; i4 && r3 < i4.length; r3++) i4[r3] && (i4[r3].__ = n2, l3 = A(i4[r3], l3, u4, t3));
+    return l3;
+  }
+  n2.__e != l3 && (t3 && (l3 && n2.type && !l3.parentNode && (l3 = S(n2)), u4.insertBefore(n2.__e, l3 || null)), l3 = n2.__e);
+  do {
+    l3 = l3 && l3.nextSibling;
+  } while (null != l3 && 8 == l3.nodeType);
+  return l3;
+}
+function L(n2, l3, u4, t3) {
+  var i4, r3, o3, e3 = n2.key, f4 = n2.type, c3 = l3[u4], s3 = null != c3 && 0 == (2 & c3.__u);
+  if (null === c3 && null == n2.key || s3 && e3 == c3.key && f4 == c3.type) return u4;
+  if (t3 > (s3 ? 1 : 0)) {
+    for (i4 = u4 - 1, r3 = u4 + 1; i4 >= 0 || r3 < l3.length; ) if (null != (c3 = l3[o3 = i4 >= 0 ? i4-- : r3++]) && 0 == (2 & c3.__u) && e3 == c3.key && f4 == c3.type) return o3;
+  }
+  return -1;
+}
+function T(n2, l3, u4) {
+  "-" == l3[0] ? n2.setProperty(l3, null == u4 ? "" : u4) : n2[l3] = null == u4 ? "" : "number" != typeof u4 || y.test(l3) ? u4 : u4 + "px";
+}
+function j(n2, l3, u4, t3, i4) {
+  var r3, o3;
+  n: if ("style" == l3) if ("string" == typeof u4) n2.style.cssText = u4;
+  else {
+    if ("string" == typeof t3 && (n2.style.cssText = t3 = ""), t3) for (l3 in t3) u4 && l3 in u4 || T(n2.style, l3, "");
+    if (u4) for (l3 in u4) t3 && u4[l3] == t3[l3] || T(n2.style, l3, u4[l3]);
+  }
+  else if ("o" == l3[0] && "n" == l3[1]) r3 = l3 != (l3 = l3.replace(f, "$1")), o3 = l3.toLowerCase(), l3 = o3 in n2 || "onFocusOut" == l3 || "onFocusIn" == l3 ? o3.slice(2) : l3.slice(2), n2.l || (n2.l = {}), n2.l[l3 + r3] = u4, u4 ? t3 ? u4.u = t3.u : (u4.u = c, n2.addEventListener(l3, r3 ? a : s, r3)) : n2.removeEventListener(l3, r3 ? a : s, r3);
+  else {
+    if ("http://www.w3.org/2000/svg" == i4) l3 = l3.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
+    else if ("width" != l3 && "height" != l3 && "href" != l3 && "list" != l3 && "form" != l3 && "tabIndex" != l3 && "download" != l3 && "rowSpan" != l3 && "colSpan" != l3 && "role" != l3 && "popover" != l3 && l3 in n2) try {
+      n2[l3] = null == u4 ? "" : u4;
+      break n;
+    } catch (n3) {
+    }
+    "function" == typeof u4 || (null == u4 || false === u4 && "-" != l3[4] ? n2.removeAttribute(l3) : n2.setAttribute(l3, "popover" == l3 && 1 == u4 ? "" : u4));
+  }
+}
+function F(n2) {
+  return function(u4) {
+    if (this.l) {
+      var t3 = this.l[u4.type + n2];
+      if (null == u4.t) u4.t = c++;
+      else if (u4.t < t3.u) return;
+      return t3(l.event ? l.event(u4) : u4);
+    }
+  };
+}
+function O(n2, u4, t3, i4, r3, o3, e3, f4, c3, s3) {
+  var a3, h4, p3, v3, y3, _2, m3, b, S2, C3, M2, $2, P2, A3, H, L2, T3, j3 = u4.type;
+  if (null != u4.constructor) return null;
+  128 & t3.__u && (c3 = !!(32 & t3.__u), o3 = [f4 = u4.__e = t3.__e]), (a3 = l.__b) && a3(u4);
+  n: if ("function" == typeof j3) try {
+    if (b = u4.props, S2 = "prototype" in j3 && j3.prototype.render, C3 = (a3 = j3.contextType) && i4[a3.__c], M2 = a3 ? C3 ? C3.props.value : a3.__ : i4, t3.__c ? m3 = (h4 = u4.__c = t3.__c).__ = h4.__E : (S2 ? u4.__c = h4 = new j3(b, M2) : (u4.__c = h4 = new x(b, M2), h4.constructor = j3, h4.render = E), C3 && C3.sub(h4), h4.props = b, h4.state || (h4.state = {}), h4.context = M2, h4.__n = i4, p3 = h4.__d = true, h4.__h = [], h4._sb = []), S2 && null == h4.__s && (h4.__s = h4.state), S2 && null != j3.getDerivedStateFromProps && (h4.__s == h4.state && (h4.__s = d({}, h4.__s)), d(h4.__s, j3.getDerivedStateFromProps(b, h4.__s))), v3 = h4.props, y3 = h4.state, h4.__v = u4, p3) S2 && null == j3.getDerivedStateFromProps && null != h4.componentWillMount && h4.componentWillMount(), S2 && null != h4.componentDidMount && h4.__h.push(h4.componentDidMount);
+    else {
+      if (S2 && null == j3.getDerivedStateFromProps && b !== v3 && null != h4.componentWillReceiveProps && h4.componentWillReceiveProps(b, M2), !h4.__e && null != h4.shouldComponentUpdate && false === h4.shouldComponentUpdate(b, h4.__s, M2) || u4.__v == t3.__v) {
+        for (u4.__v != t3.__v && (h4.props = b, h4.state = h4.__s, h4.__d = false), u4.__e = t3.__e, u4.__k = t3.__k, u4.__k.some(function(n3) {
+          n3 && (n3.__ = u4);
+        }), $2 = 0; $2 < h4._sb.length; $2++) h4.__h.push(h4._sb[$2]);
+        h4._sb = [], h4.__h.length && e3.push(h4);
+        break n;
+      }
+      null != h4.componentWillUpdate && h4.componentWillUpdate(b, h4.__s, M2), S2 && null != h4.componentDidUpdate && h4.__h.push(function() {
+        h4.componentDidUpdate(v3, y3, _2);
+      });
+    }
+    if (h4.context = M2, h4.props = b, h4.__P = n2, h4.__e = false, P2 = l.__r, A3 = 0, S2) {
+      for (h4.state = h4.__s, h4.__d = false, P2 && P2(u4), a3 = h4.render(h4.props, h4.state, h4.context), H = 0; H < h4._sb.length; H++) h4.__h.push(h4._sb[H]);
+      h4._sb = [];
+    } else do {
+      h4.__d = false, P2 && P2(u4), a3 = h4.render(h4.props, h4.state, h4.context), h4.state = h4.__s;
+    } while (h4.__d && ++A3 < 25);
+    h4.state = h4.__s, null != h4.getChildContext && (i4 = d(d({}, i4), h4.getChildContext())), S2 && !p3 && null != h4.getSnapshotBeforeUpdate && (_2 = h4.getSnapshotBeforeUpdate(v3, y3)), L2 = a3, null != a3 && a3.type === k && null == a3.key && (L2 = V(a3.props.children)), f4 = I(n2, w(L2) ? L2 : [L2], u4, t3, i4, r3, o3, e3, f4, c3, s3), h4.base = u4.__e, u4.__u &= -161, h4.__h.length && e3.push(h4), m3 && (h4.__E = h4.__ = null);
+  } catch (n3) {
+    if (u4.__v = null, c3 || null != o3) if (n3.then) {
+      for (u4.__u |= c3 ? 160 : 128; f4 && 8 == f4.nodeType && f4.nextSibling; ) f4 = f4.nextSibling;
+      o3[o3.indexOf(f4)] = null, u4.__e = f4;
+    } else {
+      for (T3 = o3.length; T3--; ) g(o3[T3]);
+      z(u4);
+    }
+    else u4.__e = t3.__e, u4.__k = t3.__k, n3.then || z(u4);
+    l.__e(n3, u4, t3);
+  }
+  else null == o3 && u4.__v == t3.__v ? (u4.__k = t3.__k, u4.__e = t3.__e) : f4 = u4.__e = q(t3.__e, u4, t3, i4, r3, o3, e3, c3, s3);
+  return (a3 = l.diffed) && a3(u4), 128 & u4.__u ? void 0 : f4;
+}
+function z(n2) {
+  n2 && n2.__c && (n2.__c.__e = true), n2 && n2.__k && n2.__k.forEach(z);
+}
+function N(n2, u4, t3) {
+  for (var i4 = 0; i4 < t3.length; i4++) B(t3[i4], t3[++i4], t3[++i4]);
+  l.__c && l.__c(u4, n2), n2.some(function(u5) {
+    try {
+      n2 = u5.__h, u5.__h = [], n2.some(function(n3) {
+        n3.call(u5);
+      });
+    } catch (n3) {
+      l.__e(n3, u5.__v);
+    }
+  });
+}
+function V(n2) {
+  return "object" != typeof n2 || null == n2 || n2.__b && n2.__b > 0 ? n2 : w(n2) ? n2.map(V) : d({}, n2);
+}
+function q(u4, t3, i4, r3, o3, e3, f4, c3, s3) {
+  var a3, h4, v3, y3, d3, _2, m3, b = i4.props, k3 = t3.props, x3 = t3.type;
+  if ("svg" == x3 ? o3 = "http://www.w3.org/2000/svg" : "math" == x3 ? o3 = "http://www.w3.org/1998/Math/MathML" : o3 || (o3 = "http://www.w3.org/1999/xhtml"), null != e3) {
+    for (a3 = 0; a3 < e3.length; a3++) if ((d3 = e3[a3]) && "setAttribute" in d3 == !!x3 && (x3 ? d3.localName == x3 : 3 == d3.nodeType)) {
+      u4 = d3, e3[a3] = null;
+      break;
+    }
+  }
+  if (null == u4) {
+    if (null == x3) return document.createTextNode(k3);
+    u4 = document.createElementNS(o3, x3, k3.is && k3), c3 && (l.__m && l.__m(t3, e3), c3 = false), e3 = null;
+  }
+  if (null == x3) b === k3 || c3 && u4.data == k3 || (u4.data = k3);
+  else {
+    if (e3 = e3 && n.call(u4.childNodes), b = i4.props || p, !c3 && null != e3) for (b = {}, a3 = 0; a3 < u4.attributes.length; a3++) b[(d3 = u4.attributes[a3]).name] = d3.value;
+    for (a3 in b) if (d3 = b[a3], "children" == a3) ;
+    else if ("dangerouslySetInnerHTML" == a3) v3 = d3;
+    else if (!(a3 in k3)) {
+      if ("value" == a3 && "defaultValue" in k3 || "checked" == a3 && "defaultChecked" in k3) continue;
+      j(u4, a3, null, d3, o3);
+    }
+    for (a3 in k3) d3 = k3[a3], "children" == a3 ? y3 = d3 : "dangerouslySetInnerHTML" == a3 ? h4 = d3 : "value" == a3 ? _2 = d3 : "checked" == a3 ? m3 = d3 : c3 && "function" != typeof d3 || b[a3] === d3 || j(u4, a3, d3, b[a3], o3);
+    if (h4) c3 || v3 && (h4.__html == v3.__html || h4.__html == u4.innerHTML) || (u4.innerHTML = h4.__html), t3.__k = [];
+    else if (v3 && (u4.innerHTML = ""), I("template" == t3.type ? u4.content : u4, w(y3) ? y3 : [y3], t3, i4, r3, "foreignObject" == x3 ? "http://www.w3.org/1999/xhtml" : o3, e3, f4, e3 ? e3[0] : i4.__k && S(i4, 0), c3, s3), null != e3) for (a3 = e3.length; a3--; ) g(e3[a3]);
+    c3 || (a3 = "value", "progress" == x3 && null == _2 ? u4.removeAttribute("value") : null != _2 && (_2 !== u4[a3] || "progress" == x3 && !_2 || "option" == x3 && _2 != b[a3]) && j(u4, a3, _2, b[a3], o3), a3 = "checked", null != m3 && m3 != u4[a3] && j(u4, a3, m3, b[a3], o3));
+  }
+  return u4;
+}
+function B(n2, u4, t3) {
+  try {
+    if ("function" == typeof n2) {
+      var i4 = "function" == typeof n2.__u;
+      i4 && n2.__u(), i4 && null == u4 || (n2.__u = n2(u4));
+    } else n2.current = u4;
+  } catch (n3) {
+    l.__e(n3, t3);
+  }
+}
+function D(n2, u4, t3) {
+  var i4, r3;
+  if (l.unmount && l.unmount(n2), (i4 = n2.ref) && (i4.current && i4.current != n2.__e || B(i4, null, u4)), null != (i4 = n2.__c)) {
+    if (i4.componentWillUnmount) try {
+      i4.componentWillUnmount();
+    } catch (n3) {
+      l.__e(n3, u4);
+    }
+    i4.base = i4.__P = null;
+  }
+  if (i4 = n2.__k) for (r3 = 0; r3 < i4.length; r3++) i4[r3] && D(i4[r3], u4, t3 || "function" != typeof n2.type);
+  t3 || g(n2.__e), n2.__c = n2.__ = n2.__e = void 0;
+}
+function E(n2, l3, u4) {
+  return this.constructor(n2, u4);
+}
+function G(u4, t3, i4) {
+  var r3, o3, e3, f4;
+  t3 == document && (t3 = document.documentElement), l.__ && l.__(u4, t3), o3 = (r3 = "function" == typeof i4) ? null : i4 && i4.__k || t3.__k, e3 = [], f4 = [], O(t3, u4 = (!r3 && i4 || t3).__k = _(k, null, [u4]), o3 || p, p, t3.namespaceURI, !r3 && i4 ? [i4] : o3 ? null : t3.firstChild ? n.call(t3.childNodes) : null, e3, !r3 && i4 ? i4 : o3 ? o3.__e : t3.firstChild, r3, f4), N(e3, u4, f4);
+}
+function Q(n2) {
+  function l3(n3) {
+    var u4, t3;
+    return this.getChildContext || (u4 = /* @__PURE__ */ new Set(), (t3 = {})[l3.__c] = this, this.getChildContext = function() {
+      return t3;
+    }, this.componentWillUnmount = function() {
+      u4 = null;
+    }, this.shouldComponentUpdate = function(n4) {
+      this.props.value != n4.value && u4.forEach(function(n5) {
+        n5.__e = true, M(n5);
+      });
+    }, this.sub = function(n4) {
+      u4.add(n4);
+      var l4 = n4.componentWillUnmount;
+      n4.componentWillUnmount = function() {
+        u4 && u4.delete(n4), l4 && l4.call(n4);
+      };
+    }), n3.children;
+  }
+  return l3.__c = "__cC" + h++, l3.__ = n2, l3.Provider = l3.__l = (l3.Consumer = function(n3, l4) {
+    return n3.children(l4);
+  }).contextType = l3, l3;
+}
+n = v.slice, l = { __e: function(n2, l3, u4, t3) {
+  for (var i4, r3, o3; l3 = l3.__; ) if ((i4 = l3.__c) && !i4.__) try {
+    if ((r3 = i4.constructor) && null != r3.getDerivedStateFromError && (i4.setState(r3.getDerivedStateFromError(n2)), o3 = i4.__d), null != i4.componentDidCatch && (i4.componentDidCatch(n2, t3 || {}), o3 = i4.__d), o3) return i4.__E = i4;
+  } catch (l4) {
+    n2 = l4;
+  }
+  throw n2;
+} }, u = 0, t = function(n2) {
+  return null != n2 && null == n2.constructor;
+}, x.prototype.setState = function(n2, l3) {
+  var u4;
+  u4 = null != this.__s && this.__s != this.state ? this.__s : this.__s = d({}, this.state), "function" == typeof n2 && (n2 = n2(d({}, u4), this.props)), n2 && d(u4, n2), null != n2 && this.__v && (l3 && this._sb.push(l3), M(this));
+}, x.prototype.forceUpdate = function(n2) {
+  this.__v && (this.__e = true, n2 && this.__h.push(n2), M(this));
+}, x.prototype.render = k, i = [], o = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, e = function(n2, l3) {
+  return n2.__v.__b - l3.__v.__b;
+}, $.__r = 0, f = /(PointerCapture)$|Capture$/i, c = 0, s = F(false), a = F(true), h = 0;
 
 // src/utils/options.ts
 function parseOptions(src) {
@@ -14526,9 +14808,9 @@ var DateService = class {
    * Create a DateWrapper from a date string and format
    */
   static parse(dateStr, format) {
-    const m = this.getMoment();
-    if (m) {
-      const parsed = m(dateStr, format, true);
+    const m3 = this.getMoment();
+    if (m3) {
+      const parsed = m3(dateStr, format, true);
       if (parsed.isValid()) {
         return this.wrapMoment(parsed);
       }
@@ -14539,9 +14821,9 @@ var DateService = class {
    * Create a DateWrapper from multiple possible formats
    */
   static parseMultiple(dateStr, formats) {
-    const m = this.getMoment();
-    if (m) {
-      const parsed = m(dateStr, formats, true);
+    const m3 = this.getMoment();
+    if (m3) {
+      const parsed = m3(dateStr, formats, true);
       if (parsed.isValid()) {
         return this.wrapMoment(parsed);
       }
@@ -14561,9 +14843,9 @@ var DateService = class {
    * Get current date/time
    */
   static now() {
-    const m = this.getMoment();
-    if (m) {
-      return this.wrapMoment(m());
+    const m3 = this.getMoment();
+    if (m3) {
+      return this.wrapMoment(m3());
     }
     return this.wrapDate(/* @__PURE__ */ new Date());
   }
@@ -14571,9 +14853,9 @@ var DateService = class {
    * Create DateWrapper from native Date
    */
   static fromDate(date) {
-    const m = this.getMoment();
-    if (m) {
-      return this.wrapMoment(m(date));
+    const m3 = this.getMoment();
+    if (m3) {
+      return this.wrapMoment(m3(date));
     }
     return this.wrapDate(new Date(date.getTime()));
   }
@@ -14642,13 +14924,13 @@ var DateService = class {
     if (!input || input.toLowerCase() === "today") {
       return this.format(this.now(), fmt);
     }
-    const m = this.getMoment();
-    if (m) {
-      const tryParse = m(input, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"], true);
+    const m3 = this.getMoment();
+    if (m3) {
+      const tryParse = m3(input, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"], true);
       if (tryParse.isValid()) {
         return tryParse.format(fmt);
       }
-      return m().format(fmt);
+      return m3().format(fmt);
     }
     const today = /* @__PURE__ */ new Date();
     const parsed = new Date(input);
@@ -14659,7 +14941,7 @@ var DateService = class {
   }
   // Private helper methods
   static wrapMoment(momentObj) {
-    const m = this.getMoment();
+    const m3 = this.getMoment();
     return {
       format: (fmt) => momentObj.format(fmt),
       date: () => momentObj.date(),
@@ -14672,13 +14954,13 @@ var DateService = class {
       getTime: () => momentObj.valueOf(),
       isBefore: (other) => {
         if (other instanceof Date) {
-          return momentObj.isBefore(m ? m(other) : other);
+          return momentObj.isBefore(m3 ? m3(other) : other);
         }
         return momentObj.isBefore(other.toDate ? other.toDate() : other);
       },
       isAfter: (other) => {
         if (other instanceof Date) {
-          return momentObj.isAfter(m ? m(other) : other);
+          return momentObj.isAfter(m3 ? m3(other) : other);
         }
         return momentObj.isAfter(other.toDate ? other.toDate() : other);
       },
@@ -14780,12 +15062,6 @@ var DateService = class {
 // src/utils/date.ts
 function resolveDateIso(input, fmt) {
   return DateService.resolveDateIso(input, fmt);
-}
-
-// src/utils/path.ts
-function normalizePath(path) {
-  if (!path) return "";
-  return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
 }
 
 // src/constants/index.ts
@@ -14927,6 +15203,12 @@ var CHART_CONFIG = {
   PADDING_FACTOR: 0.1,
   LINE_WIDTH: 2
 };
+var DATE_FORMATS = {
+  ISO: "YYYY-MM-DD",
+  ISO_SLASH: "YYYY/MM/DD",
+  EU: "DD.MM.YYYY",
+  DISPLAY_SHORT: "D MMM"
+};
 var ERROR_MESSAGES = {
   NO_TRACKERS: "no trackers found in folder",
   NO_FRONTMATTER: "Frontmatter not found",
@@ -15024,7 +15306,2213 @@ var STATS_LABELS = {
   BEST_STREAK: "Best streak"
 };
 
-// src/ui/tracker-block-render-child.ts
+// node_modules/preact/hooks/dist/hooks.module.js
+var t2;
+var r2;
+var u2;
+var i2;
+var o2 = 0;
+var f2 = [];
+var c2 = l;
+var e2 = c2.__b;
+var a2 = c2.__r;
+var v2 = c2.diffed;
+var l2 = c2.__c;
+var m2 = c2.unmount;
+var s2 = c2.__;
+function p2(n2, t3) {
+  c2.__h && c2.__h(r2, n2, o2 || t3), o2 = 0;
+  var u4 = r2.__H || (r2.__H = { __: [], __h: [] });
+  return n2 >= u4.__.length && u4.__.push({}), u4.__[n2];
+}
+function d2(n2) {
+  return o2 = 1, h3(D2, n2);
+}
+function h3(n2, u4, i4) {
+  var o3 = p2(t2++, 2);
+  if (o3.t = n2, !o3.__c && (o3.__ = [i4 ? i4(u4) : D2(void 0, u4), function(n3) {
+    var t3 = o3.__N ? o3.__N[0] : o3.__[0], r3 = o3.t(t3, n3);
+    t3 !== r3 && (o3.__N = [r3, o3.__[1]], o3.__c.setState({}));
+  }], o3.__c = r2, !r2.__f)) {
+    var f4 = function(n3, t3, r3) {
+      if (!o3.__c.__H) return true;
+      var u5 = o3.__c.__H.__.filter(function(n4) {
+        return !!n4.__c;
+      });
+      if (u5.every(function(n4) {
+        return !n4.__N;
+      })) return !c3 || c3.call(this, n3, t3, r3);
+      var i5 = o3.__c.props !== n3;
+      return u5.forEach(function(n4) {
+        if (n4.__N) {
+          var t4 = n4.__[0];
+          n4.__ = n4.__N, n4.__N = void 0, t4 !== n4.__[0] && (i5 = true);
+        }
+      }), c3 && c3.call(this, n3, t3, r3) || i5;
+    };
+    r2.__f = true;
+    var c3 = r2.shouldComponentUpdate, e3 = r2.componentWillUpdate;
+    r2.componentWillUpdate = function(n3, t3, r3) {
+      if (this.__e) {
+        var u5 = c3;
+        c3 = void 0, f4(n3, t3, r3), c3 = u5;
+      }
+      e3 && e3.call(this, n3, t3, r3);
+    }, r2.shouldComponentUpdate = f4;
+  }
+  return o3.__N || o3.__;
+}
+function y2(n2, u4) {
+  var i4 = p2(t2++, 3);
+  !c2.__s && C2(i4.__H, u4) && (i4.__ = n2, i4.u = u4, r2.__H.__h.push(i4));
+}
+function A2(n2) {
+  return o2 = 5, T2(function() {
+    return { current: n2 };
+  }, []);
+}
+function T2(n2, r3) {
+  var u4 = p2(t2++, 7);
+  return C2(u4.__H, r3) && (u4.__ = n2(), u4.__H = r3, u4.__h = n2), u4.__;
+}
+function q2(n2, t3) {
+  return o2 = 8, T2(function() {
+    return n2;
+  }, t3);
+}
+function x2(n2) {
+  var u4 = r2.context[n2.__c], i4 = p2(t2++, 9);
+  return i4.c = n2, u4 ? (null == i4.__ && (i4.__ = true, u4.sub(r2)), u4.props.value) : n2.__;
+}
+function j2() {
+  for (var n2; n2 = f2.shift(); ) if (n2.__P && n2.__H) try {
+    n2.__H.__h.forEach(z2), n2.__H.__h.forEach(B2), n2.__H.__h = [];
+  } catch (t3) {
+    n2.__H.__h = [], c2.__e(t3, n2.__v);
+  }
+}
+c2.__b = function(n2) {
+  r2 = null, e2 && e2(n2);
+}, c2.__ = function(n2, t3) {
+  n2 && t3.__k && t3.__k.__m && (n2.__m = t3.__k.__m), s2 && s2(n2, t3);
+}, c2.__r = function(n2) {
+  a2 && a2(n2), t2 = 0;
+  var i4 = (r2 = n2.__c).__H;
+  i4 && (u2 === r2 ? (i4.__h = [], r2.__h = [], i4.__.forEach(function(n3) {
+    n3.__N && (n3.__ = n3.__N), n3.u = n3.__N = void 0;
+  })) : (i4.__h.forEach(z2), i4.__h.forEach(B2), i4.__h = [], t2 = 0)), u2 = r2;
+}, c2.diffed = function(n2) {
+  v2 && v2(n2);
+  var t3 = n2.__c;
+  t3 && t3.__H && (t3.__H.__h.length && (1 !== f2.push(t3) && i2 === c2.requestAnimationFrame || ((i2 = c2.requestAnimationFrame) || w2)(j2)), t3.__H.__.forEach(function(n3) {
+    n3.u && (n3.__H = n3.u), n3.u = void 0;
+  })), u2 = r2 = null;
+}, c2.__c = function(n2, t3) {
+  t3.some(function(n3) {
+    try {
+      n3.__h.forEach(z2), n3.__h = n3.__h.filter(function(n4) {
+        return !n4.__ || B2(n4);
+      });
+    } catch (r3) {
+      t3.some(function(n4) {
+        n4.__h && (n4.__h = []);
+      }), t3 = [], c2.__e(r3, n3.__v);
+    }
+  }), l2 && l2(n2, t3);
+}, c2.unmount = function(n2) {
+  m2 && m2(n2);
+  var t3, r3 = n2.__c;
+  r3 && r3.__H && (r3.__H.__.forEach(function(n3) {
+    try {
+      z2(n3);
+    } catch (n4) {
+      t3 = n4;
+    }
+  }), r3.__H = void 0, t3 && c2.__e(t3, r3.__v));
+};
+var k2 = "function" == typeof requestAnimationFrame;
+function w2(n2) {
+  var t3, r3 = function() {
+    clearTimeout(u4), k2 && cancelAnimationFrame(t3), setTimeout(n2);
+  }, u4 = setTimeout(r3, 35);
+  k2 && (t3 = requestAnimationFrame(r3));
+}
+function z2(n2) {
+  var t3 = r2, u4 = n2.__c;
+  "function" == typeof u4 && (n2.__c = void 0, u4()), r2 = t3;
+}
+function B2(n2) {
+  var t3 = r2;
+  n2.__c = n2.__(), r2 = t3;
+}
+function C2(n2, t3) {
+  return !n2 || n2.length !== t3.length || t3.some(function(t4, r3) {
+    return t4 !== n2[r3];
+  });
+}
+function D2(n2, t3) {
+  return "function" == typeof t3 ? t3(n2) : t3;
+}
+
+// src/components/TrackerContext.tsx
+var TrackerContext = Q(null);
+function useTrackerContext() {
+  const context = x2(TrackerContext);
+  if (!context) {
+    throw new Error("useTrackerContext must be used within TrackerContext.Provider");
+  }
+  return context;
+}
+
+// node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js
+var f3 = 0;
+var i3 = Array.isArray;
+function u3(e3, t3, n2, o3, i4, u4) {
+  t3 || (t3 = {});
+  var a3, c3, p3 = t3;
+  if ("ref" in p3) for (c3 in p3 = {}, t3) "ref" == c3 ? a3 = t3[c3] : p3[c3] = t3[c3];
+  var l3 = { type: e3, props: p3, key: n2, ref: a3, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --f3, __i: -1, __u: 0, __source: i4, __self: u4 };
+  if ("function" == typeof e3 && (a3 = e3.defaultProps)) for (c3 in a3) void 0 === p3[c3] && (p3[c3] = a3[c3]);
+  return l.vnode && l.vnode(l3), l3;
+}
+
+// src/components/TrackerBlock/DatePicker.tsx
+function DatePicker({ dateIso, onDateChange, onNavigate, isUpdating }) {
+  const handleInputChange = q2((e3) => {
+    const target = e3.target;
+    onDateChange(target.value);
+  }, [onDateChange]);
+  const handlePrevDay = q2(() => {
+    onNavigate(-1);
+  }, [onNavigate]);
+  const handleNextDay = q2(() => {
+    onNavigate(1);
+  }, [onNavigate]);
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.DATE_PICKER_CONTAINER, children: /* @__PURE__ */ u3("div", { class: CSS_CLASSES.DATE_PICKER, children: [
+    /* @__PURE__ */ u3(
+      "button",
+      {
+        type: "button",
+        class: `${CSS_CLASSES.DATE_NAV_BTN} ${CSS_CLASSES.DATE_NAV_BTN_LEFT}`,
+        onClick: handlePrevDay,
+        disabled: isUpdating,
+        title: MODAL_LABELS.YESTERDAY,
+        children: "\u25C0"
+      }
+    ),
+    /* @__PURE__ */ u3(
+      "input",
+      {
+        type: "date",
+        class: `${CSS_CLASSES.DATE_INPUT}${isUpdating ? ` ${CSS_CLASSES.DATE_INPUT_UPDATING}` : ""}`,
+        value: dateIso,
+        onChange: handleInputChange,
+        disabled: isUpdating
+      }
+    ),
+    /* @__PURE__ */ u3(
+      "button",
+      {
+        type: "button",
+        class: `${CSS_CLASSES.DATE_NAV_BTN} ${CSS_CLASSES.DATE_NAV_BTN_RIGHT}`,
+        onClick: handleNextDay,
+        disabled: isUpdating,
+        title: MODAL_LABELS.TOMORROW,
+        children: "\u25B6"
+      }
+    )
+  ] }) });
+}
+
+// src/components/TrackerBlock/LoadingIndicator.tsx
+function LoadingIndicator({ isActive }) {
+  return /* @__PURE__ */ u3("div", { class: `${CSS_CLASSES.LOADING}${isActive ? ` ${CSS_CLASSES.LOADING_ACTIVE}` : ""}`, children: [
+    /* @__PURE__ */ u3("div", { class: CSS_CLASSES.LOADING_DOT }),
+    /* @__PURE__ */ u3("span", { children: MODAL_LABELS.UPDATING })
+  ] });
+}
+
+// src/utils/path.ts
+function normalizePath(path) {
+  if (!path) return "";
+  return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
+}
+
+// src/components/TrackerItem/TrackerHeader.tsx
+function TrackerHeader({
+  file,
+  displayName,
+  plugin,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+  limitProgress
+}) {
+  const headerRef = A2(null);
+  const iconContainerRef = A2(null);
+  y2(() => {
+    if (iconContainerRef.current) {
+      const trackerIcon = plugin.getIconForPath(file.path, true);
+      if (trackerIcon) {
+        iconContainerRef.current.innerHTML = "";
+        plugin.renderIcon(trackerIcon, iconContainerRef.current);
+      }
+    }
+  }, [plugin, file.path]);
+  y2(() => {
+    if (headerRef.current) {
+      if (limitProgress) {
+        headerRef.current.style.setProperty("--limit-progress-width", limitProgress.width);
+        headerRef.current.style.setProperty("--limit-progress-color", limitProgress.color);
+      } else {
+        headerRef.current.style.setProperty("--limit-progress-width", "0%");
+        headerRef.current.style.setProperty("--limit-progress-color", "transparent");
+      }
+    }
+  }, [limitProgress]);
+  const handleTitleClick = q2((e3) => {
+    e3.preventDefault();
+    e3.stopPropagation();
+    plugin.app.workspace.openLinkText(file.path, "", false);
+  }, [plugin, file.path]);
+  return /* @__PURE__ */ u3("div", { ref: headerRef, class: CSS_CLASSES.TRACKER_HEADER, children: [
+    /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER_TITLE, children: [
+      /* @__PURE__ */ u3("span", { ref: iconContainerRef, class: "tracker-notes__tracker-icon" }),
+      /* @__PURE__ */ u3(
+        "a",
+        {
+          class: "internal-link",
+          href: file.path,
+          "data-href": file.path,
+          onClick: handleTitleClick,
+          children: displayName
+        }
+      )
+    ] }),
+    (onMoveUp || onMoveDown) && /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ORDER_BTN_CONTAINER, children: [
+      onMoveUp && /* @__PURE__ */ u3(
+        "button",
+        {
+          type: "button",
+          class: CSS_CLASSES.ORDER_BTN_UP,
+          onClick: onMoveUp,
+          title: MODAL_LABELS.MOVE_UP,
+          children: "\u2191"
+        }
+      ),
+      onMoveDown && /* @__PURE__ */ u3(
+        "button",
+        {
+          type: "button",
+          class: CSS_CLASSES.ORDER_BTN_DOWN,
+          onClick: onMoveDown,
+          title: MODAL_LABELS.MOVE_DOWN,
+          children: "\u2193"
+        }
+      )
+    ] }),
+    onEdit && /* @__PURE__ */ u3(
+      "button",
+      {
+        type: "button",
+        class: CSS_CLASSES.SETTINGS_BTN,
+        onClick: onEdit,
+        title: MODAL_LABELS.TRACKER_SETTINGS,
+        children: "\u2699\uFE0F"
+      }
+    )
+  ] });
+}
+
+// src/components/controls/NumberControl.tsx
+function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+  const currentValue = entries.get(dateIso);
+  const initialValue = currentValue != null && !isNaN(Number(currentValue)) ? String(currentValue) : "";
+  const [inputValue, setInputValue] = d2(initialValue);
+  const inputRef = A2(null);
+  const debounceRef = A2(null);
+  y2(() => {
+    const newValue = entries.get(dateIso);
+    const newInputValue = newValue != null && !isNaN(Number(newValue)) ? String(newValue) : "";
+    setInputValue(newInputValue);
+  }, [entries, dateIso]);
+  const writeValue = q2(async (value, immediate = false) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    const val = value === "" ? "0" : value;
+    const numVal = Number(val);
+    if (isNaN(numVal)) return;
+    const doWrite = async () => {
+      try {
+        await plugin.writeLogLine(file, dateIso, String(numVal));
+        await onValueChange();
+      } catch (err) {
+        console.error("NumberControl: write error", err);
+      }
+    };
+    if (immediate) {
+      await doWrite();
+    } else {
+      debounceRef.current = setTimeout(doWrite, DEBOUNCE_DELAY_MS);
+    }
+  }, [plugin, file, dateIso, onValueChange]);
+  const handleChange = q2((e3) => {
+    const target = e3.target;
+    setInputValue(target.value);
+    writeValue(target.value, false);
+    if (inputRef.current) {
+      inputRef.current.style.transform = "scale(0.98)";
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.style.transform = "";
+        }
+      }, ANIMATION_DURATION_MS);
+    }
+  }, [writeValue]);
+  const handleKeyPress = q2((e3) => {
+    if (e3.key === "Enter") {
+      writeValue(inputValue, true);
+    }
+  }, [inputValue, writeValue]);
+  const handleBlur = q2(() => {
+    writeValue(inputValue, true);
+  }, [inputValue, writeValue]);
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ROW, children: /* @__PURE__ */ u3(
+    "input",
+    {
+      ref: inputRef,
+      type: "number",
+      placeholder: "0",
+      value: inputValue,
+      onInput: handleChange,
+      onKeyPress: handleKeyPress,
+      onBlur: handleBlur
+    }
+  ) });
+}
+
+// src/components/controls/PlusMinusControl.tsx
+function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+  const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
+  const currentValue = entries.get(dateIso);
+  const initialValue = currentValue != null && !isNaN(Number(currentValue)) ? Number(currentValue) : 0;
+  const [value, setValue] = d2(initialValue);
+  const [isUpdated, setIsUpdated] = d2(false);
+  const valueRef = A2(null);
+  y2(() => {
+    const newValue = entries.get(dateIso);
+    const newNumValue = newValue != null && !isNaN(Number(newValue)) ? Number(newValue) : 0;
+    setValue(newNumValue);
+  }, [entries, dateIso]);
+  const writeValue = q2(async (newValue) => {
+    try {
+      await plugin.writeLogLine(file, dateIso, String(newValue));
+      await onValueChange();
+    } catch (err) {
+      console.error("PlusMinusControl: write error", err);
+    }
+  }, [plugin, file, dateIso, onValueChange]);
+  const handleMinus = q2(async () => {
+    const newValue = (Number.isFinite(value) ? value : 0) - step;
+    setValue(newValue);
+    setIsUpdated(true);
+    await writeValue(newValue);
+    setTimeout(() => setIsUpdated(false), ANIMATION_DURATION_MS);
+  }, [value, step, writeValue]);
+  const handlePlus = q2(async () => {
+    const newValue = (Number.isFinite(value) ? value : 0) + step;
+    setValue(newValue);
+    setIsUpdated(true);
+    await writeValue(newValue);
+    setTimeout(() => setIsUpdated(false), ANIMATION_DURATION_MS);
+  }, [value, step, writeValue]);
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ROW, children: [
+    /* @__PURE__ */ u3("button", { type: "button", onClick: handleMinus, children: "\u2212" }),
+    /* @__PURE__ */ u3(
+      "span",
+      {
+        ref: valueRef,
+        class: `${CSS_CLASSES.VALUE}${isUpdated ? ` ${CSS_CLASSES.VALUE_UPDATED}` : ""}`,
+        children: value
+      }
+    ),
+    /* @__PURE__ */ u3("button", { type: "button", onClick: handlePlus, children: "+" })
+  ] });
+}
+
+// src/components/controls/TextControl.tsx
+function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+  const currentValue = entries.get(dateIso);
+  const initialValue = currentValue != null && typeof currentValue === "string" ? currentValue : "";
+  const [inputValue, setInputValue] = d2(initialValue);
+  const buttonRef = A2(null);
+  y2(() => {
+    const newValue = entries.get(dateIso);
+    const newInputValue = newValue != null && typeof newValue === "string" ? newValue : "";
+    setInputValue(newInputValue);
+  }, [entries, dateIso]);
+  const handleChange = q2((e3) => {
+    const target = e3.target;
+    setInputValue(target.value);
+  }, []);
+  const handleSave = q2(async () => {
+    try {
+      const val = inputValue.trim();
+      await plugin.writeLogLine(file, dateIso, val);
+      await onValueChange();
+      if (buttonRef.current) {
+        buttonRef.current.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          if (buttonRef.current) {
+            buttonRef.current.style.transform = "";
+          }
+        }, ANIMATION_DURATION_MS);
+      }
+    } catch (err) {
+      console.error("TextControl: write error", err);
+    }
+  }, [plugin, file, dateIso, inputValue, onValueChange]);
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ROW, children: [
+    /* @__PURE__ */ u3(
+      "textarea",
+      {
+        class: CSS_CLASSES.TEXT_INPUT,
+        placeholder: PLACEHOLDERS.TEXT_INPUT,
+        value: inputValue,
+        onInput: handleChange
+      }
+    ),
+    /* @__PURE__ */ u3("button", { ref: buttonRef, type: "button", onClick: handleSave, children: MODAL_LABELS.SAVE })
+  ] });
+}
+
+// src/components/controls/ScaleControl.tsx
+function ScaleControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+  const minValue = parseFloat(fileOptions.minValue || String(DEFAULTS.MIN_VALUE)) || DEFAULTS.MIN_VALUE;
+  const maxValue = parseFloat(fileOptions.maxValue || String(DEFAULTS.MAX_VALUE)) || DEFAULTS.MAX_VALUE;
+  const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
+  const currentValue = entries.get(dateIso);
+  let initialValue = minValue;
+  if (currentValue != null && !isNaN(Number(currentValue))) {
+    initialValue = Math.max(minValue, Math.min(maxValue, Number(currentValue)));
+  }
+  const [value, setValue] = d2(initialValue);
+  const [isDragging, setIsDragging] = d2(false);
+  const progressBarRef = A2(null);
+  const hasMoved = A2(false);
+  y2(() => {
+    const newValue = entries.get(dateIso);
+    if (newValue != null && !isNaN(Number(newValue))) {
+      const numVal = Math.max(minValue, Math.min(maxValue, Number(newValue)));
+      setValue(numVal);
+    }
+  }, [entries, dateIso, minValue, maxValue]);
+  const calculateValue = q2((clientX) => {
+    if (!progressBarRef.current) return minValue;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+    const percentage2 = Math.max(0, Math.min(1, clickX / rect.width));
+    const rawValue = minValue + (maxValue - minValue) * percentage2;
+    const steppedValue = Math.round((rawValue - minValue) / step) * step + minValue;
+    return Math.max(minValue, Math.min(maxValue, steppedValue));
+  }, [minValue, maxValue, step]);
+  const writeValue = q2(async (newValue) => {
+    try {
+      await plugin.writeLogLine(file, dateIso, String(newValue));
+      await onValueChange();
+    } catch (err) {
+      console.error("ScaleControl: write error", err);
+    }
+  }, [plugin, file, dateIso, onValueChange]);
+  const handleMouseDown = q2((e3) => {
+    if (e3.button !== 0) return;
+    setIsDragging(true);
+    hasMoved.current = false;
+    const newValue = calculateValue(e3.clientX);
+    setValue(newValue);
+    e3.preventDefault();
+  }, [calculateValue]);
+  const handleMouseMove = q2((e3) => {
+    if (!isDragging) return;
+    hasMoved.current = true;
+    const newValue = calculateValue(e3.clientX);
+    setValue(newValue);
+  }, [isDragging, calculateValue]);
+  const handleMouseUp = q2(async () => {
+    if (isDragging) {
+      setIsDragging(false);
+      if (hasMoved.current) {
+        await writeValue(value);
+      }
+    }
+  }, [isDragging, value, writeValue]);
+  const handleClick = q2(async (e3) => {
+    if (hasMoved.current) {
+      hasMoved.current = false;
+      return;
+    }
+    const target = e3.target;
+    if (target.classList.contains(CSS_CLASSES.PROGRESS_BAR_PROGRESS) || target.classList.contains(CSS_CLASSES.PROGRESS_BAR_VALUE) || target.classList.contains(CSS_CLASSES.PROGRESS_BAR_LABEL_LEFT) || target.classList.contains(CSS_CLASSES.PROGRESS_BAR_LABEL_RIGHT)) {
+      return;
+    }
+    const newValue = calculateValue(e3.clientX);
+    setValue(newValue);
+    await writeValue(newValue);
+  }, [calculateValue, writeValue]);
+  const handleKeyDown = q2((e3) => {
+    let newValue = value;
+    if (e3.key === "ArrowLeft" || e3.key === "ArrowDown") {
+      e3.preventDefault();
+      newValue = Math.max(minValue, value - step);
+    } else if (e3.key === "ArrowRight" || e3.key === "ArrowUp") {
+      e3.preventDefault();
+      newValue = Math.min(maxValue, value + step);
+    } else if (e3.key === "Home") {
+      e3.preventDefault();
+      newValue = minValue;
+    } else if (e3.key === "End") {
+      e3.preventDefault();
+      newValue = maxValue;
+    } else {
+      return;
+    }
+    setValue(newValue);
+  }, [value, minValue, maxValue, step]);
+  const handleKeyUp = q2(async (e3) => {
+    if (["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(e3.key)) {
+      await writeValue(value);
+    }
+  }, [value, writeValue]);
+  y2(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+  const percentage = (value - minValue) / (maxValue - minValue) * 100;
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.PROGRESS_BAR_WRAPPER, "data-internal-value": value, children: /* @__PURE__ */ u3(
+    "div",
+    {
+      ref: progressBarRef,
+      class: CSS_CLASSES.PROGRESS_BAR_INPUT,
+      tabIndex: 0,
+      role: "button",
+      "aria-label": String(value),
+      "aria-valuemin": minValue,
+      "aria-valuemax": maxValue,
+      "aria-valuenow": value,
+      onClick: handleClick,
+      onMouseDown: handleMouseDown,
+      onKeyDown: handleKeyDown,
+      onKeyUp: handleKeyUp,
+      style: { cursor: isDragging ? "col-resize" : void 0 },
+      children: [
+        /* @__PURE__ */ u3(
+          "div",
+          {
+            class: CSS_CLASSES.PROGRESS_BAR_PROGRESS,
+            role: "slider",
+            tabIndex: 0,
+            "aria-valuemin": minValue,
+            "aria-valuemax": maxValue,
+            "aria-valuenow": value,
+            style: { width: `${percentage}%` }
+          }
+        ),
+        /* @__PURE__ */ u3("span", { class: CSS_CLASSES.PROGRESS_BAR_VALUE, children: value }),
+        /* @__PURE__ */ u3("span", { class: CSS_CLASSES.PROGRESS_BAR_LABEL_LEFT, children: minValue }),
+        /* @__PURE__ */ u3("span", { class: CSS_CLASSES.PROGRESS_BAR_LABEL_RIGHT, children: maxValue })
+      ]
+    }
+  ) });
+}
+
+// src/utils/validation.ts
+function sanitizeFileName(name) {
+  return name.replace(/[<>:"/\\|?*]/g, "_");
+}
+function isTrackerValueTrue(value) {
+  if (value === null || value === void 0) {
+    return false;
+  }
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+  const str = String(value);
+  return str === "1" || str === "true" || str.trim() !== "";
+}
+
+// src/components/controls/Heatmap.tsx
+function Heatmap({
+  file,
+  dateIso,
+  plugin,
+  fileOptions,
+  entries,
+  onValueChange,
+  daysToShow,
+  trackerType,
+  startTrackingDate
+}) {
+  const heatmapRef = A2(null);
+  const touchStartRef = A2({ x: 0, y: 0, isScrolling: false });
+  const days = T2(() => {
+    const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
+    const today = DateService.now();
+    const todayStart = DateService.startOfDay(today);
+    const todayStr = DateService.format(todayStart, plugin.settings.dateFormat);
+    const result = [];
+    for (let i4 = 0; i4 < daysToShow; i4++) {
+      const date = endDate.clone().subtract(i4, "days");
+      const dateStr = DateService.format(date, plugin.settings.dateFormat);
+      const dayNum = date.getDate();
+      const value = entries.get(dateStr);
+      const hasValue = isTrackerValueTrue(value);
+      const isStartDay = dateStr === startTrackingDate;
+      let isBeforeStart = false;
+      let isAfterToday = false;
+      if (DateService.isAfter(date, todayStart)) {
+        isAfterToday = true;
+      } else if (startTrackingDate) {
+        try {
+          const startDateObj = DateService.parseMultiple(startTrackingDate, [
+            plugin.settings.dateFormat,
+            "YYYY-MM-DD",
+            "DD.MM.YYYY",
+            "MM/DD/YYYY"
+          ]);
+          if (DateService.isBefore(date, startDateObj)) {
+            isBeforeStart = true;
+          }
+        } catch (e3) {
+        }
+      }
+      result.push({
+        dateStr,
+        dayNum,
+        hasValue,
+        isStartDay,
+        isBeforeStart,
+        isAfterToday
+      });
+    }
+    return result;
+  }, [dateIso, daysToShow, entries, plugin.settings.dateFormat, startTrackingDate]);
+  const handleDayClick = q2(async (day) => {
+    if (day.isAfterToday || day.isBeforeStart) {
+      return;
+    }
+    const isChecked = day.hasValue;
+    const newValue = isChecked ? 0 : 1;
+    try {
+      await plugin.writeLogLine(file, day.dateStr, String(newValue));
+      await onValueChange();
+    } catch (err) {
+      console.error("Heatmap: write error", err);
+    }
+  }, [plugin, file, onValueChange]);
+  const handleTouchStart = q2((e3) => {
+    if (e3.touches.length === 1) {
+      touchStartRef.current = {
+        x: e3.touches[0].clientX,
+        y: e3.touches[0].clientY,
+        isScrolling: false
+      };
+    }
+  }, []);
+  const handleTouchMove = q2((e3) => {
+    if (e3.touches.length === 1 && touchStartRef.current.x !== 0) {
+      const deltaX = Math.abs(e3.touches[0].clientX - touchStartRef.current.x);
+      const deltaY = Math.abs(e3.touches[0].clientY - touchStartRef.current.y);
+      if (deltaX > deltaY * 1.5 && deltaX > 10) {
+        touchStartRef.current.isScrolling = true;
+        e3.stopPropagation();
+      } else {
+        touchStartRef.current.isScrolling = false;
+      }
+    }
+  }, []);
+  const handleTouchEnd = q2((e3) => {
+    if (touchStartRef.current.isScrolling) {
+      e3.stopPropagation();
+    }
+    touchStartRef.current = { x: 0, y: 0, isScrolling: false };
+  }, []);
+  const getDayClassName = q2((day) => {
+    const classes = [CSS_CLASSES.HEATMAP_DAY, trackerType];
+    if (day.hasValue) classes.push("has-value");
+    if (day.isStartDay) classes.push("start-day");
+    if (day.isBeforeStart) classes.push("before-start");
+    if (day.isAfterToday) classes.push("after-today");
+    return classes.join(" ");
+  }, [trackerType]);
+  return /* @__PURE__ */ u3(
+    "div",
+    {
+      ref: heatmapRef,
+      class: CSS_CLASSES.HEATMAP,
+      onTouchStart: handleTouchStart,
+      onTouchMove: handleTouchMove,
+      onTouchEnd: handleTouchEnd,
+      children: days.map((day) => /* @__PURE__ */ u3(
+        "div",
+        {
+          class: getDayClassName(day),
+          "data-date-str": day.dateStr,
+          onClick: () => handleDayClick(day),
+          children: day.dayNum
+        },
+        day.dateStr
+      ))
+    }
+  );
+}
+
+// src/utils/misc.ts
+function parseMaybeNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : value;
+}
+function countWords(text) {
+  const trimmed = text.trim();
+  if (trimmed === "") return 0;
+  return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
+}
+
+// src/services/statistics-service.ts
+var StatisticsService = class {
+  /**
+   * Gets entry value by date, trying multiple date formats
+   */
+  getEntryValueByDate(entries, date, settings) {
+    const formats = [
+      settings.dateFormat,
+      "YYYY-MM-DD",
+      "DD.MM.YYYY",
+      "MM/DD/YYYY"
+    ];
+    const triedFormats = [];
+    for (const format of formats) {
+      const dateStr = DateService.format(date, format);
+      triedFormats.push(`${format}:${dateStr}`);
+      const val = entries.get(dateStr);
+      if (val !== void 0) {
+        return val;
+      }
+    }
+    return void 0;
+  }
+  /**
+   * Determines the start tracking date with priorities:
+   * 1. trackingStartDate from frontmatter
+   * 2. File creation date
+   * 3. First date from entries
+   * 4. Fallback: 365 days ago from current date
+   */
+  determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
+    let startTrackingDate = null;
+    if (startTrackingDateStr) {
+      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
+        "YYYY-MM-DD",
+        settings.dateFormat,
+        "DD.MM.YYYY",
+        "MM/DD/YYYY"
+      ]);
+      if (startTrackingDate.isValid()) {
+        startTrackingDate = DateService.startOfDay(startTrackingDate);
+      } else {
+        startTrackingDate = null;
+      }
+    }
+    if (!startTrackingDate && file?.stat?.ctime) {
+      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
+    }
+    if (entries.size > 0) {
+      const sortedDates = Array.from(entries.keys()).sort();
+      const firstDateStr = sortedDates[0];
+      const firstDate = DateService.parseMultiple(firstDateStr, [
+        settings.dateFormat,
+        "YYYY-MM-DD",
+        "DD.MM.YYYY",
+        "MM/DD/YYYY"
+      ]);
+      if (firstDate.isValid()) {
+        const firstDateNormalized = DateService.startOfDay(firstDate);
+        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
+          startTrackingDate = firstDateNormalized;
+        }
+      }
+    }
+    if (!startTrackingDate) {
+      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
+    }
+    return startTrackingDate;
+  }
+  /**
+   * Calculates statistics for habits (good-habit and bad-habit)
+   */
+  calculateHabitStatistics(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
+    const endDate = DateService.parse(dateIso, settings.dateFormat);
+    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
+    let actualStartDate = startDate;
+    if (startTrackingDateStr) {
+      const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
+        settings.dateFormat,
+        "YYYY-MM-DD",
+        "YYYY/MM/DD",
+        "DD.MM.YYYY"
+      ]);
+      if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
+        actualStartDate = trackingStartDate;
+      }
+    }
+    const periodDays = [];
+    const metricType = trackerType.toLowerCase();
+    const isBadHabit = metricType === TrackerType.BAD_HABIT;
+    let actualDaysCount = 0;
+    let currentDate = actualStartDate.clone();
+    while (!DateService.isAfter(currentDate, endDate)) {
+      const dateStr = DateService.format(currentDate, settings.dateFormat);
+      const val = entries.get(dateStr);
+      let numVal = 0;
+      if (val != null) {
+        if (typeof val === "number") {
+          numVal = val;
+        } else if (val === "1" || String(val) === "true") {
+          numVal = 1;
+        } else {
+          numVal = Number(val) || 0;
+        }
+      }
+      if (isBadHabit) {
+        numVal = numVal === 0 || val == null ? 1 : 0;
+      } else {
+        numVal = val != null && numVal > 0 ? 1 : 0;
+      }
+      periodDays.push(numVal);
+      actualDaysCount++;
+      currentDate = currentDate.add(1, "days");
+    }
+    const sum = periodDays.reduce((a3, b) => a3 + b, 0);
+    const avg = actualDaysCount > 0 ? sum / actualDaysCount : 0;
+    const totalRecords = entries.size;
+    const activeDays = periodDays.filter((v3) => v3 > 0).length;
+    const completionRate = actualDaysCount > 0 ? activeDays / actualDaysCount * 100 : 0;
+    return {
+      totalRecords,
+      periodDays,
+      actualDaysCount,
+      completionRate,
+      activeDays,
+      sum,
+      avg
+    };
+  }
+  /**
+   * Calculates statistics for metrics (number, scale, plusminus, text)
+   */
+  calculateMetricStatistics(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
+    const endDate = DateService.parse(dateIso, settings.dateFormat);
+    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
+    let actualStartDate = startDate;
+    if (startTrackingDateStr) {
+      const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
+        settings.dateFormat,
+        "YYYY-MM-DD",
+        "YYYY/MM/DD",
+        "DD.MM.YYYY"
+      ]);
+      if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
+        actualStartDate = trackingStartDate;
+      }
+    }
+    const periodDays = [];
+    const metricType = trackerType.toLowerCase();
+    let actualDaysCount = 0;
+    let currentDate = actualStartDate.clone();
+    while (!DateService.isAfter(currentDate, endDate)) {
+      const dateStr = DateService.format(currentDate, settings.dateFormat);
+      const val = entries.get(dateStr);
+      let numVal = 0;
+      if (val != null) {
+        if (metricType === TrackerType.TEXT) {
+          numVal = countWords(String(val));
+        } else if (typeof val === "number") {
+          numVal = val;
+        } else if (val === "1" || String(val) === "true") {
+          numVal = 1;
+        } else {
+          numVal = Number(val) || 0;
+        }
+      }
+      periodDays.push(numVal);
+      actualDaysCount++;
+      currentDate = currentDate.add(1, "days");
+    }
+    const sum = periodDays.reduce((a3, b) => a3 + b, 0);
+    const avg = actualDaysCount > 0 ? sum / actualDaysCount : 0;
+    const totalRecords = entries.size;
+    let min = null;
+    let max = null;
+    let median = null;
+    const nonZeroValues = periodDays.filter((v3) => v3 > 0);
+    if (periodDays.length > 0) {
+      const sortedValues = [...periodDays].sort((a3, b) => a3 - b);
+      min = sortedValues[0];
+      max = sortedValues[sortedValues.length - 1];
+      const mid = Math.floor(sortedValues.length / 2);
+      if (sortedValues.length % 2 === 0) {
+        median = (sortedValues[mid - 1] + sortedValues[mid]) / 2;
+      } else {
+        median = sortedValues[mid];
+      }
+    }
+    const activeDays = nonZeroValues.length;
+    return {
+      totalRecords,
+      periodDays,
+      actualDaysCount,
+      sum,
+      avg,
+      min,
+      max,
+      median,
+      activeDays
+    };
+  }
+  /**
+   * Calculates streak information (current and best streak)
+   */
+  calculateStreaks(entries, settings, endDate, trackerType, file, startTrackingDateStr) {
+    const metricType = trackerType.toLowerCase();
+    const isBadHabit = metricType === TrackerType.BAD_HABIT;
+    let currentDate;
+    if (endDate instanceof Date) {
+      currentDate = DateService.fromDate(endDate);
+    } else if (endDate && typeof endDate.isValid === "function" && typeof endDate.clone === "function") {
+      currentDate = endDate.clone();
+    } else {
+      currentDate = DateService.fromDate(new Date(endDate));
+    }
+    if (!currentDate || !currentDate.isValid || !currentDate.isValid()) {
+      return { current: 0, best: 0 };
+    }
+    currentDate = DateService.startOfDay(currentDate);
+    const startTrackingDate = this.determineStartTrackingDate(
+      startTrackingDateStr,
+      file,
+      entries,
+      settings,
+      currentDate
+    );
+    if (!startTrackingDate || !startTrackingDate.isValid()) {
+      return { current: 0, best: 0 };
+    }
+    let currentStreak = 0;
+    let daysChecked = 0;
+    let checkDate = currentDate.clone();
+    while (daysChecked < MAX_DAYS_BACK) {
+      if (DateService.isBefore(checkDate, startTrackingDate)) {
+        break;
+      }
+      const val = this.getEntryValueByDate(entries, checkDate, settings);
+      let isSuccess = false;
+      if (isBadHabit) {
+        if (val == null || val === void 0) {
+          isSuccess = true;
+        } else {
+          const hasValue = isTrackerValueTrue(val);
+          isSuccess = !hasValue;
+        }
+      } else {
+        if (val != null && val !== void 0) {
+          isSuccess = isTrackerValueTrue(val);
+        }
+      }
+      if (isSuccess) {
+        currentStreak++;
+      } else {
+        break;
+      }
+      checkDate = checkDate.subtract(1, "days");
+      daysChecked++;
+    }
+    let bestStreak = 0;
+    let bestCurrentStreak = 0;
+    daysChecked = 0;
+    let bestCheckDate = currentDate.clone();
+    while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
+      const val = this.getEntryValueByDate(entries, bestCheckDate, settings);
+      let isSuccess = false;
+      if (isBadHabit) {
+        if (val == null || val === void 0) {
+          isSuccess = true;
+        } else {
+          const hasValue = isTrackerValueTrue(val);
+          isSuccess = !hasValue;
+        }
+      } else {
+        if (val != null && val !== void 0) {
+          isSuccess = isTrackerValueTrue(val);
+        }
+      }
+      if (isSuccess) {
+        bestCurrentStreak++;
+        bestStreak = Math.max(bestStreak, bestCurrentStreak);
+      } else {
+        bestCurrentStreak = 0;
+      }
+      bestCheckDate = bestCheckDate.subtract(1, "days");
+      daysChecked++;
+    }
+    return {
+      current: currentStreak,
+      best: bestStreak
+    };
+  }
+  /**
+   * Calculates complete statistics for a tracker
+   */
+  calculateStatistics(entries, settings, dateIso, daysToShow, trackerType, endDate, file, startTrackingDateStr) {
+    const metricType = trackerType.toLowerCase();
+    const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
+    const streaks = this.calculateStreaks(
+      entries,
+      settings,
+      endDate,
+      trackerType,
+      file,
+      startTrackingDateStr
+    );
+    let habit = null;
+    let metric = null;
+    let base;
+    if (isHabit) {
+      habit = this.calculateHabitStatistics(
+        entries,
+        settings,
+        dateIso,
+        daysToShow,
+        trackerType,
+        startTrackingDateStr
+      );
+      base = {
+        totalRecords: habit.totalRecords,
+        periodDays: habit.periodDays,
+        actualDaysCount: habit.actualDaysCount
+      };
+    } else {
+      metric = this.calculateMetricStatistics(
+        entries,
+        settings,
+        dateIso,
+        daysToShow,
+        trackerType,
+        startTrackingDateStr
+      );
+      base = {
+        totalRecords: metric.totalRecords,
+        periodDays: metric.periodDays,
+        actualDaysCount: metric.actualDaysCount
+      };
+    }
+    return {
+      base,
+      habit,
+      metric,
+      streaks,
+      trackerType
+    };
+  }
+};
+
+// src/components/Statistics/Statistics.tsx
+function getCompletionColorClass(rate) {
+  if (rate >= 80) return "tracker-notes__stats-value--success";
+  if (rate >= 50) return "tracker-notes__stats-value--warning";
+  return "tracker-notes__stats-value--error";
+}
+function formatValue(value, decimals = 1, unit = "") {
+  const formatted = value.toFixed(decimals);
+  return unit ? `${formatted} ${unit}` : formatted;
+}
+function getDaysLabel(count) {
+  if (count === 1) return STATS_LABELS.DAYS_SINGULAR;
+  if (count < 5) return STATS_LABELS.DAYS_PLURAL_2_4;
+  return STATS_LABELS.DAYS_PLURAL_5_PLUS;
+}
+function Section({ title, children }) {
+  return /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-section tracker-notes__stats-card", children: [
+    title && /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-section-title", children: /* @__PURE__ */ u3("span", { children: title }) }),
+    children
+  ] });
+}
+function MetricItem({ label, value, valueClass, icon }) {
+  return /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-metric", children: [
+    icon && /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-icon", children: icon }),
+    /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-label", children: [
+      label,
+      ": "
+    ] }),
+    /* @__PURE__ */ u3("span", { class: `tracker-notes__stats-value ${valueClass || ""}`.trim(), children: value })
+  ] });
+}
+function CompletionRate({ rate, activeDays, totalDays, label }) {
+  const rateValue = Math.round(rate);
+  const colorClass = getCompletionColorClass(rateValue);
+  return /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-metric tracker-notes__stats-metric--completion", children: [
+    /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-completion-header", children: [
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-icon", children: "\u2705" }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-label", children: [
+        label,
+        ": "
+      ] }),
+      /* @__PURE__ */ u3("span", { class: `tracker-notes__stats-value ${colorClass}`, children: [
+        rateValue,
+        "%"
+      ] }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-value-sub", children: [
+        " (",
+        activeDays,
+        "/",
+        totalDays,
+        ")"
+      ] })
+    ] }),
+    /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-progress-bar", children: /* @__PURE__ */ u3(
+      "div",
+      {
+        class: `tracker-notes__stats-progress-fill ${colorClass}`,
+        style: { width: `${rate}%` }
+      }
+    ) })
+  ] });
+}
+function Streak({ streak, label, isCurrent = false }) {
+  const icon = isCurrent ? "\u{1F525}" : "\u2B50";
+  const daysLabel = getDaysLabel(streak);
+  return /* @__PURE__ */ u3("div", { class: `tracker-notes__stats-metric tracker-notes__stats-metric--streak ${isCurrent ? "tracker-notes__stats-metric--current" : ""}`, children: [
+    /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-icon tracker-notes__stats-icon--streak", children: icon }),
+    /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-label", children: [
+      label,
+      ": "
+    ] }),
+    /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-value", children: [
+      streak,
+      " ",
+      daysLabel
+    ] })
+  ] });
+}
+function HabitStats({ result }) {
+  if (!result.habit) return null;
+  const stats = result.habit;
+  const isBadHabit = result.trackerType.toLowerCase() === TrackerType.BAD_HABIT;
+  const completionLabel = isBadHabit ? "Days without" : STATS_LABELS.COMPLETION_RATE;
+  return /* @__PURE__ */ u3(k, { children: [
+    /* @__PURE__ */ u3(Section, { title: "PERIOD", children: /* @__PURE__ */ u3(
+      CompletionRate,
+      {
+        rate: stats.completionRate,
+        activeDays: stats.activeDays,
+        totalDays: stats.actualDaysCount,
+        label: completionLabel
+      }
+    ) }),
+    /* @__PURE__ */ u3(Section, { title: "STREAKS", children: [
+      /* @__PURE__ */ u3(
+        Streak,
+        {
+          streak: result.streaks.current,
+          label: STATS_LABELS.CURRENT_STREAK,
+          isCurrent: true
+        }
+      ),
+      /* @__PURE__ */ u3(
+        Streak,
+        {
+          streak: result.streaks.best,
+          label: STATS_LABELS.BEST_STREAK
+        }
+      )
+    ] })
+  ] });
+}
+function MetricStats({ result, unit }) {
+  if (!result.metric) return null;
+  const stats = result.metric;
+  return /* @__PURE__ */ u3(Section, { title: "PERIOD", children: [
+    /* @__PURE__ */ u3(
+      MetricItem,
+      {
+        label: STATS_LABELS.ACTIVE_DAYS,
+        value: `${stats.activeDays}/${stats.actualDaysCount}`,
+        icon: "\u{1F4C5}"
+      }
+    ),
+    /* @__PURE__ */ u3(
+      MetricItem,
+      {
+        label: STATS_LABELS.LAST_DAYS,
+        value: formatValue(stats.sum, 1, unit),
+        icon: "\u{1F4C8}"
+      }
+    ),
+    /* @__PURE__ */ u3(
+      MetricItem,
+      {
+        label: STATS_LABELS.AVERAGE,
+        value: formatValue(stats.avg, 1, unit),
+        icon: "\u{1F4CA}"
+      }
+    ),
+    stats.min !== null && stats.max !== null && /* @__PURE__ */ u3("div", { class: "tracker-notes__stats-metric tracker-notes__stats-metric--minmax", children: [
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-icon", children: "\u{1F4C9}" }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-label", children: [
+        STATS_LABELS.MIN,
+        ": "
+      ] }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-value", children: formatValue(stats.min, 1, unit) }),
+      /* @__PURE__ */ u3("span", { children: " | " }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-label", children: [
+        STATS_LABELS.MAX,
+        ": "
+      ] }),
+      /* @__PURE__ */ u3("span", { class: "tracker-notes__stats-value", children: formatValue(stats.max, 1, unit) })
+    ] }),
+    stats.median !== null && /* @__PURE__ */ u3(
+      MetricItem,
+      {
+        label: STATS_LABELS.MEDIAN,
+        value: formatValue(stats.median, 1, unit),
+        icon: "\u{1F4CA}"
+      }
+    )
+  ] });
+}
+function Statistics({
+  file,
+  plugin,
+  dateIso,
+  daysToShow,
+  trackerType,
+  entries,
+  fileOptions
+}) {
+  const statisticsResult = T2(() => {
+    try {
+      const statisticsService = new StatisticsService();
+      const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
+      const startTrackingDateStr = plugin.getStartTrackingDate(entries, fileOptions);
+      return statisticsService.calculateStatistics(
+        entries,
+        plugin.settings,
+        dateIso,
+        daysToShow,
+        trackerType,
+        endDate,
+        file,
+        startTrackingDateStr
+      );
+    } catch (error) {
+      console.error("Statistics: error calculating statistics", error);
+      return null;
+    }
+  }, [file, plugin, dateIso, daysToShow, trackerType, entries, fileOptions]);
+  if (!statisticsResult) return null;
+  const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
+  const unit = fileOptions?.unit || "";
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.STATS, children: isHabit ? /* @__PURE__ */ u3(HabitStats, { result: statisticsResult }) : /* @__PURE__ */ u3(MetricStats, { result: statisticsResult, unit }) });
+}
+
+// src/utils/theme.ts
+function getCSSVar(varName, fallback = "#000000") {
+  const root = document.body || document.documentElement;
+  const value = getComputedStyle(root).getPropertyValue(varName).trim();
+  return value || fallback;
+}
+function getAccentColor() {
+  const tempEl = document.createElement("div");
+  tempEl.style.position = "absolute";
+  tempEl.style.visibility = "hidden";
+  document.body.appendChild(tempEl);
+  let accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
+  if (!accentColor) {
+    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.COLOR_ACCENT).trim();
+  }
+  if (!accentColor) {
+    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.ACCENT_COLOR).trim();
+  }
+  document.body.removeChild(tempEl);
+  if (!accentColor) {
+    const root = document.body || document.documentElement;
+    accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
+  }
+  if (!accentColor) {
+    accentColor = FALLBACK_COLORS.ACCENT;
+  }
+  return accentColor;
+}
+function getThemeColors() {
+  const accentColor = getAccentColor();
+  return {
+    accentColor,
+    textMuted: getCSSVar(CSS_VARIABLES.TEXT_MUTED, FALLBACK_COLORS.TEXT_MUTED),
+    textFaint: getCSSVar(CSS_VARIABLES.TEXT_FAINT, FALLBACK_COLORS.TEXT_FAINT),
+    borderColor: getCSSVar(CSS_VARIABLES.BACKGROUND_MODIFIER_BORDER, FALLBACK_COLORS.BORDER),
+    bgPrimary: getCSSVar(CSS_VARIABLES.BACKGROUND_PRIMARY, FALLBACK_COLORS.BG_PRIMARY),
+    errorColor: getCSSVar(CSS_VARIABLES.TEXT_ERROR, FALLBACK_COLORS.TEXT_ERROR),
+    successColor: getCSSVar(CSS_VARIABLES.TEXT_SUCCESS, FALLBACK_COLORS.TEXT_SUCCESS),
+    startLineColor: getCSSVar(CSS_VARIABLES.TEXT_ACCENT, accentColor)
+  };
+}
+function colorToRgba(color2, alpha2) {
+  if (color2.startsWith("#")) {
+    const r3 = parseInt(color2.slice(1, 3), 16);
+    const g2 = parseInt(color2.slice(3, 5), 16);
+    const b = parseInt(color2.slice(5, 7), 16);
+    return `rgba(${r3}, ${g2}, ${b}, ${alpha2})`;
+  } else if (color2.startsWith("rgb")) {
+    return color2.replace("rgb", "rgba").replace(")", `, ${alpha2})`);
+  }
+  return color2;
+}
+
+// src/services/chart-service.ts
+var ChartService = class {
+  /**
+   * Prepares chart data from file entries
+   */
+  prepareChartData(entries, file, settings, options, startTrackingDateStr, todayStr) {
+    const { dateIso, daysToShow, metricType, minLimit, maxLimit, scaleMinValue, scaleMaxValue } = options;
+    const activeDate = dateIso ? DateService.parse(dateIso, DATE_FORMATS.ISO) : DateService.now();
+    const endDate = activeDate.clone().add(CHART_CONFIG.FUTURE_DAYS_OFFSET, "days");
+    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
+    const activeDateStr = DateService.format(activeDate, settings.dateFormat);
+    const colors2 = getThemeColors();
+    const labels = [];
+    const values = [];
+    const pointBackgroundColors = [];
+    const pointBorderColors = [];
+    const pointRadii = [];
+    const pointBorderWidths = [];
+    const dateStrings = [];
+    let maxValue = 0;
+    let startTrackingIndex = null;
+    let activeDateIndex = null;
+    for (let i4 = 0; i4 < daysToShow; i4++) {
+      const date = startDate.clone().add(i4, "days");
+      const dateStr = DateService.format(date, settings.dateFormat);
+      if (dateStr === startTrackingDateStr) {
+        startTrackingIndex = i4;
+      }
+      if (dateStr === activeDateStr) {
+        activeDateIndex = i4;
+      }
+      let label = "";
+      const m3 = window.moment;
+      if (m3) {
+        label = m3(date.toDate()).format(DATE_FORMATS.DISPLAY_SHORT);
+      } else {
+        const day = date.getDate();
+        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        label = `${day} ${month}`;
+      }
+      labels.push(label);
+      dateStrings.push(dateStr);
+      const val = entries.get(dateStr);
+      let numVal = 0;
+      if (val != null) {
+        if (metricType === TrackerType.TEXT) {
+          numVal = countWords(String(val));
+        } else if (typeof val === "number") {
+          numVal = val;
+        } else if (val === "1" || String(val) === "true") {
+          numVal = 1;
+        } else {
+          numVal = Number(val) || 0;
+        }
+      }
+      values.push(numVal);
+      maxValue = Math.max(maxValue, numVal);
+      let pointColor = colors2.accentColor;
+      let pointBorder = colors2.accentColor;
+      const isAfterToday = dateStr > todayStr;
+      const hasLimits = minLimit !== null || maxLimit !== null;
+      if (!isAfterToday && startTrackingIndex !== null && i4 >= startTrackingIndex && hasLimits) {
+        const isInRange = (minLimit === null || numVal >= minLimit) && (maxLimit === null || numVal <= maxLimit);
+        if (isInRange) {
+          pointColor = colors2.successColor;
+          pointBorder = colors2.successColor;
+        } else {
+          pointColor = colors2.errorColor;
+          pointBorder = colors2.errorColor;
+        }
+      }
+      pointBackgroundColors.push(pointColor);
+      pointBorderColors.push(pointBorder);
+      pointRadii.push(CHART_CONFIG.POINT_RADIUS);
+      pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
+    }
+    let yAxisMin = 0;
+    let yAxisMax = maxValue;
+    const allMinValues = [];
+    if (minLimit !== null) allMinValues.push(minLimit);
+    if (scaleMinValue !== null) allMinValues.push(scaleMinValue);
+    if (allMinValues.length > 0) {
+      const minFromAll = Math.min(...allMinValues);
+      yAxisMin = Math.min(yAxisMin, minFromAll);
+    }
+    const allMaxValues = [maxValue];
+    if (maxLimit !== null) allMaxValues.push(maxLimit);
+    if (minLimit !== null && maxLimit === null) {
+      allMaxValues.push(minLimit * 2);
+    }
+    if (scaleMaxValue !== null) allMaxValues.push(scaleMaxValue);
+    if (allMaxValues.length > 0) {
+      const maxFromAll = Math.max(...allMaxValues);
+      yAxisMax = Math.max(yAxisMax, maxFromAll);
+    }
+    return {
+      labels,
+      values,
+      pointBackgroundColors,
+      pointBorderColors,
+      pointRadii,
+      pointBorderWidths,
+      dateStrings,
+      startTrackingIndex,
+      activeDateIndex,
+      maxValue,
+      yAxisMin,
+      yAxisMax
+    };
+  }
+  /**
+   * Creates Chart.js configuration
+   */
+  createChartConfig(data, colors2, options, onChartClick) {
+    const { metricType, unit, minLimit, maxLimit, scaleMinValue, scaleMaxValue } = options;
+    let chartLabel;
+    if (unit) {
+      chartLabel = unit.charAt(0).toUpperCase() + unit.slice(1);
+    } else {
+      chartLabel = metricType === TrackerType.TEXT ? "Word count" : "Value";
+    }
+    const config = {
+      type: "line",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: chartLabel,
+          data: data.values,
+          borderColor: colors2.accentColor,
+          backgroundColor: colorToRgba(colors2.accentColor, 0.1),
+          borderWidth: CHART_CONFIG.BORDER_WIDTH,
+          fill: false,
+          tension: CHART_CONFIG.LINE_TENSION,
+          pointRadius: data.pointRadii,
+          pointBackgroundColor: data.pointBackgroundColors,
+          pointBorderColor: data.pointBorderColors,
+          pointBorderWidth: data.pointBorderWidths,
+          pointHoverRadius: CHART_CONFIG.POINT_HOVER_RADIUS,
+          pointHitRadius: CHART_CONFIG.POINT_HIT_RADIUS,
+          pointHoverBackgroundColor: (ctx) => {
+            const index2 = ctx.dataIndex;
+            return data.pointBackgroundColors[index2] || colors2.accentColor;
+          },
+          pointHoverBorderColor: (ctx) => {
+            const index2 = ctx.dataIndex;
+            return data.pointBorderColors[index2] || colors2.accentColor;
+          },
+          pointHoverBorderWidth: (ctx) => {
+            const index2 = ctx.dataIndex;
+            return data.pointBorderWidths[index2] || CHART_CONFIG.POINT_BORDER_WIDTH;
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: colors2.bgPrimary,
+            titleColor: colors2.textMuted,
+            bodyColor: colors2.textMuted,
+            borderColor: colors2.borderColor,
+            borderWidth: 1,
+            padding: 8,
+            displayColors: false,
+            callbacks: {
+              label: (context) => {
+                const value = context.parsed.y;
+                if (unit) {
+                  const capitalizedUnit = unit.charAt(0).toUpperCase() + unit.slice(1);
+                  return `${capitalizedUnit}: ${value}`;
+                }
+                return `${chartLabel}: ${value}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: true,
+              color: colorToRgba(colors2.borderColor, 0.3),
+              lineWidth: CHART_CONFIG.GRID_LINE_WIDTH,
+              drawBorder: false
+            },
+            ticks: {
+              color: colors2.textFaint,
+              font: {
+                family: "var(--font-text)",
+                size: CHART_CONFIG.FONT_SIZE_SMALL
+              },
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: CHART_CONFIG.MAX_TICKS_LIMIT
+            }
+          },
+          y: {
+            grid: {
+              display: true,
+              color: colorToRgba(colors2.borderColor, 0.3),
+              lineWidth: CHART_CONFIG.GRID_LINE_WIDTH,
+              drawBorder: false
+            },
+            ticks: {
+              color: colors2.textFaint,
+              font: {
+                family: "var(--font-text)",
+                size: CHART_CONFIG.FONT_SIZE_SMALL
+              }
+            },
+            beginAtZero: !minLimit && !maxLimit && !scaleMinValue && !scaleMaxValue,
+            min: minLimit !== null || maxLimit !== null || scaleMinValue !== null || scaleMaxValue !== null ? data.yAxisMin : void 0,
+            max: minLimit !== null || maxLimit !== null || scaleMinValue !== null || scaleMaxValue !== null ? data.yAxisMax : void 0
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: "index"
+        },
+        elements: {
+          point: {
+            hoverBackgroundColor: void 0,
+            hoverBorderColor: void 0,
+            hoverRadius: CHART_CONFIG.POINT_HOVER_RADIUS,
+            hoverBorderWidth: void 0
+          }
+        },
+        onClick: (event, elements2, chart) => {
+          if (elements2 && elements2.length > 0) {
+            const element = elements2[0];
+            const pointIndex = element.index;
+            const dateStrings = chart.dateStrings;
+            if (dateStrings && pointIndex >= 0 && pointIndex < dateStrings.length) {
+              const clickedDateStr = dateStrings[pointIndex];
+              onChartClick(clickedDateStr);
+            }
+          }
+        },
+        onResize: (chart) => {
+          this.drawChartAnnotations(chart, data, colors2, minLimit, maxLimit);
+        }
+      },
+      plugins: [{
+        id: "startLinePlugin",
+        beforeDraw: (chart) => {
+          this.drawChartAnnotations(chart, data, colors2, minLimit, maxLimit);
+        }
+      }]
+    };
+    return config;
+  }
+  /**
+   * Draws annotations (vertical lines, limit lines) on chart
+   */
+  drawChartAnnotations(chart, data, colors2, minLimit, maxLimit) {
+    const ctx = chart.ctx;
+    const chartArea = chart.chartArea;
+    if (!chartArea) return;
+    if (data.startTrackingIndex !== null && data.startTrackingIndex !== data.activeDateIndex) {
+      this.drawVerticalLine(
+        chart,
+        data.startTrackingIndex,
+        colors2.startLineColor,
+        true
+        // dashed
+      );
+    }
+    if (data.activeDateIndex !== null) {
+      this.drawVerticalLine(
+        chart,
+        data.activeDateIndex,
+        colors2.startLineColor,
+        false
+        // solid
+      );
+    }
+    if (minLimit !== null) {
+      this.drawHorizontalLine(chart, minLimit, colors2.startLineColor);
+    }
+    if (maxLimit !== null) {
+      this.drawHorizontalLine(chart, maxLimit, colors2.startLineColor);
+    }
+  }
+  /**
+   * Draws a vertical line on chart
+   */
+  drawVerticalLine(chart, index2, color2, dashed) {
+    const ctx = chart.ctx;
+    const chartArea = chart.chartArea;
+    if (!chartArea) return;
+    const xScale = chart.scales.x;
+    const xPos = xScale.getPixelForValue(index2);
+    if (xPos < chartArea.left || xPos > chartArea.right) return;
+    ctx.save();
+    ctx.strokeStyle = colorToRgba(color2, 0.6);
+    ctx.lineWidth = 2;
+    ctx.setLineDash(dashed ? [5, 5] : []);
+    ctx.beginPath();
+    ctx.moveTo(xPos, chartArea.top);
+    ctx.lineTo(xPos, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  }
+  /**
+   * Draws a horizontal line on chart
+   */
+  drawHorizontalLine(chart, value, color2) {
+    const ctx = chart.ctx;
+    const chartArea = chart.chartArea;
+    if (!chartArea) return;
+    const yScale = chart.scales.y;
+    const yPos = yScale.getPixelForValue(value);
+    if (yPos < chartArea.top || yPos > chartArea.bottom) return;
+    ctx.save();
+    ctx.strokeStyle = colorToRgba(color2, 0.6);
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, yPos);
+    ctx.lineTo(chartArea.right, yPos);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+// src/components/Chart/ChartWrapper.tsx
+Chart.register(...registerables);
+function ChartWrapper({
+  file,
+  plugin,
+  dateIso,
+  daysToShow,
+  entries,
+  fileOptions,
+  onDateClick
+}) {
+  const canvasRef = A2(null);
+  const chartRef = A2(null);
+  const chartService = T2(() => new ChartService(), []);
+  const trackerType = (fileOptions?.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
+  const unit = fileOptions?.unit || "";
+  const minLimit = fileOptions?.minLimit ? parseFloat(fileOptions.minLimit) : null;
+  const maxLimit = fileOptions?.maxLimit ? parseFloat(fileOptions.maxLimit) : null;
+  const scaleMinValue = fileOptions?.minValue ? parseFloat(fileOptions.minValue) : null;
+  const scaleMaxValue = fileOptions?.maxValue ? parseFloat(fileOptions.maxValue) : null;
+  const startTrackingDateStr = T2(() => {
+    return plugin.getStartTrackingDate(entries, fileOptions);
+  }, [plugin, entries, fileOptions]);
+  const handleChartClick = q2((dateStr) => {
+    if (onDateClick) {
+      onDateClick(dateStr);
+    }
+  }, [onDateClick]);
+  y2(() => {
+    if (!canvasRef.current) return;
+    const colors2 = getThemeColors();
+    const todayStr = DateService.format(DateService.now(), plugin.settings.dateFormat);
+    const chartData = chartService.prepareChartData(
+      entries,
+      file,
+      plugin.settings,
+      {
+        dateIso,
+        daysToShow,
+        metricType: trackerType,
+        unit,
+        minLimit,
+        maxLimit,
+        scaleMinValue,
+        scaleMaxValue
+      },
+      startTrackingDateStr,
+      todayStr
+    );
+    const config = chartService.createChartConfig(
+      chartData,
+      colors2,
+      {
+        dateIso,
+        daysToShow,
+        metricType: trackerType,
+        unit,
+        minLimit,
+        maxLimit,
+        scaleMinValue,
+        scaleMaxValue
+      },
+      handleChartClick
+    );
+    if (chartRef.current) {
+      chartRef.current.destroy();
+    }
+    const ctx = canvasRef.current.getContext("2d");
+    if (ctx) {
+      chartRef.current = new Chart(ctx, config);
+      chartRef.current.dateStrings = chartData.dateStrings;
+    }
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy();
+        chartRef.current = null;
+      }
+    };
+  }, [
+    file,
+    plugin,
+    dateIso,
+    daysToShow,
+    entries,
+    trackerType,
+    unit,
+    minLimit,
+    maxLimit,
+    scaleMinValue,
+    scaleMaxValue,
+    startTrackingDateStr,
+    chartService,
+    handleChartClick
+  ]);
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.CHART, style: { height: `${CHART_CONFIG.DEFAULT_HEIGHT}px` }, children: /* @__PURE__ */ u3("canvas", { ref: canvasRef, height: CHART_CONFIG.CANVAS_HEIGHT }) });
+}
+
+// src/components/TrackerItem/TrackerItem.tsx
+function TrackerItem({ file, plugin, dateIso, viewMode, opts }) {
+  const { onDateChange } = useTrackerContext();
+  const [fileOptions, setFileOptions] = d2(null);
+  const [entries, setEntries] = d2(/* @__PURE__ */ new Map());
+  const [isLoading, setIsLoading] = d2(true);
+  y2(() => {
+    let mounted = true;
+    const loadData = async () => {
+      try {
+        const [options, entriesData] = await Promise.all([
+          plugin.getFileTypeFromFrontmatter(file),
+          plugin.readAllEntries(file)
+        ]);
+        if (mounted) {
+          setFileOptions(options);
+          setEntries(entriesData);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("TrackerItem: error loading data", error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadData();
+    return () => {
+      mounted = false;
+    };
+  }, [file, plugin, dateIso]);
+  const handleValueChange = q2(async () => {
+    const entriesData = await plugin.readAllEntries(file);
+    setEntries(entriesData);
+  }, [plugin, file]);
+  const trackerType = T2(() => {
+    return (fileOptions?.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
+  }, [fileOptions]);
+  const displayName = T2(() => {
+    const baseName = file.basename;
+    const unit = fileOptions?.unit || "";
+    return unit ? `${baseName} (${unit})` : baseName;
+  }, [file, fileOptions]);
+  const {
+    daysToShow: defaultDaysToShow,
+    showChartByDefault,
+    showStatsByDefault,
+    hideChartOnMobile,
+    hideStatsOnMobile
+  } = plugin.settings;
+  const daysToShow = parseInt(opts.days) || defaultDaysToShow;
+  const isHabitType = T2(() => {
+    return trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
+  }, [trackerType]);
+  const shouldShowChart = T2(() => {
+    if (isHabitType) return false;
+    const showChart = opts.showChart === "true" || opts.showChart === void 0 && showChartByDefault;
+    const hideOnMobile = plugin.isMobileDevice() && hideChartOnMobile;
+    return showChart && !hideOnMobile;
+  }, [opts.showChart, isHabitType, showChartByDefault, hideChartOnMobile, plugin]);
+  const shouldShowStats = T2(() => {
+    const showStats = opts.showStats === "true" || opts.showStats === void 0 && showStatsByDefault;
+    const hideOnMobile = plugin.isMobileDevice() && hideStatsOnMobile;
+    return showStats && !hideOnMobile;
+  }, [opts.showStats, showStatsByDefault, hideStatsOnMobile, plugin]);
+  const handleEdit = q2(() => {
+    plugin.openEditTrackerModal(file);
+  }, [plugin, file]);
+  const handleMoveUp = q2(async () => {
+    await plugin.moveTrackerUp(file);
+  }, [plugin, file]);
+  const handleMoveDown = q2(async () => {
+    await plugin.moveTrackerDown(file);
+  }, [plugin, file]);
+  const startTrackingDate = T2(() => {
+    if (!fileOptions) return null;
+    return plugin.getStartTrackingDate(entries, fileOptions);
+  }, [plugin, entries, fileOptions]);
+  const limitProgress = T2(() => {
+    if (!fileOptions || plugin.settings.disableLimitReaction) return null;
+    const minLimit = fileOptions.minLimit ? parseFloat(fileOptions.minLimit) : null;
+    const maxLimit = fileOptions.maxLimit ? parseFloat(fileOptions.maxLimit) : null;
+    if (minLimit === null && maxLimit === null) return null;
+    const currentValue = entries.get(dateIso);
+    const value = currentValue != null ? Number(currentValue) : null;
+    if (value === null || isNaN(value)) {
+      return { width: "0%", color: "transparent" };
+    }
+    let progressPercent = 0;
+    let isExceedingMax = false;
+    if (minLimit !== null && maxLimit !== null) {
+      if (value >= minLimit && value <= maxLimit) {
+        progressPercent = 100;
+      } else if (value < minLimit) {
+        progressPercent = Math.max(0, 100 * (value / minLimit));
+      } else {
+        progressPercent = 100;
+        isExceedingMax = true;
+      }
+    } else if (maxLimit !== null) {
+      if (value <= maxLimit) {
+        progressPercent = 100;
+      } else {
+        progressPercent = 100;
+        isExceedingMax = true;
+      }
+    } else if (minLimit !== null) {
+      progressPercent = Math.min(100, Math.max(0, 100 * (value / minLimit)));
+    }
+    const hue2 = isExceedingMax ? 0 : 120 * (progressPercent / 100);
+    const progressColor = `hsl(${hue2}, 70%, 50%)`;
+    return {
+      width: `${progressPercent}%`,
+      color: progressColor
+    };
+  }, [fileOptions, plugin.settings.disableLimitReaction, entries, dateIso]);
+  const renderControl = () => {
+    if (isLoading || !fileOptions) return null;
+    const controlProps = {
+      file,
+      dateIso,
+      plugin,
+      fileOptions,
+      entries,
+      onValueChange: handleValueChange
+    };
+    const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
+    if (isHabit) {
+      return /* @__PURE__ */ u3(
+        Heatmap,
+        {
+          ...controlProps,
+          daysToShow,
+          trackerType,
+          startTrackingDate
+        }
+      );
+    }
+    switch (trackerType) {
+      case TrackerType.NUMBER:
+        return /* @__PURE__ */ u3(NumberControl, { ...controlProps });
+      case TrackerType.PLUSMINUS:
+        return /* @__PURE__ */ u3(PlusMinusControl, { ...controlProps });
+      case TrackerType.TEXT:
+        return /* @__PURE__ */ u3(TextControl, { ...controlProps });
+      case TrackerType.SCALE:
+        return /* @__PURE__ */ u3(ScaleControl, { ...controlProps });
+      default:
+        return /* @__PURE__ */ u3("div", { children: [
+          "Unknown tracker type: ",
+          trackerType
+        ] });
+    }
+  };
+  if (viewMode === ViewMode.DISPLAY) {
+    const currentValue = entries.get(dateIso);
+    return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER, "data-file-path": file.path, children: [
+      /* @__PURE__ */ u3(
+        TrackerHeader,
+        {
+          file,
+          displayName,
+          plugin
+        }
+      ),
+      /* @__PURE__ */ u3("div", { children: [
+        dateIso,
+        ": ",
+        currentValue ?? "\u2014"
+      ] }),
+      shouldShowChart && fileOptions && /* @__PURE__ */ u3(
+        ChartWrapper,
+        {
+          file,
+          plugin,
+          dateIso,
+          daysToShow,
+          entries,
+          fileOptions,
+          onDateClick: onDateChange
+        }
+      ),
+      shouldShowStats && fileOptions && /* @__PURE__ */ u3(
+        Statistics,
+        {
+          file,
+          plugin,
+          dateIso,
+          daysToShow,
+          trackerType,
+          entries,
+          fileOptions
+        }
+      )
+    ] });
+  }
+  return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER, "data-file-path": file.path, children: [
+    /* @__PURE__ */ u3(
+      TrackerHeader,
+      {
+        file,
+        displayName,
+        plugin,
+        onEdit: handleEdit,
+        onMoveUp: handleMoveUp,
+        onMoveDown: handleMoveDown,
+        limitProgress
+      }
+    ),
+    /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER_CONTROLS, children: renderControl() }),
+    shouldShowChart && fileOptions && /* @__PURE__ */ u3(
+      ChartWrapper,
+      {
+        file,
+        plugin,
+        dateIso,
+        daysToShow,
+        entries,
+        fileOptions,
+        onDateClick: onDateChange
+      }
+    ),
+    shouldShowStats && fileOptions && /* @__PURE__ */ u3(
+      Statistics,
+      {
+        file,
+        plugin,
+        dateIso,
+        daysToShow,
+        trackerType,
+        entries,
+        fileOptions
+      }
+    )
+  ] });
+}
+
+// src/components/TrackerBlock/FolderNode.tsx
+function FolderNode({ node, plugin, dateIso, viewMode, opts }) {
+  const nodeRef = A2(null);
+  const shouldShowHeader = node.files.length > 0 || node.level > 0 && node.children.length > 0;
+  const handleMoveUp = q2(async () => {
+    const folderPath = normalizePath(node.path);
+    await plugin.moveFolderUp(folderPath);
+  }, [plugin, node.path]);
+  const handleMoveDown = q2(async () => {
+    const folderPath = normalizePath(node.path);
+    await plugin.moveFolderDown(folderPath);
+  }, [plugin, node.path]);
+  const renderFolderIcon = q2(() => {
+    const folderIcon = plugin.getIconForPath(node.path, false);
+    if (!folderIcon) return null;
+    const iconContainer = document.createElement("span");
+    plugin.renderIcon(folderIcon, iconContainer);
+    return /* @__PURE__ */ u3(
+      "span",
+      {
+        class: "tracker-notes__folder-icon",
+        ref: (el) => {
+          if (el && iconContainer.firstChild) {
+            el.innerHTML = "";
+            el.appendChild(iconContainer.firstChild);
+          }
+        }
+      }
+    );
+  }, [plugin, node.path]);
+  return /* @__PURE__ */ u3(
+    "div",
+    {
+      ref: nodeRef,
+      class: `${CSS_CLASSES.FOLDER_NODE} level-${node.level}`,
+      "data-folder-path": normalizePath(node.path),
+      children: [
+        shouldShowHeader && /* @__PURE__ */ u3("div", { class: `${CSS_CLASSES.FOLDER_HEADER} level-${node.level}`, children: [
+          /* @__PURE__ */ u3("span", { children: [
+            renderFolderIcon(),
+            /* @__PURE__ */ u3("span", { children: node.name })
+          ] }),
+          /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ORDER_BTN_CONTAINER, children: [
+            /* @__PURE__ */ u3(
+              "button",
+              {
+                type: "button",
+                class: CSS_CLASSES.ORDER_BTN_UP,
+                onClick: handleMoveUp,
+                title: MODAL_LABELS.MOVE_UP,
+                children: "\u2191"
+              }
+            ),
+            /* @__PURE__ */ u3(
+              "button",
+              {
+                type: "button",
+                class: CSS_CLASSES.ORDER_BTN_DOWN,
+                onClick: handleMoveDown,
+                title: MODAL_LABELS.MOVE_DOWN,
+                children: "\u2193"
+              }
+            )
+          ] })
+        ] }),
+        node.files.length > 0 && /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKERS_CONTAINER, "data-folder-path": normalizePath(node.path), children: node.files.map((file) => /* @__PURE__ */ u3(
+          TrackerItem,
+          {
+            file,
+            plugin,
+            dateIso,
+            viewMode,
+            opts
+          },
+          file.path
+        )) }),
+        node.children.map((childNode) => /* @__PURE__ */ u3(
+          FolderNode,
+          {
+            node: childNode,
+            plugin,
+            dateIso,
+            viewMode,
+            opts
+          },
+          childNode.path
+        ))
+      ]
+    }
+  );
+}
+
+// src/components/TrackerBlock/TrackerBlock.tsx
+function TrackerBlock({
+  plugin,
+  folderTree,
+  initialDateIso,
+  viewMode,
+  opts,
+  folderPath
+}) {
+  const [dateIso, setDateIso] = d2(initialDateIso);
+  const [isUpdating, setIsUpdating] = d2(false);
+  const [pendingDate, setPendingDate] = d2(null);
+  const handleDateChange = q2(async (newDate) => {
+    const newDateIso = resolveDateIso(newDate, plugin.settings.dateFormat);
+    setDateIso(newDateIso);
+    setPendingDate(newDateIso);
+    setIsUpdating(true);
+    try {
+    } finally {
+      setIsUpdating(false);
+      setPendingDate(null);
+    }
+  }, [plugin.settings.dateFormat]);
+  const handleNavigate = q2((days) => {
+    const referenceIso = pendingDate ?? dateIso;
+    const currentDateObj = DateService.parse(referenceIso, plugin.settings.dateFormat);
+    const newDate = currentDateObj.clone().add(days, "days");
+    const newDateStr = DateService.format(newDate, plugin.settings.dateFormat);
+    handleDateChange(newDateStr);
+  }, [pendingDate, dateIso, plugin.settings.dateFormat, handleDateChange]);
+  const contextValue = T2(() => ({
+    plugin,
+    dateIso,
+    viewMode,
+    opts,
+    onDateChange: handleDateChange
+  }), [plugin, dateIso, viewMode, opts, handleDateChange]);
+  if (!folderTree || folderTree.files.length === 0 && folderTree.children.length === 0) {
+    return /* @__PURE__ */ u3("div", { class: CSS_CLASSES.ERROR, children: [
+      "tracker: ",
+      ERROR_MESSAGES.NO_TRACKERS,
+      " ",
+      folderPath
+    ] });
+  }
+  const folderName = folderPath.split("/").pop() || folderPath;
+  return /* @__PURE__ */ u3(TrackerContext.Provider, { value: contextValue, children: [
+    viewMode === ViewMode.CONTROL && /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER_NOTES_HEADER, children: [
+      /* @__PURE__ */ u3("div", { class: "tracker-notes__header-title", children: /* @__PURE__ */ u3("span", { class: "tracker-notes__header-label", children: folderName }) }),
+      /* @__PURE__ */ u3(
+        DatePicker,
+        {
+          dateIso,
+          onDateChange: handleDateChange,
+          onNavigate: handleNavigate,
+          isUpdating
+        }
+      ),
+      /* @__PURE__ */ u3(LoadingIndicator, { isActive: isUpdating })
+    ] }),
+    /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER_NOTES, children: /* @__PURE__ */ u3("div", { class: CSS_CLASSES.TRACKER_NOTES_HIERARCHY, children: /* @__PURE__ */ u3(
+      FolderNode,
+      {
+        node: folderTree,
+        plugin,
+        dateIso,
+        viewMode,
+        opts
+      }
+    ) }) })
+  ] });
+}
+
+// src/ui/tracker-block-render-child.tsx
 var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild {
   constructor(plugin, source, containerEl, ctx) {
     super(containerEl);
@@ -15038,240 +17526,76 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
     if (!this.opts.folder) {
       this.folderPath = this.plugin.settings.trackersFolder;
     }
-    const tempContainer = document.createElement("div");
-    tempContainer.className = this.containerEl.className;
     try {
       const folderTree = this.plugin.getFolderTree(this.folderPath);
-      if (!folderTree || folderTree.files.length === 0 && folderTree.children.length === 0) {
-        tempContainer.createEl("div", {
-          text: `tracker: ${ERROR_MESSAGES.NO_TRACKERS} ${this.folderPath}`,
-          cls: "tracker-notes__error"
-        });
-        this.containerEl.empty();
-        this.containerEl.appendChild(tempContainer);
-        return;
-      }
-      const view = (this.opts.view ?? "control").toLowerCase();
+      const viewMode = (this.opts.view ?? ViewMode.CONTROL).toLowerCase();
       let initialDate = this.opts.date;
       if (!initialDate && this.ctx.sourcePath) {
-        try {
-          const noteFile = this.plugin.app.vault.getAbstractFileByPath(this.ctx.sourcePath);
-          if (noteFile instanceof import_obsidian.TFile) {
-            const fileName = noteFile.basename;
-            if (fileName) {
-              const dateFormats = [
-                "YYYY-MM-DD",
-                "YYYY/MM/DD",
-                "DD.MM.YYYY",
-                "YYYY-MM-DD HH:mm",
-                "YYYY/MM/DD HH:mm"
-              ];
-              for (const fmt of dateFormats) {
-                try {
-                  const parsedDate = DateService.parse(fileName, fmt);
-                  if (parsedDate.isValid()) {
-                    initialDate = DateService.format(parsedDate, this.plugin.settings.dateFormat);
-                    break;
-                  }
-                } catch {
-                }
-              }
-              if (!initialDate) {
-                const datePattern = /(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}\.\d{2}\.\d{4})/;
-                const match = fileName.match(datePattern);
-                if (match) {
-                  const dateStr = match[0];
-                  const parsedDate = DateService.parseMultiple(dateStr, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"]);
-                  if (parsedDate.isValid()) {
-                    initialDate = DateService.format(parsedDate, this.plugin.settings.dateFormat);
-                  }
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Tracker: Error reading note filename", error);
-        }
+        initialDate = this.extractDateFromNotePath(this.ctx.sourcePath);
       }
-      let dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
-      let pendingDateIso = null;
-      let isProcessingDateUpdate = false;
-      const mainContainer = tempContainer.createDiv({ cls: "tracker-notes" });
-      const trackerDateUpdate = async (targetIso) => {
-        dateIso = targetIso;
-        const trackerItems = Array.from(
-          mainContainer.querySelectorAll(".tracker-notes__tracker")
-        );
-        const updatePromises = trackerItems.map(async (trackerItem) => {
-          const filePath = trackerItem.dataset.filePath;
-          if (!filePath) return;
-          const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
-          if (file instanceof import_obsidian.TFile) {
-            await this.plugin.updateTrackerDate(trackerItem, file, targetIso, this.opts);
+      const dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      G(
+        /* @__PURE__ */ u3(
+          TrackerBlock,
+          {
+            plugin: this.plugin,
+            folderTree,
+            initialDateIso: dateIso,
+            viewMode,
+            opts: this.opts,
+            folderPath: this.folderPath
           }
-        });
-        await Promise.allSettled(updatePromises);
-      };
-      let dateInput = null;
-      const dateNavButtons = [];
-      let loadingIndicator = null;
-      const setDateUpdatingState = (updating) => {
-        if (loadingIndicator) {
-          loadingIndicator.toggleClass("is-active", updating);
-        }
-        dateInput?.classList.toggle("is-updating", updating);
-        if (dateInput) {
-          dateInput.disabled = updating;
-        }
-        for (const btn of dateNavButtons) {
-          btn.disabled = updating;
-        }
-      };
-      const processNextDateUpdate = async () => {
-        if (isProcessingDateUpdate || !pendingDateIso) return;
-        isProcessingDateUpdate = true;
-        const targetIso = pendingDateIso;
-        pendingDateIso = null;
-        setDateUpdatingState(true);
-        try {
-          await trackerDateUpdate(targetIso);
-        } finally {
-          setDateUpdatingState(false);
-          isProcessingDateUpdate = false;
-          if (pendingDateIso) {
-            void processNextDateUpdate();
-          }
-        }
-      };
-      const requestDateUpdate = (newDate) => {
-        const newDateIso = resolveDateIso(newDate, this.plugin.settings.dateFormat);
-        pendingDateIso = newDateIso;
-        if (dateInput) {
-          dateInput.value = newDateIso;
-        }
-        void processNextDateUpdate();
-      };
-      const navigateDate = (days) => {
-        const referenceIso = pendingDateIso ?? dateIso;
-        const currentDateObj = DateService.parse(referenceIso, this.plugin.settings.dateFormat);
-        const newDate = currentDateObj.clone().add(days, "days");
-        const newDateStr = DateService.format(newDate, this.plugin.settings.dateFormat);
-        requestDateUpdate(newDateStr);
-      };
-      if (view === "control") {
-        const blockHeader = tempContainer.createDiv({ cls: "tracker-notes__header" });
-        tempContainer.insertBefore(blockHeader, mainContainer);
-        const headerTitle = blockHeader.createDiv({ cls: "tracker-notes__header-title" });
-        const folderName = this.folderPath.split("/").pop() || this.folderPath;
-        headerTitle.createEl("span", { text: folderName, cls: "tracker-notes__header-label" });
-        const datePickerContainer = blockHeader.createDiv({
-          cls: "tracker-notes__date-picker-container"
-        });
-        const datePicker = datePickerContainer.createDiv({ cls: "tracker-notes__date-picker" });
-        const dayBackBtn = datePicker.createEl("button", {
-          text: "\u25C0",
-          cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-left"
-        });
-        dayBackBtn.onclick = () => navigateDate(-1);
-        dayBackBtn.title = MODAL_LABELS.YESTERDAY;
-        dateNavButtons.push(dayBackBtn);
-        dateInput = datePicker.createEl("input", {
-          type: "date",
-          cls: "tracker-notes__date-input",
-          value: dateIso
-        });
-        dateInput.onchange = () => requestDateUpdate(dateInput.value);
-        const dayForwardBtn = datePicker.createEl("button", {
-          text: "\u25B6",
-          cls: "tracker-notes__date-nav-btn tracker-notes__date-nav-btn-right"
-        });
-        dayForwardBtn.onclick = () => navigateDate(1);
-        dayForwardBtn.title = MODAL_LABELS.TOMORROW;
-        dateNavButtons.push(dayForwardBtn);
-        loadingIndicator = blockHeader.createDiv({ cls: "tracker-notes__loading" });
-        loadingIndicator.createDiv({ cls: "tracker-notes__loading-dot" });
-        loadingIndicator.createEl("span", { text: MODAL_LABELS.UPDATING });
-      }
-      const trackersContainer = mainContainer.createDiv({ cls: "tracker-notes__hierarchy" });
-      await this.renderFolderNode(folderTree, trackersContainer, dateIso, view, this.opts);
-      this.containerEl.empty();
-      while (tempContainer.firstChild) {
-        this.containerEl.appendChild(tempContainer.firstChild);
-      }
+        ),
+        this.containerEl
+      );
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      tempContainer.createEl("div", {
+      this.containerEl.empty();
+      this.containerEl.createEl("div", {
         text: `tracker: ${ERROR_MESSAGES.RENDER_ERROR}: ${errorMsg}`,
         cls: "tracker-notes__error"
       });
-      this.containerEl.empty();
-      while (tempContainer.firstChild) {
-        this.containerEl.appendChild(tempContainer.firstChild);
-      }
       console.error("Tracker: error processing block", error);
     }
   }
-  async renderFolderNode(node, parentEl, dateIso, view, opts) {
-    const nodeContainer = document.createElement("div");
-    nodeContainer.addClass("tracker-notes__folder-node");
-    nodeContainer.addClass(`level-${node.level}`);
-    nodeContainer.dataset.folderPath = normalizePath(node.path);
-    const shouldShowHeader = node.files.length > 0 || node.level > 0 && node.children.length > 0;
-    if (shouldShowHeader) {
-      const folderHeader = nodeContainer.createDiv({
-        cls: `tracker-notes__folder-header level-${node.level}`
-      });
-      const folderNameEl = folderHeader.createSpan();
-      const folderIcon = this.plugin.getIconForPath(node.path, false);
-      if (folderIcon) {
-        this.plugin.renderIcon(folderIcon, folderNameEl);
-      }
-      folderNameEl.createSpan({ text: node.name });
-      const orderBtnsContainer = folderHeader.createDiv({ cls: CSS_CLASSES.ORDER_BTN_CONTAINER });
-      const upButton = orderBtnsContainer.createEl("button", {
-        text: "\u2191",
-        cls: CSS_CLASSES.ORDER_BTN_UP
-      });
-      upButton.title = MODAL_LABELS.MOVE_UP;
-      upButton.onclick = async (e) => {
-        e.stopPropagation();
-        const button = e.currentTarget;
-        const folderNode = button.closest(".tracker-notes__folder-node");
-        if (!folderNode) return;
-        const folderPath = normalizePath(folderNode.dataset.folderPath || node.path);
-        await this.plugin.moveFolderUp(folderPath);
-      };
-      const downButton = orderBtnsContainer.createEl("button", {
-        text: "\u2193",
-        cls: CSS_CLASSES.ORDER_BTN_DOWN
-      });
-      downButton.title = MODAL_LABELS.MOVE_DOWN;
-      downButton.onclick = async (e) => {
-        e.stopPropagation();
-        const button = e.currentTarget;
-        const folderNode = button.closest(".tracker-notes__folder-node");
-        if (!folderNode) return;
-        const folderPath = normalizePath(folderNode.dataset.folderPath || node.path);
-        await this.plugin.moveFolderDown(folderPath);
-      };
-    }
-    if (node.files.length > 0) {
-      const trackersContainer = nodeContainer.createDiv({ cls: "tracker-notes__trackers" });
-      trackersContainer.dataset.folderPath = normalizePath(node.path);
-      const renderPromises = node.files.map(async (file) => {
+  /**
+   * Extract date from note file path/name
+   */
+  extractDateFromNotePath(sourcePath) {
+    try {
+      const noteFile = this.plugin.app.vault.getAbstractFileByPath(sourcePath);
+      if (!(noteFile instanceof import_obsidian.TFile)) return void 0;
+      const fileName = noteFile.basename;
+      if (!fileName) return void 0;
+      const dateFormats = [
+        "YYYY-MM-DD",
+        "YYYY/MM/DD",
+        "DD.MM.YYYY",
+        "YYYY-MM-DD HH:mm",
+        "YYYY/MM/DD HH:mm"
+      ];
+      for (const fmt of dateFormats) {
         try {
-          await this.plugin.readAllEntries(file);
-          await this.plugin.trackerRenderer.renderTracker(trackersContainer, file, dateIso, view, opts);
-        } catch (error) {
-          console.error("Tracker: error rendering tracker", error);
+          const parsedDate = DateService.parse(fileName, fmt);
+          if (parsedDate.isValid()) {
+            return DateService.format(parsedDate, this.plugin.settings.dateFormat);
+          }
+        } catch {
         }
-      });
-      await Promise.all(renderPromises);
+      }
+      const datePattern = /(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}\.\d{2}\.\d{4})/;
+      const match = fileName.match(datePattern);
+      if (match) {
+        const dateStr = match[0];
+        const parsedDate = DateService.parseMultiple(dateStr, ["YYYY-MM-DD", "YYYY/MM/DD", "DD.MM.YYYY"]);
+        if (parsedDate.isValid()) {
+          return DateService.format(parsedDate, this.plugin.settings.dateFormat);
+        }
+      }
+    } catch (error) {
+      console.error("Tracker: Error reading note filename", error);
     }
-    for (const childNode of node.children) {
-      await this.renderFolderNode(childNode, nodeContainer, dateIso, view, opts);
-    }
-    parentEl.appendChild(nodeContainer);
+    return void 0;
   }
   getFolderPath() {
     return this.folderPath;
@@ -15282,6 +17606,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
   onload() {
   }
   onunload() {
+    G(null, this.containerEl);
     this.plugin.removeActiveBlock(this);
   }
 };
@@ -15355,8 +17680,8 @@ var FolderTreeService = class {
     const relativePath = this.getRelativePath(folderPath);
     const sortOrder = this.customSortOrder?.[relativePath];
     if (!sortOrder || sortOrder.length === 0) {
-      return [...items].sort((a, b) => {
-        const aName = a instanceof import_obsidian2.TFile ? a.basename : a.name;
+      return [...items].sort((a3, b) => {
+        const aName = a3 instanceof import_obsidian2.TFile ? a3.basename : a3.name;
         const bName = b instanceof import_obsidian2.TFile ? b.basename : b.name;
         return aName.localeCompare(bName, void 0, { sensitivity: "base" });
       });
@@ -15384,8 +17709,8 @@ var FolderTreeService = class {
         remaining.push(item);
       }
     }
-    remaining.sort((a, b) => {
-      const aName = a instanceof import_obsidian2.TFile ? a.basename : a.name;
+    remaining.sort((a3, b) => {
+      const aName = a3 instanceof import_obsidian2.TFile ? a3.basename : a3.name;
       const bName = b instanceof import_obsidian2.TFile ? b.basename : b.name;
       return aName.localeCompare(bName, void 0, { sensitivity: "base" });
     });
@@ -15438,34 +17763,6 @@ var FolderTreeService = class {
 
 // src/services/tracker-file-service.ts
 var import_obsidian3 = require("obsidian");
-
-// src/utils/misc.ts
-function parseMaybeNumber(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : value;
-}
-function countWords(text) {
-  const trimmed = text.trim();
-  if (trimmed === "") return 0;
-  return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
-}
-
-// src/utils/validation.ts
-function sanitizeFileName(name) {
-  return name.replace(/[<>:"/\\|?*]/g, "_");
-}
-function isTrackerValueTrue(value) {
-  if (value === null || value === void 0) {
-    return false;
-  }
-  if (typeof value === "number") {
-    return value !== 0;
-  }
-  const str = String(value);
-  return str === "1" || str === "true" || str.trim() !== "";
-}
-
-// src/services/tracker-file-service.ts
 var TrackerFileService = class {
   constructor(app) {
     this.app = app;
@@ -15837,16 +18134,16 @@ var TrackerSettingsTab = class extends import_obsidian5.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     const folders = this.app.vault.getAllFolders();
-    new import_obsidian5.Setting(containerEl).setName("Default trackers folder").setDesc("Can be overridden with `folder` parameter in habit block").addText((t) => {
-      t.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v) => {
-        this.plugin.settings.trackersFolder = v.trim();
+    new import_obsidian5.Setting(containerEl).setName("Default trackers folder").setDesc("Can be overridden with `folder` parameter in habit block").addText((t3) => {
+      t3.setPlaceholder("0. Files/Trackers").setValue(this.plugin.settings.trackersFolder).onChange(async (v3) => {
+        this.plugin.settings.trackersFolder = v3.trim();
         await this.plugin.saveSettings();
       });
-      new FolderSuggest(this.app, t.inputEl, folders);
+      new FolderSuggest(this.app, t3.inputEl, folders);
     });
     new import_obsidian5.Setting(containerEl).setName("Number of days").setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block").addText(
-      (t) => t.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v) => {
-        const num = parseInt(v.trim());
+      (t3) => t3.setPlaceholder("30").setValue(String(this.plugin.settings.daysToShow)).onChange(async (v3) => {
+        const num = parseInt(v3.trim());
         if (!isNaN(num) && num > 0) {
           this.plugin.settings.daysToShow = num;
           await this.plugin.saveSettings();
@@ -15854,32 +18151,32 @@ var TrackerSettingsTab = class extends import_obsidian5.PluginSettingTab {
       })
     );
     new import_obsidian5.Setting(containerEl).setName("Show chart by default").setDesc("Can be overridden with showChart: `true/false` parameter").addToggle(
-      (t) => t.setValue(this.plugin.settings.showChartByDefault).onChange(async (v) => {
-        this.plugin.settings.showChartByDefault = v;
+      (t3) => t3.setValue(this.plugin.settings.showChartByDefault).onChange(async (v3) => {
+        this.plugin.settings.showChartByDefault = v3;
         await this.plugin.saveSettings();
       })
     );
     new import_obsidian5.Setting(containerEl).setName("Show statistics by default").setDesc("Can be overridden with showStats: `true/false` parameter").addToggle(
-      (t) => t.setValue(this.plugin.settings.showStatsByDefault).onChange(async (v) => {
-        this.plugin.settings.showStatsByDefault = v;
+      (t3) => t3.setValue(this.plugin.settings.showStatsByDefault).onChange(async (v3) => {
+        this.plugin.settings.showStatsByDefault = v3;
         await this.plugin.saveSettings();
       })
     );
     new import_obsidian5.Setting(containerEl).setName("Hide chart on mobile").addToggle(
-      (t) => t.setValue(this.plugin.settings.hideChartOnMobile).onChange(async (v) => {
-        this.plugin.settings.hideChartOnMobile = v;
+      (t3) => t3.setValue(this.plugin.settings.hideChartOnMobile).onChange(async (v3) => {
+        this.plugin.settings.hideChartOnMobile = v3;
         await this.plugin.saveSettings();
       })
     );
     new import_obsidian5.Setting(containerEl).setName("Hide statistics on mobile").addToggle(
-      (t) => t.setValue(this.plugin.settings.hideStatsOnMobile).onChange(async (v) => {
-        this.plugin.settings.hideStatsOnMobile = v;
+      (t3) => t3.setValue(this.plugin.settings.hideStatsOnMobile).onChange(async (v3) => {
+        this.plugin.settings.hideStatsOnMobile = v3;
         await this.plugin.saveSettings();
       })
     );
     new import_obsidian5.Setting(containerEl).setName("Disable color reaction to range compliance").setDesc("Disables color feedback when metric values are within or outside the defined limit range").addToggle(
-      (t) => t.setValue(this.plugin.settings.disableLimitReaction).onChange(async (v) => {
-        this.plugin.settings.disableLimitReaction = v;
+      (t3) => t3.setValue(this.plugin.settings.disableLimitReaction).onChange(async (v3) => {
+        this.plugin.settings.disableLimitReaction = v3;
         await this.plugin.saveSettings();
       })
     );
@@ -16275,7 +18572,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
               if (DateService.isBefore(dataDateObj, newStartDateObj)) {
                 datesToDeleteCount++;
               }
-            } catch (e) {
+            } catch (e3) {
             }
           }
           if (datesToDeleteCount > 0) {
@@ -16463,7 +18760,7 @@ var EditTrackerModal = class extends import_obsidian7.Modal {
               if (DateService.isBefore(dataDateObj, newStartDateObj)) {
                 datesToDelete.push(dateStr);
               }
-            } catch (e) {
+            } catch (e3) {
             }
           }
           for (const dateStr of datesToDelete) {
@@ -18455,13 +20752,13 @@ var HeatmapService = class {
     };
     const dayElements = Array.from(heatmapDiv.children);
     const fragment = document.createDocumentFragment();
-    for (let i = 0; i < daysToShow; i++) {
-      const date = endDate.clone().subtract(i, "days");
+    for (let i4 = 0; i4 < daysToShow; i4++) {
+      const date = endDate.clone().subtract(i4, "days");
       const dateStr = DateService.format(date, this.settings.dateFormat);
       const dayNum = date.getDate();
       let dayDiv;
-      if (i < dayElements.length) {
-        dayDiv = dayElements[i];
+      if (i4 < dayElements.length) {
+        dayDiv = dayElements[i4];
         dayDiv.setText(dayNum.toString());
         dayDiv.removeClass("good-habit");
         dayDiv.removeClass("bad-habit");
@@ -18510,7 +20807,7 @@ var HeatmapService = class {
             dayDiv.removeClass("before-start");
             dayDiv.removeClass("after-today");
           }
-        } catch (e) {
+        } catch (e3) {
           dayDiv.removeClass("before-start");
           dayDiv.removeClass("after-today");
         }
@@ -18537,35 +20834,35 @@ var HeatmapService = class {
       let touchStartX = 0;
       let touchStartY = 0;
       let isScrolling = false;
-      heatmapDiv.addEventListener("touchstart", (e) => {
-        if (e.touches.length === 1) {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
+      heatmapDiv.addEventListener("touchstart", (e3) => {
+        if (e3.touches.length === 1) {
+          touchStartX = e3.touches[0].clientX;
+          touchStartY = e3.touches[0].clientY;
           isScrolling = false;
         }
       }, { passive: true });
-      heatmapDiv.addEventListener("touchmove", (e) => {
-        if (e.touches.length === 1 && touchStartX !== 0) {
-          const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
-          const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
+      heatmapDiv.addEventListener("touchmove", (e3) => {
+        if (e3.touches.length === 1 && touchStartX !== 0) {
+          const deltaX = Math.abs(e3.touches[0].clientX - touchStartX);
+          const deltaY = Math.abs(e3.touches[0].clientY - touchStartY);
           if (deltaX > deltaY * 1.5 && deltaX > 10) {
             isScrolling = true;
-            e.stopPropagation();
+            e3.stopPropagation();
           } else {
             isScrolling = false;
           }
         }
       }, { passive: true });
-      heatmapDiv.addEventListener("touchend", (e) => {
+      heatmapDiv.addEventListener("touchend", (e3) => {
         if (isScrolling) {
-          e.stopPropagation();
+          e3.stopPropagation();
         }
         touchStartX = 0;
         touchStartY = 0;
         isScrolling = false;
       }, { passive: true });
-      heatmapDiv.addEventListener("click", async (e) => {
-        const dayDiv = e.target.closest(`.${CSS_CLASSES.HEATMAP_DAY}`);
+      heatmapDiv.addEventListener("click", async (e3) => {
+        const dayDiv = e3.target.closest(`.${CSS_CLASSES.HEATMAP_DAY}`);
         if (!dayDiv) return;
         const dateStr = dayDiv.dataset.dateStr;
         if (!dateStr) return;
@@ -18595,7 +20892,7 @@ var HeatmapService = class {
               return;
             }
           }
-        } catch (e2) {
+        } catch (e4) {
         }
         const currentValue = entries.get(dateStr);
         const isChecked = isTrackerValueTrue(currentValue);
@@ -18645,7 +20942,7 @@ var HeatmapService = class {
                   dayEl.removeClass("before-start");
                   dayEl.removeClass("after-today");
                 }
-              } catch (e2) {
+              } catch (e4) {
                 dayEl.removeClass("before-start");
                 dayEl.removeClass("after-today");
               }
@@ -18859,8 +21156,8 @@ var ControlsRenderer = class {
       if (isNaN(val)) return;
       void updateValue(false);
     };
-    input.onkeypress = async (e) => {
-      if (e.key === "Enter") {
+    input.onkeypress = async (e3) => {
+      if (e3.key === "Enter") {
         await updateValue(true);
       }
     };
@@ -18994,20 +21291,20 @@ var ControlsRenderer = class {
     updateProgressBar(currentValue);
     let isDragging = false;
     let hasMoved = false;
-    const handleMouseDown = (e) => {
-      if (e.button !== 0) return;
+    const handleMouseDown = (e3) => {
+      if (e3.button !== 0) return;
       isDragging = true;
       hasMoved = false;
       progressBarInput.style.cursor = "col-resize";
-      const newValue = calculateValueFromPosition(e.clientX);
+      const newValue = calculateValueFromPosition(e3.clientX);
       currentValue = newValue;
       updateProgressBar(currentValue);
-      e.preventDefault();
+      e3.preventDefault();
     };
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e3) => {
       if (!isDragging) return;
       hasMoved = true;
-      const newValue = calculateValueFromPosition(e.clientX);
+      const newValue = calculateValueFromPosition(e3.clientX);
       currentValue = newValue;
       updateProgressBar(currentValue);
     };
@@ -19021,33 +21318,33 @@ var ControlsRenderer = class {
         }
       }
     };
-    const handleClick = async (e) => {
+    const handleClick = async (e3) => {
       if (hasMoved) {
         hasMoved = false;
         return;
       }
-      if (e.target === progressBar || e.target === valueDisplay || e.target === labelLeft || e.target === labelRight) {
+      if (e3.target === progressBar || e3.target === valueDisplay || e3.target === labelLeft || e3.target === labelRight) {
         return;
       }
-      const newValue = calculateValueFromPosition(e.clientX);
+      const newValue = calculateValueFromPosition(e3.clientX);
       currentValue = newValue;
       updateProgressBar(currentValue);
       await this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: write error", err));
       await updateVisualizations();
     };
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e3) => {
       let newValue = currentValue;
-      if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
-        e.preventDefault();
+      if (e3.key === "ArrowLeft" || e3.key === "ArrowDown") {
+        e3.preventDefault();
         newValue = Math.max(minValue, currentValue - step);
-      } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
-        e.preventDefault();
+      } else if (e3.key === "ArrowRight" || e3.key === "ArrowUp") {
+        e3.preventDefault();
         newValue = Math.min(maxValue, currentValue + step);
-      } else if (e.key === "Home") {
-        e.preventDefault();
+      } else if (e3.key === "Home") {
+        e3.preventDefault();
         newValue = minValue;
-      } else if (e.key === "End") {
-        e.preventDefault();
+      } else if (e3.key === "End") {
+        e3.preventDefault();
         newValue = maxValue;
       } else {
         return;
@@ -19055,8 +21352,8 @@ var ControlsRenderer = class {
       currentValue = newValue;
       updateProgressBar(currentValue);
     };
-    const handleKeyUp = async (e) => {
-      if (e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "Home" || e.key === "End") {
+    const handleKeyUp = async (e3) => {
+      if (e3.key === "ArrowLeft" || e3.key === "ArrowDown" || e3.key === "ArrowRight" || e3.key === "ArrowUp" || e3.key === "Home" || e3.key === "End") {
         await this.writeLogLine(file, dateIso, String(currentValue)).catch((err) => console.error("Tracker: write error", err));
         await updateVisualizations();
       }
@@ -19146,8 +21443,8 @@ var TrackerRenderer = class {
           cls: CSS_CLASSES.ORDER_BTN_UP
         });
         upButton.title = MODAL_LABELS.MOVE_UP;
-        upButton.onclick = async (e) => {
-          e.stopPropagation();
+        upButton.onclick = async (e3) => {
+          e3.stopPropagation();
           await this.onMoveTrackerUp(file);
         };
       }
@@ -19157,8 +21454,8 @@ var TrackerRenderer = class {
           cls: CSS_CLASSES.ORDER_BTN_DOWN
         });
         downButton.title = MODAL_LABELS.MOVE_DOWN;
-        downButton.onclick = async (e) => {
-          e.stopPropagation();
+        downButton.onclick = async (e3) => {
+          e3.stopPropagation();
           await this.onMoveTrackerDown(file);
         };
       }
@@ -19229,353 +21526,6 @@ var VisualizationService = class {
     } else {
       dayDiv.removeClass(CSS_CLASSES.HEATMAP_DAY_START);
     }
-  }
-};
-
-// src/services/statistics-service.ts
-var StatisticsService = class {
-  /**
-   * Gets entry value by date, trying multiple date formats
-   */
-  getEntryValueByDate(entries, date, settings) {
-    const formats = [
-      settings.dateFormat,
-      "YYYY-MM-DD",
-      "DD.MM.YYYY",
-      "MM/DD/YYYY"
-    ];
-    const triedFormats = [];
-    for (const format of formats) {
-      const dateStr = DateService.format(date, format);
-      triedFormats.push(`${format}:${dateStr}`);
-      const val = entries.get(dateStr);
-      if (val !== void 0) {
-        return val;
-      }
-    }
-    return void 0;
-  }
-  /**
-   * Determines the start tracking date with priorities:
-   * 1. trackingStartDate from frontmatter
-   * 2. File creation date
-   * 3. First date from entries
-   * 4. Fallback: 365 days ago from current date
-   */
-  determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
-    let startTrackingDate = null;
-    if (startTrackingDateStr) {
-      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
-        "YYYY-MM-DD",
-        settings.dateFormat,
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (startTrackingDate.isValid()) {
-        startTrackingDate = DateService.startOfDay(startTrackingDate);
-      } else {
-        startTrackingDate = null;
-      }
-    }
-    if (!startTrackingDate && file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parseMultiple(firstDateStr, [
-        settings.dateFormat,
-        "YYYY-MM-DD",
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (firstDate.isValid()) {
-        const firstDateNormalized = DateService.startOfDay(firstDate);
-        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
-          startTrackingDate = firstDateNormalized;
-        }
-      }
-    }
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
-    }
-    return startTrackingDate;
-  }
-  /**
-   * Calculates statistics for habits (good-habit and bad-habit)
-   */
-  calculateHabitStatistics(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
-    const endDate = DateService.parse(dateIso, settings.dateFormat);
-    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
-    let actualStartDate = startDate;
-    if (startTrackingDateStr) {
-      const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
-        settings.dateFormat,
-        "YYYY-MM-DD",
-        "YYYY/MM/DD",
-        "DD.MM.YYYY"
-      ]);
-      if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
-        actualStartDate = trackingStartDate;
-      }
-    }
-    const periodDays = [];
-    const metricType = trackerType.toLowerCase();
-    const isBadHabit = metricType === TrackerType.BAD_HABIT;
-    let actualDaysCount = 0;
-    let currentDate = actualStartDate.clone();
-    while (!DateService.isAfter(currentDate, endDate)) {
-      const dateStr = DateService.format(currentDate, settings.dateFormat);
-      const val = entries.get(dateStr);
-      let numVal = 0;
-      if (val != null) {
-        if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
-      if (isBadHabit) {
-        numVal = numVal === 0 || val == null ? 1 : 0;
-      } else {
-        numVal = val != null && numVal > 0 ? 1 : 0;
-      }
-      periodDays.push(numVal);
-      actualDaysCount++;
-      currentDate = currentDate.add(1, "days");
-    }
-    const sum = periodDays.reduce((a, b) => a + b, 0);
-    const avg = actualDaysCount > 0 ? sum / actualDaysCount : 0;
-    const totalRecords = entries.size;
-    const activeDays = periodDays.filter((v) => v > 0).length;
-    const completionRate = actualDaysCount > 0 ? activeDays / actualDaysCount * 100 : 0;
-    return {
-      totalRecords,
-      periodDays,
-      actualDaysCount,
-      completionRate,
-      activeDays,
-      sum,
-      avg
-    };
-  }
-  /**
-   * Calculates statistics for metrics (number, scale, plusminus, text)
-   */
-  calculateMetricStatistics(entries, settings, dateIso, daysToShow, trackerType, startTrackingDateStr) {
-    const endDate = DateService.parse(dateIso, settings.dateFormat);
-    const startDate = endDate.clone().subtract(daysToShow - 1, "days");
-    let actualStartDate = startDate;
-    if (startTrackingDateStr) {
-      const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
-        settings.dateFormat,
-        "YYYY-MM-DD",
-        "YYYY/MM/DD",
-        "DD.MM.YYYY"
-      ]);
-      if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
-        actualStartDate = trackingStartDate;
-      }
-    }
-    const periodDays = [];
-    const metricType = trackerType.toLowerCase();
-    let actualDaysCount = 0;
-    let currentDate = actualStartDate.clone();
-    while (!DateService.isAfter(currentDate, endDate)) {
-      const dateStr = DateService.format(currentDate, settings.dateFormat);
-      const val = entries.get(dateStr);
-      let numVal = 0;
-      if (val != null) {
-        if (metricType === TrackerType.TEXT) {
-          numVal = countWords(String(val));
-        } else if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
-      periodDays.push(numVal);
-      actualDaysCount++;
-      currentDate = currentDate.add(1, "days");
-    }
-    const sum = periodDays.reduce((a, b) => a + b, 0);
-    const avg = actualDaysCount > 0 ? sum / actualDaysCount : 0;
-    const totalRecords = entries.size;
-    let min = null;
-    let max = null;
-    let median = null;
-    const nonZeroValues = periodDays.filter((v) => v > 0);
-    if (periodDays.length > 0) {
-      const sortedValues = [...periodDays].sort((a, b) => a - b);
-      min = sortedValues[0];
-      max = sortedValues[sortedValues.length - 1];
-      const mid = Math.floor(sortedValues.length / 2);
-      if (sortedValues.length % 2 === 0) {
-        median = (sortedValues[mid - 1] + sortedValues[mid]) / 2;
-      } else {
-        median = sortedValues[mid];
-      }
-    }
-    const activeDays = nonZeroValues.length;
-    return {
-      totalRecords,
-      periodDays,
-      actualDaysCount,
-      sum,
-      avg,
-      min,
-      max,
-      median,
-      activeDays
-    };
-  }
-  /**
-   * Calculates streak information (current and best streak)
-   */
-  calculateStreaks(entries, settings, endDate, trackerType, file, startTrackingDateStr) {
-    const metricType = trackerType.toLowerCase();
-    const isBadHabit = metricType === TrackerType.BAD_HABIT;
-    let currentDate;
-    if (endDate instanceof Date) {
-      currentDate = DateService.fromDate(endDate);
-    } else if (endDate && typeof endDate.isValid === "function" && typeof endDate.clone === "function") {
-      currentDate = endDate.clone();
-    } else {
-      currentDate = DateService.fromDate(new Date(endDate));
-    }
-    if (!currentDate || !currentDate.isValid || !currentDate.isValid()) {
-      return { current: 0, best: 0 };
-    }
-    currentDate = DateService.startOfDay(currentDate);
-    const startTrackingDate = this.determineStartTrackingDate(
-      startTrackingDateStr,
-      file,
-      entries,
-      settings,
-      currentDate
-    );
-    if (!startTrackingDate || !startTrackingDate.isValid()) {
-      return { current: 0, best: 0 };
-    }
-    let currentStreak = 0;
-    let daysChecked = 0;
-    let checkDate = currentDate.clone();
-    while (daysChecked < MAX_DAYS_BACK) {
-      if (DateService.isBefore(checkDate, startTrackingDate)) {
-        break;
-      }
-      const val = this.getEntryValueByDate(entries, checkDate, settings);
-      let isSuccess = false;
-      if (isBadHabit) {
-        if (val == null || val === void 0) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== void 0) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
-      if (isSuccess) {
-        currentStreak++;
-      } else {
-        break;
-      }
-      checkDate = checkDate.subtract(1, "days");
-      daysChecked++;
-    }
-    let bestStreak = 0;
-    let bestCurrentStreak = 0;
-    daysChecked = 0;
-    let bestCheckDate = currentDate.clone();
-    while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      const val = this.getEntryValueByDate(entries, bestCheckDate, settings);
-      let isSuccess = false;
-      if (isBadHabit) {
-        if (val == null || val === void 0) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== void 0) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
-      if (isSuccess) {
-        bestCurrentStreak++;
-        bestStreak = Math.max(bestStreak, bestCurrentStreak);
-      } else {
-        bestCurrentStreak = 0;
-      }
-      bestCheckDate = bestCheckDate.subtract(1, "days");
-      daysChecked++;
-    }
-    return {
-      current: currentStreak,
-      best: bestStreak
-    };
-  }
-  /**
-   * Calculates complete statistics for a tracker
-   */
-  calculateStatistics(entries, settings, dateIso, daysToShow, trackerType, endDate, file, startTrackingDateStr) {
-    const metricType = trackerType.toLowerCase();
-    const isHabit = metricType === TrackerType.GOOD_HABIT || metricType === TrackerType.BAD_HABIT;
-    const streaks = this.calculateStreaks(
-      entries,
-      settings,
-      endDate,
-      trackerType,
-      file,
-      startTrackingDateStr
-    );
-    let habit = null;
-    let metric = null;
-    let base;
-    if (isHabit) {
-      habit = this.calculateHabitStatistics(
-        entries,
-        settings,
-        dateIso,
-        daysToShow,
-        trackerType,
-        startTrackingDateStr
-      );
-      base = {
-        totalRecords: habit.totalRecords,
-        periodDays: habit.periodDays,
-        actualDaysCount: habit.actualDaysCount
-      };
-    } else {
-      metric = this.calculateMetricStatistics(
-        entries,
-        settings,
-        dateIso,
-        daysToShow,
-        trackerType,
-        startTrackingDateStr
-      );
-      base = {
-        totalRecords: metric.totalRecords,
-        periodDays: metric.periodDays,
-        actualDaysCount: metric.actualDaysCount
-      };
-    }
-    return {
-      base,
-      habit,
-      metric,
-      streaks,
-      trackerType
-    };
   }
 };
 
@@ -19840,10 +21790,10 @@ var TrackerOrderService = class {
   async reorderTrackers(folderPath, newOrder) {
     if (newOrder.length === 0) return;
     const prefixWidth = newOrder.length >= 100 ? 3 : newOrder.length >= 10 ? 2 : 2;
-    for (let i = 0; i < newOrder.length; i++) {
-      const file = newOrder[i];
+    for (let i4 = 0; i4 < newOrder.length; i4++) {
+      const file = newOrder[i4];
       const parsed = parseFilename(file.basename);
-      const newBasename = formatFilename(parsed.name, i + 1);
+      const newBasename = formatFilename(parsed.name, i4 + 1);
       const newPath = `${folderPath}/${newBasename}.md`;
       if (file.path !== newPath) {
         await this.app.vault.rename(file, newPath);
@@ -19858,10 +21808,10 @@ var TrackerOrderService = class {
   async reorderFolders(parentFolderPath, newOrder) {
     if (newOrder.length === 0) return;
     const prefixWidth = newOrder.length >= 100 ? 3 : newOrder.length >= 10 ? 2 : 2;
-    for (let i = 0; i < newOrder.length; i++) {
-      const folder = newOrder[i];
+    for (let i4 = 0; i4 < newOrder.length; i4++) {
+      const folder = newOrder[i4];
       const parsed = parseFilename(folder.name);
-      const newName = formatFilename(parsed.name, i + 1);
+      const newName = formatFilename(parsed.name, i4 + 1);
       const newPath = parentFolderPath ? `${parentFolderPath}/${newName}` : newName;
       if (folder.path !== newPath) {
         await this.app.vault.rename(folder, newPath);
@@ -20008,59 +21958,6 @@ var IconizeService = class {
   }
 };
 
-// src/utils/theme.ts
-function getCSSVar(varName, fallback = "#000000") {
-  const root = document.body || document.documentElement;
-  const value = getComputedStyle(root).getPropertyValue(varName).trim();
-  return value || fallback;
-}
-function getAccentColor() {
-  const tempEl = document.createElement("div");
-  tempEl.style.position = "absolute";
-  tempEl.style.visibility = "hidden";
-  document.body.appendChild(tempEl);
-  let accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
-  if (!accentColor) {
-    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.COLOR_ACCENT).trim();
-  }
-  if (!accentColor) {
-    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.ACCENT_COLOR).trim();
-  }
-  document.body.removeChild(tempEl);
-  if (!accentColor) {
-    const root = document.body || document.documentElement;
-    accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
-  }
-  if (!accentColor) {
-    accentColor = FALLBACK_COLORS.ACCENT;
-  }
-  return accentColor;
-}
-function getThemeColors() {
-  const accentColor = getAccentColor();
-  return {
-    accentColor,
-    textMuted: getCSSVar(CSS_VARIABLES.TEXT_MUTED, FALLBACK_COLORS.TEXT_MUTED),
-    textFaint: getCSSVar(CSS_VARIABLES.TEXT_FAINT, FALLBACK_COLORS.TEXT_FAINT),
-    borderColor: getCSSVar(CSS_VARIABLES.BACKGROUND_MODIFIER_BORDER, FALLBACK_COLORS.BORDER),
-    bgPrimary: getCSSVar(CSS_VARIABLES.BACKGROUND_PRIMARY, FALLBACK_COLORS.BG_PRIMARY),
-    errorColor: getCSSVar(CSS_VARIABLES.TEXT_ERROR, FALLBACK_COLORS.TEXT_ERROR),
-    successColor: getCSSVar(CSS_VARIABLES.TEXT_SUCCESS, FALLBACK_COLORS.TEXT_SUCCESS),
-    startLineColor: getCSSVar(CSS_VARIABLES.TEXT_ACCENT, accentColor)
-  };
-}
-function colorToRgba(color2, alpha2) {
-  if (color2.startsWith("#")) {
-    const r = parseInt(color2.slice(1, 3), 16);
-    const g = parseInt(color2.slice(3, 5), 16);
-    const b = parseInt(color2.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha2})`;
-  } else if (color2.startsWith("rgb")) {
-    return color2.replace("rgb", "rgba").replace(")", `, ${alpha2})`);
-  }
-  return color2;
-}
-
 // src/core/tracker-plugin.ts
 Chart.register(...registerables);
 var TrackerPlugin = class extends import_obsidian10.Plugin {
@@ -20071,6 +21968,10 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.currentNotePath = null;
     this.refreshBlocksDebounceTimer = null;
   }
+  /**
+   * Check if current device is mobile (based on viewport width)
+   * Public for use by Preact components
+   */
   isMobileDevice() {
     return window.innerWidth <= MOBILE_BREAKPOINT;
   }
@@ -20349,7 +22250,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           const tc = element.querySelector(`.tracker-notes__trackers`);
           return tc?.dataset.folderPath || "no-trackers-container";
         });
-        const missingPaths = foldersInNewOrder.map((f) => f.path).filter((path) => !folderElementsMap.has(path));
+        const missingPaths = foldersInNewOrder.map((f4) => f4.path).filter((path) => !folderElementsMap.has(path));
         console.warn(`Tracker: Missing folders:`, missingPaths);
         console.warn(`Tracker: Found folders:`, foundPaths);
       }
@@ -20360,8 +22261,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       }
       let insertBefore = null;
       const remainingSiblings = Array.from(parentContainer.children);
-      for (let i = remainingSiblings.length - 1; i >= 0; i--) {
-        const sibling = remainingSiblings[i];
+      for (let i4 = remainingSiblings.length - 1; i4 >= 0; i4--) {
+        const sibling = remainingSiblings[i4];
         if (!sibling.classList.contains("tracker-notes__folder-node")) {
           insertBefore = sibling.nextSibling;
           break;
@@ -20543,7 +22444,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
           try {
             container.scrollTop = position.top;
             container.scrollLeft = position.left;
-          } catch (e) {
+          } catch (e3) {
           }
         }
       }
@@ -20644,19 +22545,19 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const pointBorderColors = [];
     const dateStrings = [];
     let maxValue = 0;
-    for (let i = 0; i < days; i++) {
-      const date = startDate.clone().add(i, "days");
+    for (let i4 = 0; i4 < days; i4++) {
+      const date = startDate.clone().add(i4, "days");
       const dateStr = DateService.format(date, this.settings.dateFormat);
       if (dateStr === startTrackingDateStr) {
-        startTrackingIndex = i;
+        startTrackingIndex = i4;
       }
       if (dateStr === activeDateStr) {
-        activeDateIndex = i;
+        activeDateIndex = i4;
       }
       let label = "";
-      const m = window.moment;
-      if (m) {
-        label = m(date.toDate()).format("D MMM");
+      const m3 = window.moment;
+      if (m3) {
+        label = m3(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
         const month = date.toDate().toLocaleDateString("en", { month: "short" });
@@ -20683,7 +22584,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       let pointBorder = colors2.accentColor;
       const isAfterToday = dateStr > todayStr;
       const hasLimits = minLimit !== null || maxLimit !== null;
-      if (!isAfterToday && startTrackingIndex !== null && i >= startTrackingIndex && hasLimits) {
+      if (!isAfterToday && startTrackingIndex !== null && i4 >= startTrackingIndex && hasLimits) {
         const isInRange = (minLimit === null || numVal >= minLimit) && (maxLimit === null || numVal <= maxLimit);
         if (isInRange) {
           pointColor = colors2.successColor;
@@ -20698,7 +22599,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     }
     const pointRadii = [];
     const pointBorderWidths = [];
-    for (let i = 0; i < days; i++) {
+    for (let i4 = 0; i4 < days; i4++) {
       pointRadii.push(CHART_CONFIG.POINT_RADIUS);
       pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
@@ -20779,10 +22680,10 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       ctx2.stroke();
       ctx2.restore();
     };
-    const hasInvalidValues = values.some((v) => !isFinite(v) || isNaN(v));
+    const hasInvalidValues = values.some((v3) => !isFinite(v3) || isNaN(v3));
     if (hasInvalidValues) {
       console.error("Tracker: Invalid values in chart data", { values, labels, dateStrings });
-      const validValues = values.map((v) => isFinite(v) && !isNaN(v) ? v : 0);
+      const validValues = values.map((v3) => isFinite(v3) && !isNaN(v3) ? v3 : 0);
       values.length = 0;
       values.push(...validValues);
     }
@@ -21045,19 +22946,19 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const pointBorderColors = [];
     const dateStrings = [];
     let maxValue = 0;
-    for (let i = 0; i < days; i++) {
-      const date = startDate.clone().add(i, "days");
+    for (let i4 = 0; i4 < days; i4++) {
+      const date = startDate.clone().add(i4, "days");
       const dateStr = DateService.format(date, this.settings.dateFormat);
       if (dateStr === startTrackingDateStr) {
-        startTrackingIndex = i;
+        startTrackingIndex = i4;
       }
       if (dateStr === activeDateStr) {
-        activeDateIndex = i;
+        activeDateIndex = i4;
       }
       let label = "";
-      const m = window.moment;
-      if (m) {
-        label = m(date.toDate()).format("D MMM");
+      const m3 = window.moment;
+      if (m3) {
+        label = m3(date.toDate()).format("D MMM");
       } else {
         const day = date.getDate();
         const month = date.toDate().toLocaleDateString("en", { month: "short" });
@@ -21084,7 +22985,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       let pointBorder = colors2.accentColor;
       const isAfterToday = dateStr > todayStr;
       const hasLimits = minLimit !== null || maxLimit !== null;
-      if (!isAfterToday && startTrackingIndex !== null && i >= startTrackingIndex && hasLimits) {
+      if (!isAfterToday && startTrackingIndex !== null && i4 >= startTrackingIndex && hasLimits) {
         const isInRange = (minLimit === null || numVal >= minLimit) && (maxLimit === null || numVal <= maxLimit);
         if (isInRange) {
           pointColor = colors2.successColor;
@@ -21099,7 +23000,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     }
     const pointRadii = [];
     const pointBorderWidths = [];
-    for (let i = 0; i < days; i++) {
+    for (let i4 = 0; i4 < days; i4++) {
       pointRadii.push(CHART_CONFIG.POINT_RADIUS);
       pointBorderWidths.push(CHART_CONFIG.POINT_BORDER_WIDTH);
     }
@@ -21285,7 +23186,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     if (sortOrder && sortOrder.length > 0) {
       return sortOrder;
     }
-    return items.map((item) => item instanceof import_obsidian10.TFile ? item.basename : item.name).sort((a, b) => a.localeCompare(b, void 0, { sensitivity: "base" }));
+    return items.map((item) => item instanceof import_obsidian10.TFile ? item.basename : item.name).sort((a3, b) => a3.localeCompare(b, void 0, { sensitivity: "base" }));
   }
   /**
    * Saves sort order for a folder to settings
@@ -21323,8 +23224,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         remaining.push(item);
       }
     }
-    remaining.sort((a, b) => {
-      const aName = a instanceof import_obsidian10.TFile ? a.basename : a.name;
+    remaining.sort((a3, b) => {
+      const aName = a3 instanceof import_obsidian10.TFile ? a3.basename : a3.name;
       const bName = b instanceof import_obsidian10.TFile ? b.basename : b.name;
       return aName.localeCompare(bName, void 0, { sensitivity: "base" });
     });
@@ -21490,25 +23391,31 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     if (orderBtnsContainer) {
       const upButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_UP}`);
       if (upButton) {
-        upButton.onclick = async (e) => {
-          e.stopPropagation();
+        upButton.onclick = async (e3) => {
+          e3.stopPropagation();
           await this.moveFolderUp(newPath);
         };
       }
       const downButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_DOWN}`);
       if (downButton) {
-        downButton.onclick = async (e) => {
-          e.stopPropagation();
+        downButton.onclick = async (e3) => {
+          e3.stopPropagation();
           await this.moveFolderDown(newPath);
         };
       }
     }
   }
-  async getStartTrackingDate(entries, file) {
+  async getStartTrackingDateAsync(entries, file) {
     if (!file) {
       return DateService.format(DateService.now(), this.settings.dateFormat);
     }
     const fileOpts = await this.getFileTypeFromFrontmatter(file);
+    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
+  }
+  /**
+   * Get start tracking date synchronously (for Preact components that already have fileOptions)
+   */
+  getStartTrackingDate(entries, fileOpts) {
     return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
   }
   invalidateCacheForFile(file) {
@@ -21522,7 +23429,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   }
   async readAllEntries(file) {
     const state = await this.ensureTrackerState(file);
-    return state.entries;
+    return new Map(state.entries);
   }
   // ---- Создание привычки ----------------------------------------------------
   async createNewTracker() {
@@ -21543,56 +23450,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       const blockFolderPath = block.getFolderPath();
       const normalizedBlockPath = this.normalizePath(blockFolderPath);
       if (!this.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
-      const opts = block.getOptions();
-      const view = (opts.view ?? "control").toLowerCase();
-      const dateInput = block.containerEl.querySelector(".tracker-notes__date-input");
-      const activeDateIso = dateInput?.value || resolveDateIso(opts.date, this.settings.dateFormat);
-      const trackersContainers = Array.from(
-        block.containerEl.querySelectorAll(
-          `.tracker-notes__trackers[data-folder-path="${normalizedFolderPath}"]`
-        )
-      );
-      if (trackersContainers.length === 0) {
-        await block.render();
-        continue;
-      }
-      for (const trackersContainer of trackersContainers) {
-        const folder = this.app.vault.getAbstractFileByPath(normalizedFolderPath);
-        if (!folder || !(folder instanceof import_obsidian10.TFolder)) continue;
-        const allTrackers = folder.children.filter(
-          (f) => f instanceof import_obsidian10.TFile && f.extension === "md"
-        );
-        const sortedTrackers = this.sortItemsByOrder(allTrackers, normalizedFolderPath);
-        const newTrackerIndex = sortedTrackers.findIndex((t) => t.path === file.path);
-        if (newTrackerIndex < 0) continue;
-        await this.trackerRenderer.renderTracker(trackersContainer, file, activeDateIso, view, opts);
-        const newTracker = trackersContainer.querySelector(
-          `.tracker-notes__tracker[data-file-path="${file.path}"]`
-        );
-        if (!newTracker || newTracker.parentElement !== trackersContainer) continue;
-        let insertBefore = null;
-        if (newTrackerIndex === 0) {
-          const firstChild = trackersContainer.firstElementChild;
-          if (firstChild && firstChild !== newTracker) {
-            insertBefore = firstChild;
-          }
-        } else if (newTrackerIndex < sortedTrackers.length) {
-          const nextTracker = sortedTrackers[newTrackerIndex];
-          if (nextTracker) {
-            insertBefore = trackersContainer.querySelector(
-              `.tracker-notes__tracker[data-file-path="${nextTracker.path}"]`
-            );
-          }
-        }
-        if (insertBefore && insertBefore !== newTracker) {
-          trackersContainer.insertBefore(newTracker, insertBefore);
-        } else if (newTrackerIndex === 0) {
-          const firstChild = trackersContainer.firstElementChild;
-          if (firstChild !== newTracker) {
-            trackersContainer.insertBefore(newTracker, firstChild);
-          }
-        }
-      }
+      await block.render();
     }
   }
   async onTrackerDeleted(filePath) {
@@ -21648,7 +23506,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   }
   // Simple file picker: suggests recently opened/suitable files
   async pickTrackerFile() {
-    const files = this.app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(this.settings.trackersFolder + "/"));
+    const files = this.app.vault.getMarkdownFiles().filter((f4) => f4.path.startsWith(this.settings.trackersFolder + "/"));
     if (files.length === 0) {
       new import_obsidian10.Notice(MODAL_LABELS.NO_TRACKERS_FOUND);
       return null;
@@ -21672,18 +23530,24 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   editTracker(file) {
     new EditTrackerModal(this.app, this, file).open();
   }
+  /**
+   * Alias for editTracker for use by Preact components
+   */
+  openEditTrackerModal(file) {
+    this.editTracker(file);
+  }
   async moveTrackerUp(file) {
     const folderPath = this.getFolderPathFromFile(file.path);
     const folder = this.app.vault.getAbstractFileByPath(folderPath);
     if (!folder || !(folder instanceof import_obsidian10.TFolder)) return;
     const trackers = folder.children.filter(
-      (f) => f instanceof import_obsidian10.TFile && f.extension === "md"
+      (f4) => f4 instanceof import_obsidian10.TFile && f4.extension === "md"
     );
     const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
-    const currentIndex = sortedTrackers.findIndex((t) => t.path === file.path);
+    const currentIndex = sortedTrackers.findIndex((t3) => t3.path === file.path);
     if (currentIndex <= 0) return;
     [sortedTrackers[currentIndex - 1], sortedTrackers[currentIndex]] = [sortedTrackers[currentIndex], sortedTrackers[currentIndex - 1]];
-    const newOrder = sortedTrackers.map((t) => t.basename);
+    const newOrder = sortedTrackers.map((t3) => t3.basename);
     await this.saveSortOrderForFolder(folderPath, newOrder);
     await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
@@ -21693,13 +23557,13 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const folder = this.app.vault.getAbstractFileByPath(folderPath);
     if (!folder || !(folder instanceof import_obsidian10.TFolder)) return;
     const trackers = folder.children.filter(
-      (f) => f instanceof import_obsidian10.TFile && f.extension === "md"
+      (f4) => f4 instanceof import_obsidian10.TFile && f4.extension === "md"
     );
     const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
-    const currentIndex = sortedTrackers.findIndex((t) => t.path === file.path);
+    const currentIndex = sortedTrackers.findIndex((t3) => t3.path === file.path);
     if (currentIndex < 0 || currentIndex >= sortedTrackers.length - 1) return;
     [sortedTrackers[currentIndex], sortedTrackers[currentIndex + 1]] = [sortedTrackers[currentIndex + 1], sortedTrackers[currentIndex]];
-    const newOrder = sortedTrackers.map((t) => t.basename);
+    const newOrder = sortedTrackers.map((t3) => t3.basename);
     await this.saveSortOrderForFolder(folderPath, newOrder);
     await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
@@ -21709,20 +23573,20 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     let folders;
     if (!parentFolderPath) {
       folders = this.app.vault.getRoot().children.filter(
-        (f) => f instanceof import_obsidian10.TFolder
+        (f4) => f4 instanceof import_obsidian10.TFolder
       );
     } else {
       const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
       if (!parentFolder || !(parentFolder instanceof import_obsidian10.TFolder)) return;
       folders = parentFolder.children.filter(
-        (f) => f instanceof import_obsidian10.TFolder
+        (f4) => f4 instanceof import_obsidian10.TFolder
       );
     }
     const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
-    const currentIndex = sortedFolders.findIndex((f) => f.path === folderPath);
+    const currentIndex = sortedFolders.findIndex((f4) => f4.path === folderPath);
     if (currentIndex <= 0) return;
     [sortedFolders[currentIndex - 1], sortedFolders[currentIndex]] = [sortedFolders[currentIndex], sortedFolders[currentIndex - 1]];
-    const newOrder = sortedFolders.map((f) => f.name);
+    const newOrder = sortedFolders.map((f4) => f4.name);
     await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
     await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
@@ -21732,20 +23596,20 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     let folders;
     if (!parentFolderPath) {
       folders = this.app.vault.getRoot().children.filter(
-        (f) => f instanceof import_obsidian10.TFolder
+        (f4) => f4 instanceof import_obsidian10.TFolder
       );
     } else {
       const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
       if (!parentFolder || !(parentFolder instanceof import_obsidian10.TFolder)) return;
       folders = parentFolder.children.filter(
-        (f) => f instanceof import_obsidian10.TFolder
+        (f4) => f4 instanceof import_obsidian10.TFolder
       );
     }
     const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
-    const currentIndex = sortedFolders.findIndex((f) => f.path === folderPath);
+    const currentIndex = sortedFolders.findIndex((f4) => f4.path === folderPath);
     if (currentIndex < 0 || currentIndex >= sortedFolders.length - 1) return;
     [sortedFolders[currentIndex], sortedFolders[currentIndex + 1]] = [sortedFolders[currentIndex + 1], sortedFolders[currentIndex]];
-    const newOrder = sortedFolders.map((f) => f.name);
+    const newOrder = sortedFolders.map((f4) => f4.name);
     await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
     await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
