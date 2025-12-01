@@ -6,7 +6,6 @@ import {
 import { render } from "preact";
 import type TrackerPlugin from "../core/tracker-plugin";
 import { parseOptions } from "../utils/options";
-import { resolveDateIso } from "../utils/date";
 import { DateService } from "../services/date-service";
 import { ViewMode, ERROR_MESSAGES } from "../constants";
 import { TrackerBlock } from "../components/TrackerBlock";
@@ -51,7 +50,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         initialDate = this.extractDateFromNotePath(this.ctx.sourcePath);
       }
 
-      const dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      const dateIso = DateService.resolveDateIso(initialDate, this.plugin.settings.dateFormat);
 
       // Render Preact component
       render(

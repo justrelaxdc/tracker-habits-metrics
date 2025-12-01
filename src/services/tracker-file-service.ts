@@ -4,98 +4,10 @@ import { parseMaybeNumber } from "../utils/misc";
 import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
 import { DateService } from "./date-service";
+import { getEntryValueByDate, determineStartTrackingDate } from "./entry-utils";
 
 export class TrackerFileService {
   constructor(private readonly app: App) {}
-
-  /**
-   * Находит значение в entries по дате, пробуя разные форматы
-   */
-  private getEntryValueByDate(
-    entries: Map<string, string | number>,
-    date: any,
-    settings: TrackerSettings
-  ): string | number | undefined {
-    // Пробуем разные форматы
-    const formats = [
-      settings.dateFormat,
-      'YYYY-MM-DD',
-      'DD.MM.YYYY',
-      'MM/DD/YYYY'
-    ];
-    
-    for (const format of formats) {
-      const dateStr = DateService.format(date, format);
-      const val = entries.get(dateStr);
-      if (val !== undefined) {
-        return val;
-      }
-    }
-    
-    return undefined;
-  }
-
-  /**
-   * Определяет дату начала отслеживания с приоритетами:
-   * 1. trackingStartDate из frontmatter
-   * 2. Дата создания файла
-   * 3. Первая дата из entries
-   * 4. Fallback: 365 дней назад от текущей даты
-   */
-  private determineStartTrackingDate(
-    startTrackingDateStr: string | null | undefined,
-    file: TFile | undefined,
-    entries: Map<string, string | number>,
-    settings: TrackerSettings,
-    currentDate: any
-  ): any {
-    let startTrackingDate = null;
-    
-    // Приоритет 1: Дата из frontmatter (trackingStartDate)
-    if (startTrackingDateStr) {
-      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
-        'YYYY-MM-DD',
-        settings.dateFormat,
-        'DD.MM.YYYY',
-        'MM/DD/YYYY'
-      ]);
-      if (startTrackingDate.isValid()) {
-        startTrackingDate = DateService.startOfDay(startTrackingDate);
-      } else {
-        startTrackingDate = null;
-      }
-    }
-    
-    // Приоритет 2: Дата создания файла
-    if (!startTrackingDate && file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-
-    // Приоритет 3: Первая дата из entries
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parseMultiple(firstDateStr, [
-        settings.dateFormat,
-        'YYYY-MM-DD',
-        'DD.MM.YYYY',
-        'MM/DD/YYYY'
-      ]);
-      if (firstDate.isValid()) {
-        const firstDateNormalized = DateService.startOfDay(firstDate);
-        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
-          startTrackingDate = firstDateNormalized;
-        }
-      }
-    }
-
-    // Fallback: 365 дней назад
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
-    }
-
-    return startTrackingDate;
-  }
 
   async ensureFileWithHeading(filePath: string, type: string = "good-habit"): Promise<TFile> {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
@@ -285,12 +197,12 @@ export class TrackerFileService {
     settings: TrackerSettings,
     fileOpts?: TrackerFileOptions
   ): string | null {
-    // Приоритет 1: Дата из frontmatter
+    // Priority 1: Date from frontmatter
     if (fileOpts?.trackingStartDate) {
       return fileOpts.trackingStartDate;
     }
     
-    // Fallback: текущая дата
+    // Fallback: current date
     return DateService.format(DateService.now(), settings.dateFormat);
   }
 
@@ -304,12 +216,12 @@ export class TrackerFileService {
   ): number {
     let streak = 0;
     let currentDate = endDate instanceof Date ? DateService.fromDate(endDate) : DateService.fromDate(new Date(endDate));
-    currentDate = DateService.startOfDay(currentDate); // Нормализуем к началу дня
+    currentDate = DateService.startOfDay(currentDate);
     const metricType = (trackerType || "good-habit").toLowerCase();
     const isBadHabit = metricType === "bad-habit";
 
-    // Определяем дату начала отслеживания
-    const startTrackingDate = this.determineStartTrackingDate(
+    // Determine start tracking date using shared utility
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -317,7 +229,6 @@ export class TrackerFileService {
       currentDate
     );
 
-    // Убеждаемся, что startTrackingDate валидная
     if (!startTrackingDate || !startTrackingDate.isValid()) {
       return 0;
     }
@@ -325,17 +236,15 @@ export class TrackerFileService {
     let daysChecked = 0;
 
     while (daysChecked < MAX_DAYS_BACK) {
-      // Проверяем, не вышли ли мы за пределы даты начала отслеживания
       if (DateService.isBefore(currentDate, startTrackingDate)) {
         break;
       }
 
-      // Ищем значение в entries, пробуя разные форматы
-      const val = this.getEntryValueByDate(entries, currentDate, settings);
+      // Use shared utility for getting entry value
+      const val = getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
 
       if (isBadHabit) {
-        // Для bad-habit: успех = отсутствие записи ИЛИ значение 0/false
         if (val == null || val === undefined) {
           isSuccess = true;
         } else {
@@ -343,7 +252,6 @@ export class TrackerFileService {
           isSuccess = !hasValue;
         }
       } else {
-        // Для good-habit и метрик: успех = наличие записи с истинным значением
         if (val != null && val !== undefined) {
           isSuccess = isTrackerValueTrue(val);
         }
@@ -377,8 +285,8 @@ export class TrackerFileService {
     const today = DateService.now();
     let currentDate = DateService.startOfDay(today);
     
-    // Определяем дату начала отслеживания
-    const startTrackingDate = this.determineStartTrackingDate(
+    // Determine start tracking date using shared utility
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -386,7 +294,6 @@ export class TrackerFileService {
       currentDate
     );
 
-    // Убеждаемся, что startTrackingDate валидная
     if (!startTrackingDate || !startTrackingDate.isValid()) {
       return 0;
     }
@@ -395,14 +302,12 @@ export class TrackerFileService {
     let currentStreak = 0;
     let daysChecked = 0;
     
-    // Проходим по всем дням от начала отслеживания до сегодня
     while (!DateService.isBefore(currentDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      // Ищем значение в entries, пробуя разные форматы
-      const val = this.getEntryValueByDate(entries, currentDate, settings);
+      // Use shared utility for getting entry value
+      const val = getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
       
       if (isBadHabit) {
-        // Для bad-habit: успех = отсутствие записи ИЛИ значение 0/false
         if (val == null || val === undefined) {
           isSuccess = true;
         } else {
@@ -410,7 +315,6 @@ export class TrackerFileService {
           isSuccess = !hasValue;
         }
       } else {
-        // Для good-habit и метрик: успех = наличие записи с истинным значением
         if (val != null && val !== undefined) {
           isSuccess = isTrackerValueTrue(val);
         }
@@ -429,6 +333,4 @@ export class TrackerFileService {
     
     return bestStreak;
   }
-
 }
-

@@ -1,5 +1,5 @@
 /* ============================================
-   Tracker: Habits & Metrics - Modern UI Styles
+   Tracker: Habits & Metrics - Base Styles
    ============================================ */
 
 /* Reset hover effects for code blocks */
@@ -62,7 +62,6 @@
 }
 
 .tracker-notes__header-label { 
-  /* Inherits font settings from parent */
   font-size: inherit;
 }
 
@@ -80,6 +79,195 @@
   grid-template-columns: repeat(2, 1fr); 
   gap: 1em; 
 }
+
+/* ============================================
+   Folder Hierarchy
+   ============================================ */
+.tracker-notes__hierarchy { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.75em; 
+}
+
+.tracker-notes__folder-node { 
+  display: flex; 
+  flex-direction: column; 
+  margin-bottom: 1.15em; 
+}
+
+.tracker-notes__folder-node.level-0 { 
+  padding-left: 0; 
+  margin-bottom: 0; 
+}
+
+.tracker-notes__folder-node.level-1 { 
+  padding-left: 0; 
+  margin-top: 1.15em; 
+  margin-bottom: 1.4em; 
+}
+
+.tracker-notes__folder-node.level-2 { 
+  padding-left: 1.15em; 
+  margin-top: 0.85em; 
+  margin-bottom: 1.15em; 
+}
+
+.tracker-notes__folder-node.level-3 { 
+  padding-left: 0.6em; 
+  margin-top: 0.6em; 
+  margin-bottom: 0.85em; 
+}
+
+.tracker-notes__folder-header { 
+  font-weight: 700; 
+  color: var(--text-normal); 
+  margin-bottom: 0.85em; 
+  margin-top: 0.6em; 
+  padding-bottom: 0.6em; 
+  border-bottom: 2px solid var(--background-modifier-border); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 0.55em;
+  transition: border-color 0.2s ease;
+}
+
+.tracker-notes__folder-header:hover {
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
+}
+
+.tracker-notes__folder-header.level-0 { 
+  font-size: 1.45em; 
+  margin-top: 0;
+  letter-spacing: -0.01em;
+}
+
+.tracker-notes__folder-header.level-1 { 
+  font-size: 1.4em; 
+  margin-top: 0.3em;
+  letter-spacing: -0.01em;
+}
+
+.tracker-notes__folder-header.level-2 { 
+  font-size: 1.2em; 
+  margin-top: 0.3em; 
+  border-bottom-width: 1px;
+}
+
+.tracker-notes__folder-header.level-3 { 
+  font-size: 1.05em; 
+  margin-top: 0.3em; 
+  border-bottom-width: 1px;
+}
+
+/* ============================================
+   Error & Success Messages
+   ============================================ */
+.tracker-notes__error { 
+  color: var(--text-on-accent, #ffffff); 
+  padding: 0.85em 1.15em; 
+  background: var(--text-error, #d32f2f); 
+  border: none; 
+  border-radius: 10px; 
+  margin: 0.6em 0; 
+  font-size: 0.9em; 
+  font-weight: 600; 
+  word-wrap: break-word; 
+  overflow-wrap: break-word; 
+  line-height: 1.5; 
+  box-shadow: 0 3px 10px rgba(200, 0, 0, 0.25);
+}
+
+.tracker-notes__success { 
+  color: var(--text-success, var(--text-normal)); 
+  padding: 0.5em 0.75em; 
+  background: var(--background-modifier-success, var(--background-modifier-border)); 
+  border-radius: 8px; 
+  margin: 0.45em 0; 
+  font-size: 0.85em; 
+  word-wrap: break-word; 
+  overflow-wrap: break-word;
+}
+
+/* ============================================
+   Loading Indicator
+   ============================================ */
+.tracker-notes__loading { 
+  display: none; 
+  align-items: center; 
+  gap: 0.45em; 
+  font-size: 0.85em; 
+  color: var(--text-muted); 
+  margin-top: 0.35em; 
+}
+
+.tracker-notes__loading.is-active { 
+  display: flex; 
+}
+
+.tracker-notes__loading-dot { 
+  width: 0.9em; 
+  height: 0.9em; 
+  border-radius: 50%; 
+  border: 2px solid var(--interactive-accent); 
+  border-top-color: transparent; 
+  animation: tracker-loading-spin 0.8s linear infinite; 
+}
+
+@keyframes tracker-loading-spin { 
+  0% { transform: rotate(0deg); } 
+  100% { transform: rotate(360deg); } 
+}
+
+/* ============================================
+   View Mode Visibility
+   ============================================ */
+
+/* Hide buttons in preview mode */
+.markdown-preview-view .tracker-notes__settings-btn,
+.markdown-preview-view .tracker-notes__order-btns {
+  display: none !important;
+}
+
+/* Explicit display in edit mode */
+.markdown-source-view .tracker-notes__settings-btn,
+.markdown-source-view .tracker-notes__order-btns {
+  display: flex;
+}
+
+/* Keep old limit classes for backward compatibility */
+.tracker-notes__tracker-header.tracker-notes__limit-error,
+.tracker-notes__tracker-header.tracker-notes__limit-success {
+  transition: border-color 0.2s ease;
+}
+
+/* ============================================
+   Iconize Integration
+   ============================================ */
+.tracker-notes__folder-header .iconize-icon,
+.tracker-notes__tracker-title .iconize-icon {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.tracker-notes__folder-header .lucide-icon,
+.tracker-notes__tracker-title .lucide-icon {
+  font-size: 0.9em;
+  opacity: 0.85;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes pulse { 
+  0%, 100% { transform: scale(1); } 
+  50% { transform: scale(1.1); } 
+}
+
+/* ============================================
+   Tracker: Habits & Metrics - Component Styles
+   ============================================ */
 
 /* ============================================
    Individual Tracker Card
@@ -274,11 +462,6 @@
 .tracker-notes__value.updated { 
   animation: pulse 0.3s ease;
   color: var(--interactive-accent);
-}
-
-@keyframes pulse { 
-  0%, 100% { transform: scale(1); } 
-  50% { transform: scale(1.1); } 
 }
 
 /* ============================================
@@ -782,7 +965,6 @@
 .tracker-notes__heatmap-day.bad-habit.before-start,
 .tracker-notes__heatmap-day.bad-habit.after-today { 
   background: var(--background-modifier-border); 
-  /* color: var(--text-faint, var(--text-muted)); */
   opacity: 0.5;
   cursor: default;
 }
@@ -971,145 +1153,6 @@
 }
 
 /* ============================================
-   Loading Indicator
-   ============================================ */
-.tracker-notes__loading { 
-  display: none; 
-  align-items: center; 
-  gap: 0.45em; 
-  font-size: 0.85em; 
-  color: var(--text-muted); 
-  margin-top: 0.35em; 
-}
-
-.tracker-notes__loading.is-active { 
-  display: flex; 
-}
-
-.tracker-notes__loading-dot { 
-  width: 0.9em; 
-  height: 0.9em; 
-  border-radius: 50%; 
-  border: 2px solid var(--interactive-accent); 
-  border-top-color: transparent; 
-  animation: tracker-loading-spin 0.8s linear infinite; 
-}
-
-@keyframes tracker-loading-spin { 
-  0% { transform: rotate(0deg); } 
-  100% { transform: rotate(360deg); } 
-}
-
-/* ============================================
-   Error & Success Messages
-   ============================================ */
-.tracker-notes__error { 
-  color: var(--text-on-accent, #ffffff); 
-  padding: 0.85em 1.15em; 
-  background: var(--text-error, #d32f2f); 
-  border: none; 
-  border-radius: 10px; 
-  margin: 0.6em 0; 
-  font-size: 0.9em; 
-  font-weight: 600; 
-  word-wrap: break-word; 
-  overflow-wrap: break-word; 
-  line-height: 1.5; 
-  box-shadow: 0 3px 10px rgba(200, 0, 0, 0.25);
-}
-
-.tracker-notes__success { 
-  color: var(--text-success, var(--text-normal)); 
-  padding: 0.5em 0.75em; 
-  background: var(--background-modifier-success, var(--background-modifier-border)); 
-  border-radius: 8px; 
-  margin: 0.45em 0; 
-  font-size: 0.85em; 
-  word-wrap: break-word; 
-  overflow-wrap: break-word;
-}
-
-/* ============================================
-   Folder Hierarchy
-   ============================================ */
-.tracker-notes__hierarchy { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 1.75em; 
-}
-
-.tracker-notes__folder-node { 
-  display: flex; 
-  flex-direction: column; 
-  margin-bottom: 1.15em; 
-}
-
-.tracker-notes__folder-node.level-0 { 
-  padding-left: 0; 
-  margin-bottom: 0; 
-}
-
-.tracker-notes__folder-node.level-1 { 
-  padding-left: 0; 
-  margin-top: 1.15em; 
-  margin-bottom: 1.4em; 
-}
-
-.tracker-notes__folder-node.level-2 { 
-  padding-left: 1.15em; 
-  margin-top: 0.85em; 
-  margin-bottom: 1.15em; 
-}
-
-.tracker-notes__folder-node.level-3 { 
-  padding-left: 0.6em; 
-  margin-top: 0.6em; 
-  margin-bottom: 0.85em; 
-}
-
-.tracker-notes__folder-header { 
-  font-weight: 700; 
-  color: var(--text-normal); 
-  margin-bottom: 0.85em; 
-  margin-top: 0.6em; 
-  padding-bottom: 0.6em; 
-  border-bottom: 2px solid var(--background-modifier-border); 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  gap: 0.55em;
-  transition: border-color 0.2s ease;
-}
-
-.tracker-notes__folder-header:hover {
-  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));
-}
-
-.tracker-notes__folder-header.level-0 { 
-  font-size: 1.45em; 
-  margin-top: 0;
-  letter-spacing: -0.01em;
-}
-
-.tracker-notes__folder-header.level-1 { 
-  font-size: 1.4em; 
-  margin-top: 0.3em;
-  letter-spacing: -0.01em;
-}
-
-.tracker-notes__folder-header.level-2 { 
-  font-size: 1.2em; 
-  margin-top: 0.3em; 
-  border-bottom-width: 1px;
-}
-
-.tracker-notes__folder-header.level-3 { 
-  font-size: 1.05em; 
-  margin-top: 0.3em; 
-  border-bottom-width: 1px;
-}
-
-/* ============================================
    Modal Buttons
    ============================================ */
 .tracker-modal-buttons {
@@ -1155,46 +1198,7 @@
 }
 
 /* ============================================
-   View Mode Visibility
-   ============================================ */
-
-/* Hide buttons in preview mode */
-.markdown-preview-view .tracker-notes__settings-btn,
-.markdown-preview-view .tracker-notes__order-btns {
-  display: none !important;
-}
-
-/* Explicit display in edit mode */
-.markdown-source-view .tracker-notes__settings-btn,
-.markdown-source-view .tracker-notes__order-btns {
-  display: flex;
-}
-
-/* Keep old limit classes for backward compatibility */
-.tracker-notes__tracker-header.tracker-notes__limit-error,
-.tracker-notes__tracker-header.tracker-notes__limit-success {
-  /* Legacy - kept for compatibility with older versions */
-  transition: border-color 0.2s ease;
-}
-
-/* ============================================
-   Iconize Integration
-   ============================================ */
-.tracker-notes__folder-header .iconize-icon,
-.tracker-notes__tracker-title .iconize-icon {
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 1;
-}
-
-.tracker-notes__folder-header .lucide-icon,
-.tracker-notes__tracker-title .lucide-icon {
-  font-size: 0.9em;
-  opacity: 0.85;
-}
-
-/* ============================================
-   Media Queries - Responsive Design
+   Tracker: Habits & Metrics - Responsive Styles
    ============================================ */
 
 /* Switch to single column on medium screens */
@@ -1811,3 +1815,4 @@
     width: 100%;
   }
 }
+

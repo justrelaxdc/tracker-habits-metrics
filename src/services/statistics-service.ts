@@ -1,105 +1,16 @@
 import type { TFile } from "obsidian";
-import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
+import type { TrackerSettings } from "../domain/types";
 import type { HabitStatistics, MetricStatistics, StreakInfo, StatisticsResult } from "../domain/statistics-types";
 import { TrackerType, MAX_DAYS_BACK } from "../constants";
 import { DateService } from "./date-service";
 import { isTrackerValueTrue } from "../utils/validation";
 import { countWords } from "../utils/misc";
+import { getEntryValueByDate, determineStartTrackingDate, DATE_FORMATS } from "./entry-utils";
 
 /**
  * Service for calculating statistics for trackers
  */
 export class StatisticsService {
-  /**
-   * Gets entry value by date, trying multiple date formats
-   */
-  private getEntryValueByDate(
-    entries: Map<string, string | number>,
-    date: any,
-    settings: TrackerSettings
-  ): string | number | undefined {
-    const formats = [
-      settings.dateFormat,
-      'YYYY-MM-DD',
-      'DD.MM.YYYY',
-      'MM/DD/YYYY'
-    ];
-    
-    const triedFormats: string[] = [];
-    for (const format of formats) {
-      const dateStr = DateService.format(date, format);
-      triedFormats.push(`${format}:${dateStr}`);
-      const val = entries.get(dateStr);
-      if (val !== undefined) {
-        return val;
-      }
-    }
-    
-    return undefined;
-  }
-
-  /**
-   * Determines the start tracking date with priorities:
-   * 1. trackingStartDate from frontmatter
-   * 2. File creation date
-   * 3. First date from entries
-   * 4. Fallback: 365 days ago from current date
-   */
-  private determineStartTrackingDate(
-    startTrackingDateStr: string | null | undefined,
-    file: TFile | undefined,
-    entries: Map<string, string | number>,
-    settings: TrackerSettings,
-    currentDate: any
-  ): any {
-    let startTrackingDate = null;
-    
-    // Priority 1: Date from frontmatter (trackingStartDate)
-    if (startTrackingDateStr) {
-      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
-        'YYYY-MM-DD',
-        settings.dateFormat,
-        'DD.MM.YYYY',
-        'MM/DD/YYYY'
-      ]);
-      if (startTrackingDate.isValid()) {
-        startTrackingDate = DateService.startOfDay(startTrackingDate);
-      } else {
-        startTrackingDate = null;
-      }
-    }
-    
-    // Priority 2: File creation date
-    if (!startTrackingDate && file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-
-    // Priority 3: First date from entries
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parseMultiple(firstDateStr, [
-        settings.dateFormat,
-        'YYYY-MM-DD',
-        'DD.MM.YYYY',
-        'MM/DD/YYYY'
-      ]);
-      if (firstDate.isValid()) {
-        const firstDateNormalized = DateService.startOfDay(firstDate);
-        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
-          startTrackingDate = firstDateNormalized;
-        }
-      }
-    }
-
-    // Fallback: 365 days ago
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
-    }
-
-    return startTrackingDate;
-  }
-
   /**
    * Calculates statistics for habits (good-habit and bad-habit)
    */
@@ -119,9 +30,7 @@ export class StatisticsService {
     if (startTrackingDateStr) {
       const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
         settings.dateFormat,
-        'YYYY-MM-DD',
-        'YYYY/MM/DD',
-        'DD.MM.YYYY'
+        ...DATE_FORMATS
       ]);
       if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
         actualStartDate = trackingStartDate;
@@ -204,9 +113,7 @@ export class StatisticsService {
     if (startTrackingDateStr) {
       const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
         settings.dateFormat,
-        'YYYY-MM-DD',
-        'YYYY/MM/DD',
-        'DD.MM.YYYY'
+        ...DATE_FORMATS
       ]);
       if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
         actualStartDate = trackingStartDate;
@@ -294,27 +201,24 @@ export class StatisticsService {
     const metricType = trackerType.toLowerCase();
     const isBadHabit = metricType === TrackerType.BAD_HABIT;
     
-    // Normalize end date - endDate is already a DateWrapper from DateService.parse/now
+    // Normalize end date
     let currentDate: any;
     if (endDate instanceof Date) {
       currentDate = DateService.fromDate(endDate);
     } else if (endDate && typeof endDate.isValid === 'function' && typeof endDate.clone === 'function') {
-      // It's already a DateWrapper - just clone it
       currentDate = endDate.clone();
     } else {
-      // Try to parse as string or create from Date
       currentDate = DateService.fromDate(new Date(endDate));
     }
     
-    // Ensure currentDate is valid before normalizing
     if (!currentDate || !currentDate.isValid || !currentDate.isValid()) {
       return { current: 0, best: 0 };
     }
     
     currentDate = DateService.startOfDay(currentDate);
     
-    // Determine start tracking date
-    const startTrackingDate = this.determineStartTrackingDate(
+    // Determine start tracking date using shared utility
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -322,7 +226,6 @@ export class StatisticsService {
       currentDate
     );
 
-    // Ensure startTrackingDate is valid
     if (!startTrackingDate || !startTrackingDate.isValid()) {
       return { current: 0, best: 0 };
     }
@@ -333,27 +236,22 @@ export class StatisticsService {
     let checkDate = currentDate.clone();
 
     while (daysChecked < MAX_DAYS_BACK) {
-      // Check if we've gone beyond the start tracking date
       if (DateService.isBefore(checkDate, startTrackingDate)) {
         break;
       }
 
-      // Get value for this date
-      const val = this.getEntryValueByDate(entries, checkDate, settings);
+      // Use shared utility for getting entry value
+      const val = getEntryValueByDate(entries, checkDate, settings);
       let isSuccess = false;
 
       if (isBadHabit) {
-        // For bad-habit: success = absence of record OR value is 0/false
-        // But only if the date is >= startTrackingDate (already checked above)
         if (val == null || val === undefined) {
-          // Absence of record is success for bad-habit, but only for days in tracking period
           isSuccess = true;
         } else {
           const hasValue = isTrackerValueTrue(val);
           isSuccess = !hasValue;
         }
       } else {
-        // For good-habit and metrics: success = presence of record with truthy value
         if (val != null && val !== undefined) {
           isSuccess = isTrackerValueTrue(val);
         }
@@ -374,12 +272,10 @@ export class StatisticsService {
     let bestCurrentStreak = 0;
     daysChecked = 0;
     
-    // Start from endDate (same as current streak calculation) and go backwards
     let bestCheckDate = currentDate.clone();
     
-    // Go through all days from start tracking date to endDate
     while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      const val = this.getEntryValueByDate(entries, bestCheckDate, settings);
+      const val = getEntryValueByDate(entries, bestCheckDate, settings);
       let isSuccess = false;
       
       if (isBadHabit) {
@@ -482,4 +378,3 @@ export class StatisticsService {
     };
   }
 }
-

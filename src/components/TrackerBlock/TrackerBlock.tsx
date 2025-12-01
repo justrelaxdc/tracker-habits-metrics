@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from "preact/hooks";
 import { CSS_CLASSES, ViewMode, ERROR_MESSAGES } from "../../constants";
-import { resolveDateIso } from "../../utils/date";
 import { DateService } from "../../services/date-service";
 import type { TrackerBlockProps } from "../types";
 import { TrackerContext } from "../TrackerContext";
@@ -25,7 +24,7 @@ export function TrackerBlock({
 
   // Handle date change with debouncing
   const handleDateChange = useCallback(async (newDate: string) => {
-    const newDateIso = resolveDateIso(newDate, plugin.settings.dateFormat);
+    const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
     setDateIso(newDateIso);
     setPendingDate(newDateIso);
     

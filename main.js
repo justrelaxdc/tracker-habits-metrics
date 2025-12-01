@@ -588,11 +588,6 @@ var DateService = class {
   }
 };
 
-// src/utils/date.ts
-function resolveDateIso(input, fmt) {
-  return DateService.resolveDateIso(input, fmt);
-}
-
 // src/constants/index.ts
 var MOBILE_BREAKPOINT = 768;
 var MAX_DAYS_BACK = 3650;
@@ -1620,75 +1615,65 @@ function countWords(text) {
   return trimmed.split(/\s+/).filter((word) => word.length > 0).length;
 }
 
+// src/services/entry-utils.ts
+var DATE_FORMATS2 = [
+  "YYYY-MM-DD",
+  "DD.MM.YYYY",
+  "MM/DD/YYYY",
+  "YYYY/MM/DD"
+];
+function getEntryValueByDate(entries, date, settings) {
+  const formats = [
+    settings.dateFormat,
+    ...DATE_FORMATS2
+  ];
+  const uniqueFormats = [...new Set(formats)];
+  for (const format of uniqueFormats) {
+    const dateStr = DateService.format(date, format);
+    const val = entries.get(dateStr);
+    if (val !== void 0) {
+      return val;
+    }
+  }
+  return void 0;
+}
+function determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
+  let startTrackingDate = null;
+  const parseFormats = ["YYYY-MM-DD", settings.dateFormat, ...DATE_FORMATS2];
+  const uniqueParseFormats = [...new Set(parseFormats)];
+  if (startTrackingDateStr) {
+    startTrackingDate = DateService.parseMultiple(startTrackingDateStr, uniqueParseFormats);
+    if (startTrackingDate.isValid()) {
+      startTrackingDate = DateService.startOfDay(startTrackingDate);
+    } else {
+      startTrackingDate = null;
+    }
+  }
+  if (!startTrackingDate && file?.stat?.ctime) {
+    startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
+  }
+  if (entries.size > 0) {
+    const sortedDates = Array.from(entries.keys()).sort();
+    const firstDateStr = sortedDates[0];
+    const firstDate = DateService.parseMultiple(firstDateStr, [
+      settings.dateFormat,
+      ...DATE_FORMATS2
+    ]);
+    if (firstDate.isValid()) {
+      const firstDateNormalized = DateService.startOfDay(firstDate);
+      if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
+        startTrackingDate = firstDateNormalized;
+      }
+    }
+  }
+  if (!startTrackingDate) {
+    startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
+  }
+  return startTrackingDate;
+}
+
 // src/services/statistics-service.ts
 var StatisticsService = class {
-  /**
-   * Gets entry value by date, trying multiple date formats
-   */
-  getEntryValueByDate(entries, date, settings) {
-    const formats = [
-      settings.dateFormat,
-      "YYYY-MM-DD",
-      "DD.MM.YYYY",
-      "MM/DD/YYYY"
-    ];
-    const triedFormats = [];
-    for (const format of formats) {
-      const dateStr = DateService.format(date, format);
-      triedFormats.push(`${format}:${dateStr}`);
-      const val = entries.get(dateStr);
-      if (val !== void 0) {
-        return val;
-      }
-    }
-    return void 0;
-  }
-  /**
-   * Determines the start tracking date with priorities:
-   * 1. trackingStartDate from frontmatter
-   * 2. File creation date
-   * 3. First date from entries
-   * 4. Fallback: 365 days ago from current date
-   */
-  determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
-    let startTrackingDate = null;
-    if (startTrackingDateStr) {
-      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
-        "YYYY-MM-DD",
-        settings.dateFormat,
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (startTrackingDate.isValid()) {
-        startTrackingDate = DateService.startOfDay(startTrackingDate);
-      } else {
-        startTrackingDate = null;
-      }
-    }
-    if (!startTrackingDate && file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parseMultiple(firstDateStr, [
-        settings.dateFormat,
-        "YYYY-MM-DD",
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (firstDate.isValid()) {
-        const firstDateNormalized = DateService.startOfDay(firstDate);
-        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
-          startTrackingDate = firstDateNormalized;
-        }
-      }
-    }
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
-    }
-    return startTrackingDate;
-  }
   /**
    * Calculates statistics for habits (good-habit and bad-habit)
    */
@@ -1699,9 +1684,7 @@ var StatisticsService = class {
     if (startTrackingDateStr) {
       const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
         settings.dateFormat,
-        "YYYY-MM-DD",
-        "YYYY/MM/DD",
-        "DD.MM.YYYY"
+        ...DATE_FORMATS2
       ]);
       if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
         actualStartDate = trackingStartDate;
@@ -1759,9 +1742,7 @@ var StatisticsService = class {
     if (startTrackingDateStr) {
       const trackingStartDate = DateService.parseMultiple(startTrackingDateStr, [
         settings.dateFormat,
-        "YYYY-MM-DD",
-        "YYYY/MM/DD",
-        "DD.MM.YYYY"
+        ...DATE_FORMATS2
       ]);
       if (trackingStartDate.isValid() && DateService.isAfter(trackingStartDate, startDate)) {
         actualStartDate = trackingStartDate;
@@ -1839,7 +1820,7 @@ var StatisticsService = class {
       return { current: 0, best: 0 };
     }
     currentDate = DateService.startOfDay(currentDate);
-    const startTrackingDate = this.determineStartTrackingDate(
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -1856,7 +1837,7 @@ var StatisticsService = class {
       if (DateService.isBefore(checkDate, startTrackingDate)) {
         break;
       }
-      const val = this.getEntryValueByDate(entries, checkDate, settings);
+      const val = getEntryValueByDate(entries, checkDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
         if (val == null || val === void 0) {
@@ -1883,7 +1864,7 @@ var StatisticsService = class {
     daysChecked = 0;
     let bestCheckDate = currentDate.clone();
     while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      const val = this.getEntryValueByDate(entries, bestCheckDate, settings);
+      const val = getEntryValueByDate(entries, bestCheckDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
         if (val == null || val === void 0) {
@@ -17458,7 +17439,7 @@ function TrackerBlock({
   const [isUpdating, setIsUpdating] = d2(false);
   const [pendingDate, setPendingDate] = d2(null);
   const handleDateChange = q2(async (newDate) => {
-    const newDateIso = resolveDateIso(newDate, plugin.settings.dateFormat);
+    const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
     setDateIso(newDateIso);
     setPendingDate(newDateIso);
     setIsUpdating(true);
@@ -17539,7 +17520,7 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       if (!initialDate && this.ctx.sourcePath) {
         initialDate = this.extractDateFromNotePath(this.ctx.sourcePath);
       }
-      const dateIso = resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      const dateIso = DateService.resolveDateIso(initialDate, this.plugin.settings.dateFormat);
       G(
         /* @__PURE__ */ u3(
           TrackerBlock,
@@ -17773,71 +17754,6 @@ var TrackerFileService = class {
   constructor(app) {
     this.app = app;
   }
-  /**
-   * Находит значение в entries по дате, пробуя разные форматы
-   */
-  getEntryValueByDate(entries, date, settings) {
-    const formats = [
-      settings.dateFormat,
-      "YYYY-MM-DD",
-      "DD.MM.YYYY",
-      "MM/DD/YYYY"
-    ];
-    for (const format of formats) {
-      const dateStr = DateService.format(date, format);
-      const val = entries.get(dateStr);
-      if (val !== void 0) {
-        return val;
-      }
-    }
-    return void 0;
-  }
-  /**
-   * Определяет дату начала отслеживания с приоритетами:
-   * 1. trackingStartDate из frontmatter
-   * 2. Дата создания файла
-   * 3. Первая дата из entries
-   * 4. Fallback: 365 дней назад от текущей даты
-   */
-  determineStartTrackingDate(startTrackingDateStr, file, entries, settings, currentDate) {
-    let startTrackingDate = null;
-    if (startTrackingDateStr) {
-      startTrackingDate = DateService.parseMultiple(startTrackingDateStr, [
-        "YYYY-MM-DD",
-        settings.dateFormat,
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (startTrackingDate.isValid()) {
-        startTrackingDate = DateService.startOfDay(startTrackingDate);
-      } else {
-        startTrackingDate = null;
-      }
-    }
-    if (!startTrackingDate && file?.stat?.ctime) {
-      startTrackingDate = DateService.startOfDay(DateService.fromDate(new Date(file.stat.ctime)));
-    }
-    if (entries.size > 0) {
-      const sortedDates = Array.from(entries.keys()).sort();
-      const firstDateStr = sortedDates[0];
-      const firstDate = DateService.parseMultiple(firstDateStr, [
-        settings.dateFormat,
-        "YYYY-MM-DD",
-        "DD.MM.YYYY",
-        "MM/DD/YYYY"
-      ]);
-      if (firstDate.isValid()) {
-        const firstDateNormalized = DateService.startOfDay(firstDate);
-        if (!startTrackingDate || DateService.isBefore(firstDateNormalized, startTrackingDate)) {
-          startTrackingDate = firstDateNormalized;
-        }
-      }
-    }
-    if (!startTrackingDate) {
-      startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
-    }
-    return startTrackingDate;
-  }
   async ensureFileWithHeading(filePath, type = "good-habit") {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
     if (existing instanceof import_obsidian3.TFile) return existing;
@@ -18013,7 +17929,7 @@ ${newFrontmatter}---${body}`;
     currentDate = DateService.startOfDay(currentDate);
     const metricType = (trackerType || "good-habit").toLowerCase();
     const isBadHabit = metricType === "bad-habit";
-    const startTrackingDate = this.determineStartTrackingDate(
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -18028,7 +17944,7 @@ ${newFrontmatter}---${body}`;
       if (DateService.isBefore(currentDate, startTrackingDate)) {
         break;
       }
-      const val = this.getEntryValueByDate(entries, currentDate, settings);
+      const val = getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
         if (val == null || val === void 0) {
@@ -18058,7 +17974,7 @@ ${newFrontmatter}---${body}`;
     if (entries.size === 0) return 0;
     const today = DateService.now();
     let currentDate = DateService.startOfDay(today);
-    const startTrackingDate = this.determineStartTrackingDate(
+    const startTrackingDate = determineStartTrackingDate(
       startTrackingDateStr,
       file,
       entries,
@@ -18072,7 +17988,7 @@ ${newFrontmatter}---${body}`;
     let currentStreak = 0;
     let daysChecked = 0;
     while (!DateService.isBefore(currentDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      const val = this.getEntryValueByDate(entries, currentDate, settings);
+      const val = getEntryValueByDate(entries, currentDate, settings);
       let isSuccess = false;
       if (isBadHabit) {
         if (val == null || val === void 0) {
@@ -18895,9 +18811,9 @@ var FilePickerModal = class extends import_obsidian8.Modal {
   }
 };
 
-// src/styles/tracker.css
-var tracker_default = `/* ============================================\r
-   Tracker: Habits & Metrics - Modern UI Styles\r
+// src/styles/index.css
+var styles_default = `/* ============================================\r
+   Tracker: Habits & Metrics - Base Styles\r
    ============================================ */\r
 \r
 /* Reset hover effects for code blocks */\r
@@ -18960,7 +18876,6 @@ var tracker_default = `/* ============================================\r
 }\r
 \r
 .tracker-notes__header-label { \r
-  /* Inherits font settings from parent */\r
   font-size: inherit;\r
 }\r
 \r
@@ -18978,6 +18893,195 @@ var tracker_default = `/* ============================================\r
   grid-template-columns: repeat(2, 1fr); \r
   gap: 1em; \r
 }\r
+\r
+/* ============================================\r
+   Folder Hierarchy\r
+   ============================================ */\r
+.tracker-notes__hierarchy { \r
+  display: flex; \r
+  flex-direction: column; \r
+  gap: 1.75em; \r
+}\r
+\r
+.tracker-notes__folder-node { \r
+  display: flex; \r
+  flex-direction: column; \r
+  margin-bottom: 1.15em; \r
+}\r
+\r
+.tracker-notes__folder-node.level-0 { \r
+  padding-left: 0; \r
+  margin-bottom: 0; \r
+}\r
+\r
+.tracker-notes__folder-node.level-1 { \r
+  padding-left: 0; \r
+  margin-top: 1.15em; \r
+  margin-bottom: 1.4em; \r
+}\r
+\r
+.tracker-notes__folder-node.level-2 { \r
+  padding-left: 1.15em; \r
+  margin-top: 0.85em; \r
+  margin-bottom: 1.15em; \r
+}\r
+\r
+.tracker-notes__folder-node.level-3 { \r
+  padding-left: 0.6em; \r
+  margin-top: 0.6em; \r
+  margin-bottom: 0.85em; \r
+}\r
+\r
+.tracker-notes__folder-header { \r
+  font-weight: 700; \r
+  color: var(--text-normal); \r
+  margin-bottom: 0.85em; \r
+  margin-top: 0.6em; \r
+  padding-bottom: 0.6em; \r
+  border-bottom: 2px solid var(--background-modifier-border); \r
+  display: flex; \r
+  align-items: center; \r
+  justify-content: space-between; \r
+  gap: 0.55em;\r
+  transition: border-color 0.2s ease;\r
+}\r
+\r
+.tracker-notes__folder-header:hover {\r
+  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));\r
+}\r
+\r
+.tracker-notes__folder-header.level-0 { \r
+  font-size: 1.45em; \r
+  margin-top: 0;\r
+  letter-spacing: -0.01em;\r
+}\r
+\r
+.tracker-notes__folder-header.level-1 { \r
+  font-size: 1.4em; \r
+  margin-top: 0.3em;\r
+  letter-spacing: -0.01em;\r
+}\r
+\r
+.tracker-notes__folder-header.level-2 { \r
+  font-size: 1.2em; \r
+  margin-top: 0.3em; \r
+  border-bottom-width: 1px;\r
+}\r
+\r
+.tracker-notes__folder-header.level-3 { \r
+  font-size: 1.05em; \r
+  margin-top: 0.3em; \r
+  border-bottom-width: 1px;\r
+}\r
+\r
+/* ============================================\r
+   Error & Success Messages\r
+   ============================================ */\r
+.tracker-notes__error { \r
+  color: var(--text-on-accent, #ffffff); \r
+  padding: 0.85em 1.15em; \r
+  background: var(--text-error, #d32f2f); \r
+  border: none; \r
+  border-radius: 10px; \r
+  margin: 0.6em 0; \r
+  font-size: 0.9em; \r
+  font-weight: 600; \r
+  word-wrap: break-word; \r
+  overflow-wrap: break-word; \r
+  line-height: 1.5; \r
+  box-shadow: 0 3px 10px rgba(200, 0, 0, 0.25);\r
+}\r
+\r
+.tracker-notes__success { \r
+  color: var(--text-success, var(--text-normal)); \r
+  padding: 0.5em 0.75em; \r
+  background: var(--background-modifier-success, var(--background-modifier-border)); \r
+  border-radius: 8px; \r
+  margin: 0.45em 0; \r
+  font-size: 0.85em; \r
+  word-wrap: break-word; \r
+  overflow-wrap: break-word;\r
+}\r
+\r
+/* ============================================\r
+   Loading Indicator\r
+   ============================================ */\r
+.tracker-notes__loading { \r
+  display: none; \r
+  align-items: center; \r
+  gap: 0.45em; \r
+  font-size: 0.85em; \r
+  color: var(--text-muted); \r
+  margin-top: 0.35em; \r
+}\r
+\r
+.tracker-notes__loading.is-active { \r
+  display: flex; \r
+}\r
+\r
+.tracker-notes__loading-dot { \r
+  width: 0.9em; \r
+  height: 0.9em; \r
+  border-radius: 50%; \r
+  border: 2px solid var(--interactive-accent); \r
+  border-top-color: transparent; \r
+  animation: tracker-loading-spin 0.8s linear infinite; \r
+}\r
+\r
+@keyframes tracker-loading-spin { \r
+  0% { transform: rotate(0deg); } \r
+  100% { transform: rotate(360deg); } \r
+}\r
+\r
+/* ============================================\r
+   View Mode Visibility\r
+   ============================================ */\r
+\r
+/* Hide buttons in preview mode */\r
+.markdown-preview-view .tracker-notes__settings-btn,\r
+.markdown-preview-view .tracker-notes__order-btns {\r
+  display: none !important;\r
+}\r
+\r
+/* Explicit display in edit mode */\r
+.markdown-source-view .tracker-notes__settings-btn,\r
+.markdown-source-view .tracker-notes__order-btns {\r
+  display: flex;\r
+}\r
+\r
+/* Keep old limit classes for backward compatibility */\r
+.tracker-notes__tracker-header.tracker-notes__limit-error,\r
+.tracker-notes__tracker-header.tracker-notes__limit-success {\r
+  transition: border-color 0.2s ease;\r
+}\r
+\r
+/* ============================================\r
+   Iconize Integration\r
+   ============================================ */\r
+.tracker-notes__folder-header .iconize-icon,\r
+.tracker-notes__tracker-title .iconize-icon {\r
+  display: inline-block;\r
+  vertical-align: middle;\r
+  line-height: 1;\r
+}\r
+\r
+.tracker-notes__folder-header .lucide-icon,\r
+.tracker-notes__tracker-title .lucide-icon {\r
+  font-size: 0.9em;\r
+  opacity: 0.85;\r
+}\r
+\r
+/* ============================================\r
+   Animations\r
+   ============================================ */\r
+@keyframes pulse { \r
+  0%, 100% { transform: scale(1); } \r
+  50% { transform: scale(1.1); } \r
+}\r
+\r
+/* ============================================\r
+   Tracker: Habits & Metrics - Component Styles\r
+   ============================================ */\r
 \r
 /* ============================================\r
    Individual Tracker Card\r
@@ -19172,11 +19276,6 @@ var tracker_default = `/* ============================================\r
 .tracker-notes__value.updated { \r
   animation: pulse 0.3s ease;\r
   color: var(--interactive-accent);\r
-}\r
-\r
-@keyframes pulse { \r
-  0%, 100% { transform: scale(1); } \r
-  50% { transform: scale(1.1); } \r
 }\r
 \r
 /* ============================================\r
@@ -19680,7 +19779,6 @@ var tracker_default = `/* ============================================\r
 .tracker-notes__heatmap-day.bad-habit.before-start,\r
 .tracker-notes__heatmap-day.bad-habit.after-today { \r
   background: var(--background-modifier-border); \r
-  /* color: var(--text-faint, var(--text-muted)); */\r
   opacity: 0.5;\r
   cursor: default;\r
 }\r
@@ -19869,145 +19967,6 @@ var tracker_default = `/* ============================================\r
 }\r
 \r
 /* ============================================\r
-   Loading Indicator\r
-   ============================================ */\r
-.tracker-notes__loading { \r
-  display: none; \r
-  align-items: center; \r
-  gap: 0.45em; \r
-  font-size: 0.85em; \r
-  color: var(--text-muted); \r
-  margin-top: 0.35em; \r
-}\r
-\r
-.tracker-notes__loading.is-active { \r
-  display: flex; \r
-}\r
-\r
-.tracker-notes__loading-dot { \r
-  width: 0.9em; \r
-  height: 0.9em; \r
-  border-radius: 50%; \r
-  border: 2px solid var(--interactive-accent); \r
-  border-top-color: transparent; \r
-  animation: tracker-loading-spin 0.8s linear infinite; \r
-}\r
-\r
-@keyframes tracker-loading-spin { \r
-  0% { transform: rotate(0deg); } \r
-  100% { transform: rotate(360deg); } \r
-}\r
-\r
-/* ============================================\r
-   Error & Success Messages\r
-   ============================================ */\r
-.tracker-notes__error { \r
-  color: var(--text-on-accent, #ffffff); \r
-  padding: 0.85em 1.15em; \r
-  background: var(--text-error, #d32f2f); \r
-  border: none; \r
-  border-radius: 10px; \r
-  margin: 0.6em 0; \r
-  font-size: 0.9em; \r
-  font-weight: 600; \r
-  word-wrap: break-word; \r
-  overflow-wrap: break-word; \r
-  line-height: 1.5; \r
-  box-shadow: 0 3px 10px rgba(200, 0, 0, 0.25);\r
-}\r
-\r
-.tracker-notes__success { \r
-  color: var(--text-success, var(--text-normal)); \r
-  padding: 0.5em 0.75em; \r
-  background: var(--background-modifier-success, var(--background-modifier-border)); \r
-  border-radius: 8px; \r
-  margin: 0.45em 0; \r
-  font-size: 0.85em; \r
-  word-wrap: break-word; \r
-  overflow-wrap: break-word;\r
-}\r
-\r
-/* ============================================\r
-   Folder Hierarchy\r
-   ============================================ */\r
-.tracker-notes__hierarchy { \r
-  display: flex; \r
-  flex-direction: column; \r
-  gap: 1.75em; \r
-}\r
-\r
-.tracker-notes__folder-node { \r
-  display: flex; \r
-  flex-direction: column; \r
-  margin-bottom: 1.15em; \r
-}\r
-\r
-.tracker-notes__folder-node.level-0 { \r
-  padding-left: 0; \r
-  margin-bottom: 0; \r
-}\r
-\r
-.tracker-notes__folder-node.level-1 { \r
-  padding-left: 0; \r
-  margin-top: 1.15em; \r
-  margin-bottom: 1.4em; \r
-}\r
-\r
-.tracker-notes__folder-node.level-2 { \r
-  padding-left: 1.15em; \r
-  margin-top: 0.85em; \r
-  margin-bottom: 1.15em; \r
-}\r
-\r
-.tracker-notes__folder-node.level-3 { \r
-  padding-left: 0.6em; \r
-  margin-top: 0.6em; \r
-  margin-bottom: 0.85em; \r
-}\r
-\r
-.tracker-notes__folder-header { \r
-  font-weight: 700; \r
-  color: var(--text-normal); \r
-  margin-bottom: 0.85em; \r
-  margin-top: 0.6em; \r
-  padding-bottom: 0.6em; \r
-  border-bottom: 2px solid var(--background-modifier-border); \r
-  display: flex; \r
-  align-items: center; \r
-  justify-content: space-between; \r
-  gap: 0.55em;\r
-  transition: border-color 0.2s ease;\r
-}\r
-\r
-.tracker-notes__folder-header:hover {\r
-  border-color: var(--background-modifier-border-hover, var(--background-modifier-border));\r
-}\r
-\r
-.tracker-notes__folder-header.level-0 { \r
-  font-size: 1.45em; \r
-  margin-top: 0;\r
-  letter-spacing: -0.01em;\r
-}\r
-\r
-.tracker-notes__folder-header.level-1 { \r
-  font-size: 1.4em; \r
-  margin-top: 0.3em;\r
-  letter-spacing: -0.01em;\r
-}\r
-\r
-.tracker-notes__folder-header.level-2 { \r
-  font-size: 1.2em; \r
-  margin-top: 0.3em; \r
-  border-bottom-width: 1px;\r
-}\r
-\r
-.tracker-notes__folder-header.level-3 { \r
-  font-size: 1.05em; \r
-  margin-top: 0.3em; \r
-  border-bottom-width: 1px;\r
-}\r
-\r
-/* ============================================\r
    Modal Buttons\r
    ============================================ */\r
 .tracker-modal-buttons {\r
@@ -20053,46 +20012,7 @@ var tracker_default = `/* ============================================\r
 }\r
 \r
 /* ============================================\r
-   View Mode Visibility\r
-   ============================================ */\r
-\r
-/* Hide buttons in preview mode */\r
-.markdown-preview-view .tracker-notes__settings-btn,\r
-.markdown-preview-view .tracker-notes__order-btns {\r
-  display: none !important;\r
-}\r
-\r
-/* Explicit display in edit mode */\r
-.markdown-source-view .tracker-notes__settings-btn,\r
-.markdown-source-view .tracker-notes__order-btns {\r
-  display: flex;\r
-}\r
-\r
-/* Keep old limit classes for backward compatibility */\r
-.tracker-notes__tracker-header.tracker-notes__limit-error,\r
-.tracker-notes__tracker-header.tracker-notes__limit-success {\r
-  /* Legacy - kept for compatibility with older versions */\r
-  transition: border-color 0.2s ease;\r
-}\r
-\r
-/* ============================================\r
-   Iconize Integration\r
-   ============================================ */\r
-.tracker-notes__folder-header .iconize-icon,\r
-.tracker-notes__tracker-title .iconize-icon {\r
-  display: inline-block;\r
-  vertical-align: middle;\r
-  line-height: 1;\r
-}\r
-\r
-.tracker-notes__folder-header .lucide-icon,\r
-.tracker-notes__tracker-title .lucide-icon {\r
-  font-size: 0.9em;\r
-  opacity: 0.85;\r
-}\r
-\r
-/* ============================================\r
-   Media Queries - Responsive Design\r
+   Tracker: Habits & Metrics - Responsive Styles\r
    ============================================ */\r
 \r
 /* Switch to single column on medium screens */\r
@@ -20709,6 +20629,7 @@ var tracker_default = `/* ============================================\r
     width: 100%;\r
   }\r
 }\r
+\r
 `;
 
 // src/utils/filename-parser.ts
@@ -20917,142 +20838,351 @@ var IconizeService = class {
   }
 };
 
-// src/core/tracker-plugin.ts
-var TrackerPlugin = class extends import_obsidian10.Plugin {
-  constructor() {
-    super(...arguments);
-    this.activeBlocks = /* @__PURE__ */ new Set();
+// src/core/managers/state-manager.ts
+var StateManager = class {
+  constructor(app, trackerFileService, folderTreeService) {
+    this.app = app;
+    this.trackerFileService = trackerFileService;
+    this.folderTreeService = folderTreeService;
     this.trackerState = /* @__PURE__ */ new Map();
     this.currentNotePath = null;
-    this.refreshBlocksDebounceTimer = null;
   }
   /**
-   * Check if current device is mobile (based on viewport width)
-   * Public for use by Preact components
+   * Check if note changed and clear caches if needed
    */
-  isMobileDevice() {
-    return window.innerWidth <= MOBILE_BREAKPOINT;
-  }
-  async onload() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    this.folderTreeService = new FolderTreeService(this.app);
-    this.folderTreeService.updateSettings(this.settings);
-    this.trackerFileService = new TrackerFileService(this.app);
-    this.trackerOrderService = new TrackerOrderService(this.app);
-    this.iconizeService = new IconizeService(this.app);
-    this.iconizeService.loadIconizeData().then(() => {
-      this.iconizeService.startWatching();
-    }).catch(() => {
-    });
-    this.addStyleSheet();
-    this.addSettingTab(new TrackerSettingsTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
-    this.registerMarkdownCodeBlockProcessor("habit", this.processTrackerBlock.bind(this));
-    this.addCommand({
-      id: "tracker-create",
-      name: "Create new tracker",
-      callback: () => this.createNewTracker()
-    });
-    this.registerEvent(
-      this.app.vault.on("rename", (file, oldPath) => {
-        if (file instanceof import_obsidian10.TFile || file instanceof import_obsidian10.TFolder) {
-          this.handleRename(file, oldPath);
-        }
-      })
-    );
-    this.registerEvent(
-      this.app.vault.on("delete", (file) => {
-        if (file instanceof import_obsidian10.TFile && file.extension === "md") {
-          void this.handleFileDelete(file, file.path);
-        } else if (file instanceof import_obsidian10.TFolder) {
-          void this.handleFolderDelete(file.path);
-        }
-      })
-    );
-  }
-  isFileInTrackersFolder(file) {
-    const fileFolderPath = this.getFolderPathFromFile(file.path);
-    const trackersFolderPath = this.normalizePath(this.settings.trackersFolder);
-    if (!trackersFolderPath) {
-      return fileFolderPath === "";
-    }
-    const normalizedFilePath = this.normalizePath(file.path);
-    return fileFolderPath === trackersFolderPath || normalizedFilePath.startsWith(`${trackersFolderPath}/`);
-  }
-  getFolderPathFromFile(filePath) {
-    if (!filePath) return "";
-    const normalizedPath = this.normalizePath(filePath);
-    const lastSlash = normalizedPath.lastIndexOf("/");
-    if (lastSlash === -1) {
-      return "";
-    }
-    return normalizedPath.substring(0, lastSlash);
-  }
-  getFolderTree(folderPath) {
-    return this.folderTreeService.getFolderTree(folderPath);
-  }
-  addStyleSheet() {
-    if (this.styleEl) return;
-    const styleEl = document.createElement("style");
-    styleEl.textContent = tracker_default;
-    document.head.appendChild(styleEl);
-    this.styleEl = styleEl;
-    this.register(() => {
-      styleEl.remove();
-      if (this.styleEl === styleEl) {
-        this.styleEl = void 0;
-      }
-    });
-  }
-  async onunload() {
-    this.activeBlocks.forEach((block) => block.unload());
-    this.activeBlocks.clear();
-    this.iconizeService.stopWatching();
-  }
-  // ---- Code blocks ------------------------------------------------------------
-  async processTrackerBlock(source, el, ctx) {
-    const notePath = ctx.sourcePath || null;
+  async checkNoteChange(notePath) {
     if (notePath !== this.currentNotePath) {
       await this.clearAllCaches();
       this.currentNotePath = notePath;
+      return true;
     }
-    const block = new TrackerBlockRenderChild(this, source, el, ctx);
-    ctx.addChild(block);
-    this.activeBlocks.add(block);
-    await block.render();
+    return false;
   }
-  removeActiveBlock(block) {
-    this.activeBlocks.delete(block);
+  /**
+   * Ensure tracker state is loaded for a file
+   */
+  async ensureTrackerState(file) {
+    const existing = this.trackerState.get(file.path);
+    if (existing) {
+      return existing;
+    }
+    const [entries, fileOpts] = await Promise.all([
+      this.trackerFileService.readAllEntries(file),
+      this.trackerFileService.getFileTypeFromFrontmatter(file)
+    ]);
+    const state = { entries, fileOpts };
+    this.trackerState.set(file.path, state);
+    return state;
   }
-  isFolderRelevant(targetPath, blockPath) {
-    if (blockPath === targetPath) return true;
-    if (!blockPath || !targetPath) return true;
-    return targetPath.startsWith(`${blockPath}/`) || blockPath.startsWith(`${targetPath}/`);
+  /**
+   * Clear tracker state for a specific path
+   */
+  clearTrackerState(path) {
+    this.trackerState.delete(path);
   }
-  async refreshBlocksForFolder(folderPath) {
-    const normalizedPath = this.normalizePath(folderPath);
-    const blocksToRefresh = Array.from(this.activeBlocks).filter((block) => {
-      const blockPath = this.normalizePath(block.getFolderPath());
-      return this.isFolderRelevant(normalizedPath, blockPath);
-    });
-    for (const block of blocksToRefresh) {
-      try {
-        await block.render();
-      } catch (error) {
-        console.error("Tracker: error updating block", error);
+  /**
+   * Clears all backend state (trackerState, FolderTreeService cache)
+   */
+  async clearAllCaches() {
+    this.trackerState.clear();
+    this.folderTreeService.invalidate();
+  }
+  /**
+   * Invalidate cache for a folder and all its contents
+   */
+  invalidateCacheForFolder(folderPath, normalizePath3) {
+    const normalizedPath = normalizePath3(folderPath);
+    const folder = this.app.vault.getAbstractFileByPath(normalizedPath);
+    if (folder instanceof this.app.vault.adapter.constructor) {
+    }
+    if (folder && "children" in folder) {
+      this.clearCacheForFolder(folder);
+    }
+  }
+  clearCacheForFolder(folder) {
+    for (const child of folder.children) {
+      if ("extension" in child && child.extension === "md") {
+        this.clearTrackerState(child.path);
+      } else if ("children" in child) {
+        this.clearCacheForFolder(child);
       }
     }
   }
   /**
+   * Move tracker state from old path to new path
+   */
+  moveTrackerState(oldPath, newPath) {
+    if (oldPath === newPath) return;
+    const state = this.trackerState.get(oldPath);
+    if (state) {
+      this.trackerState.delete(oldPath);
+      this.trackerState.set(newPath, state);
+    } else {
+      this.trackerState.delete(newPath);
+    }
+  }
+  /**
+   * Updates trackerState after renaming multiple files/folders
+   */
+  updateTrackerStateAfterRename(newPathsMap) {
+    for (const [oldPath, newPath] of newPathsMap.entries()) {
+      this.moveTrackerState(oldPath, newPath);
+    }
+  }
+  /**
+   * Updates trackerState for all trackers inside renamed folders
+   */
+  updateTrackerStateForRenamedFolders(folderPathsMap, normalizePath3) {
+    const filePathsMap = /* @__PURE__ */ new Map();
+    for (const [oldFolderPath, newFolderPath] of folderPathsMap.entries()) {
+      const oldFolder = this.app.vault.getAbstractFileByPath(oldFolderPath);
+      if (!oldFolder || !("children" in oldFolder)) continue;
+      const getAllFiles = (folder) => {
+        const files2 = [];
+        for (const child of folder.children) {
+          if ("extension" in child && child.extension === "md") {
+            files2.push(child);
+          } else if ("children" in child) {
+            files2.push(...getAllFiles(child));
+          }
+        }
+        return files2;
+      };
+      const files = getAllFiles(oldFolder);
+      const normalizedOldPath = normalizePath3(oldFolderPath);
+      const normalizedNewPath = normalizePath3(newFolderPath);
+      for (const file of files) {
+        const normalizedFilePath = normalizePath3(file.path);
+        if (normalizedFilePath.startsWith(normalizedOldPath + "/")) {
+          const relativePath = normalizedFilePath.substring(normalizedOldPath.length);
+          const newFilePath = normalizedNewPath + relativePath;
+          filePathsMap.set(file.path, newFilePath);
+        }
+      }
+    }
+    this.updateTrackerStateAfterRename(filePathsMap);
+  }
+};
+
+// src/core/managers/sort-order-manager.ts
+var SortOrderManager = class {
+  constructor(settings, saveSettingsCallback) {
+    this.settings = settings;
+    this.saveSettingsCallback = saveSettingsCallback;
+  }
+  /**
+   * Update settings reference (called when settings change)
+   */
+  updateSettings(settings) {
+    this.settings = settings;
+  }
+  /**
+   * Gets normalized full path from vault root
+   */
+  getRelativePath(fullPath, normalizePath3) {
+    return normalizePath3(fullPath);
+  }
+  /**
+   * Gets current sort order for a folder from settings or creates alphabetical order
+   */
+  getSortOrderForFolder(items, folderPath, normalizePath3) {
+    const relativePath = this.getRelativePath(folderPath, normalizePath3);
+    const sortOrder = this.settings.customSortOrder?.[relativePath];
+    if (sortOrder && sortOrder.length > 0) {
+      return sortOrder;
+    }
+    return items.map((item) => "basename" in item ? item.basename : item.name).sort((a3, b) => a3.localeCompare(b, void 0, { sensitivity: "base" }));
+  }
+  /**
+   * Saves sort order for a folder to settings
+   */
+  async saveSortOrderForFolder(folderPath, order, normalizePath3) {
+    const relativePath = this.getRelativePath(folderPath, normalizePath3);
+    const updatedCustomSortOrder = this.settings.customSortOrder ? { ...this.settings.customSortOrder } : {};
+    updatedCustomSortOrder[relativePath] = order;
+    this.settings.customSortOrder = updatedCustomSortOrder;
+    await this.saveSettingsCallback();
+  }
+  /**
+   * Sorts items using custom sort order if available, otherwise alphabetically
+   */
+  sortItemsByOrder(items, folderPath, normalizePath3) {
+    const order = this.getSortOrderForFolder(items, folderPath, normalizePath3);
+    const itemMap = /* @__PURE__ */ new Map();
+    for (const item of items) {
+      const itemName = "basename" in item ? item.basename : item.name;
+      itemMap.set(itemName, item);
+    }
+    const sorted = [];
+    const added = /* @__PURE__ */ new Set();
+    for (const orderedName of order) {
+      const item = itemMap.get(orderedName);
+      if (item) {
+        sorted.push(item);
+        added.add(orderedName);
+      }
+    }
+    const remaining = [];
+    for (const item of items) {
+      const itemName = "basename" in item ? item.basename : item.name;
+      if (!added.has(itemName)) {
+        remaining.push(item);
+      }
+    }
+    remaining.sort((a3, b) => {
+      const aName = "basename" in a3 ? a3.basename : a3.name;
+      const bName = "basename" in b ? b.basename : b.name;
+      return aName.localeCompare(bName, void 0, { sensitivity: "base" });
+    });
+    return [...sorted, ...remaining];
+  }
+  /**
+   * Updates customSortOrder when a file or folder is renamed
+   */
+  async updateCustomSortOrderOnRename(oldPath, newPath, isFolder, getFolderPathFromFile, normalizePath3) {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+    const updated = { ...this.settings.customSortOrder };
+    let hasChanges = false;
+    if (isFolder) {
+      if (updated[oldPath]) {
+        updated[newPath] = updated[oldPath];
+        delete updated[oldPath];
+        hasChanges = true;
+      }
+      const oldPathPrefix = `${oldPath}/`;
+      const newPathPrefix = `${newPath}/`;
+      const keysToUpdate = [];
+      for (const key of Object.keys(updated)) {
+        if (key.startsWith(oldPathPrefix)) {
+          keysToUpdate.push(key);
+        }
+      }
+      for (const key of keysToUpdate) {
+        const newKey = key.replace(oldPathPrefix, newPathPrefix);
+        updated[newKey] = updated[key];
+        delete updated[key];
+        hasChanges = true;
+      }
+      const oldFolderName = oldPath.split("/").pop() || oldPath;
+      const newFolderName = newPath.split("/").pop() || newPath;
+      for (const key of Object.keys(updated)) {
+        const order = updated[key];
+        if (Array.isArray(order)) {
+          let orderChanged = false;
+          const updatedOrder = order.map((item) => {
+            if (item === oldFolderName) {
+              orderChanged = true;
+              return newFolderName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[key] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    } else {
+      const oldFullFileName = oldPath.split("/").pop() || oldPath;
+      const newFullFileName = newPath.split("/").pop() || newPath;
+      const oldFileName = oldFullFileName.replace(/\.md$/, "");
+      const newFileName = newFullFileName.replace(/\.md$/, "");
+      const oldFolderPath = getFolderPathFromFile(oldPath);
+      const newFolderPath = getFolderPathFromFile(newPath);
+      const normalizedOldFolderPath = normalizePath3(oldFolderPath);
+      const normalizedNewFolderPath = normalizePath3(newFolderPath);
+      const foldersToCheck = /* @__PURE__ */ new Set();
+      if (normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedOldFolderPath);
+      }
+      if (normalizedNewFolderPath && normalizedNewFolderPath !== normalizedOldFolderPath) {
+        foldersToCheck.add(normalizedNewFolderPath);
+      }
+      for (const folderPath of foldersToCheck) {
+        if (updated[folderPath] && Array.isArray(updated[folderPath])) {
+          const order = updated[folderPath];
+          let orderChanged = false;
+          const updatedOrder = order.map((item) => {
+            if (item === oldFileName) {
+              orderChanged = true;
+              return newFileName;
+            }
+            return item;
+          });
+          if (orderChanged) {
+            updated[folderPath] = updatedOrder;
+            hasChanges = true;
+          }
+        }
+      }
+    }
+    if (hasChanges) {
+      this.settings.customSortOrder = updated;
+      await this.saveSettingsCallback();
+    }
+  }
+  /**
+   * Handles file deletion - removes tracker from customSortOrder
+   */
+  async handleFileDeleteSortOrder(filePath, getFolderPathFromFile, normalizePath3) {
+    const folderPath = getFolderPathFromFile(filePath);
+    if (!folderPath) return;
+    const fileName = filePath.split("/").pop()?.replace(/\.md$/, "") || "";
+    if (!fileName) return;
+    const normalizedFolderPath = normalizePath3(folderPath);
+    const relativePath = this.getRelativePath(normalizedFolderPath, normalizePath3);
+    if (!this.settings.customSortOrder?.[relativePath]) {
+      return;
+    }
+    const currentSortOrder = this.settings.customSortOrder[relativePath];
+    const updatedSortOrder = currentSortOrder.filter((name) => name !== fileName);
+    await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder, normalizePath3);
+  }
+  /**
+   * Handles folder deletion - removes folder and all nested sort order configs
+   */
+  async handleFolderDeleteSortOrder(folderPath, normalizePath3) {
+    if (!this.settings.customSortOrder) {
+      return;
+    }
+    const normalizedFolderPath = normalizePath3(folderPath);
+    const relativePath = this.getRelativePath(normalizedFolderPath, normalizePath3);
+    const updated = { ...this.settings.customSortOrder };
+    let hasChanges = false;
+    const folderPathPrefix = `${relativePath}/`;
+    const keysToDelete = [];
+    for (const key of Object.keys(updated)) {
+      if (key === relativePath || key.startsWith(folderPathPrefix)) {
+        keysToDelete.push(key);
+      }
+    }
+    for (const key of keysToDelete) {
+      delete updated[key];
+      hasChanges = true;
+    }
+    if (hasChanges) {
+      this.settings.customSortOrder = updated;
+      await this.saveSettingsCallback();
+    }
+  }
+};
+
+// src/core/managers/dom-reorder.ts
+var DomReorderManager = class {
+  constructor(getActiveBlocks, normalizePath3, isFolderRelevant) {
+    this.getActiveBlocks = getActiveBlocks;
+    this.normalizePath = normalizePath3;
+    this.isFolderRelevant = isFolderRelevant;
+  }
+  /**
    * Reorders tracker DOM elements in place without full re-rendering
-   * This preserves icons and other DOM content
-   * Works independently of file system - uses only passed data
-   * @param folderPath Path to the folder containing trackers
-   * @param trackersInNewOrder Array of files in the desired order
    */
   async swapTrackerElementsInDOM(folderPath, trackersInNewOrder) {
     const normalizedFolderPath = this.normalizePath(folderPath);
-    const relevantBlocks = Array.from(this.activeBlocks).filter((block) => {
+    const activeBlocks = this.getActiveBlocks();
+    const relevantBlocks = Array.from(activeBlocks).filter((block) => {
       const blockPath = this.normalizePath(block.getFolderPath());
       return this.isFolderRelevant(normalizedFolderPath, blockPath);
     });
@@ -21090,14 +21220,11 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   }
   /**
    * Reorders folder DOM elements in place without full re-rendering
-   * This preserves icons and all DOM content
-   * Works independently of file system - uses only passed data
-   * @param parentFolderPath Path to the parent folder containing folders
-   * @param foldersInNewOrder Array of folders in the desired order
    */
   async reorderFolderElementsInDOM(parentFolderPath, foldersInNewOrder) {
     const normalizedParentPath = this.normalizePath(parentFolderPath);
-    const relevantBlocks = Array.from(this.activeBlocks).filter((block) => {
+    const activeBlocks = this.getActiveBlocks();
+    const relevantBlocks = Array.from(activeBlocks).filter((block) => {
       const blockPath = this.normalizePath(block.getFolderPath());
       return this.isFolderRelevant(normalizedParentPath, blockPath);
     });
@@ -21166,13 +21293,6 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       }
       if (sortedFolderElements.length < foldersInNewOrder.length) {
         console.warn(`Tracker: Some folders not found in DOM. Expected ${foldersInNewOrder.length}, found ${sortedFolderElements.length}. Parent: ${parentFolderPath}`);
-        const foundPaths = sortedFolderElements.map((element) => {
-          const tc = element.querySelector(`.tracker-notes__trackers`);
-          return tc?.dataset.folderPath || "no-trackers-container";
-        });
-        const missingPaths = foldersInNewOrder.map((f4) => f4.path).filter((path) => !folderElementsMap.has(path));
-        console.warn(`Tracker: Missing folders:`, missingPaths);
-        console.warn(`Tracker: Found folders:`, foundPaths);
       }
       for (const element of sortedFolderElements) {
         if (element.parentElement) {
@@ -21200,11 +21320,160 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     }
   }
   /**
-   * Refresh trackers for a specific file by re-rendering affected blocks
-   * Simplified for Preact - just invalidate cache and re-render
+   * Updates button handlers for all folders and trackers in DOM after folder renaming
    */
-  async refreshTrackersForFile(file) {
-    this.invalidateCacheForFile(file);
+  async updateAllFolderButtonHandlersAfterRename(newPathsMap, getAbstractFileByPath, moveFolderUp, moveFolderDown) {
+    const activeBlocks = this.getActiveBlocks();
+    for (const block of Array.from(activeBlocks)) {
+      const hierarchyContainer = block.containerEl.querySelector(`.tracker-notes__hierarchy`);
+      if (!hierarchyContainer) continue;
+      const allFolderNodes = hierarchyContainer.querySelectorAll(`.tracker-notes__folder-node`);
+      for (const folderNode of Array.from(allFolderNodes)) {
+        const currentPath = this.normalizePath(folderNode.dataset.folderPath || "");
+        if (!currentPath) continue;
+        let actualPath = currentPath;
+        for (const [oldPath, newPath] of newPathsMap.entries()) {
+          const normalizedOldPath = this.normalizePath(oldPath);
+          const normalizedNewPath = this.normalizePath(newPath);
+          if (currentPath === normalizedOldPath) {
+            const folder = getAbstractFileByPath(normalizedNewPath);
+            if (folder && "children" in folder) {
+              actualPath = this.normalizePath(folder.path);
+            } else {
+              actualPath = normalizedNewPath;
+            }
+            break;
+          } else if (currentPath.startsWith(normalizedOldPath + "/")) {
+            const relativePath = currentPath.substring(normalizedOldPath.length);
+            const computedNewPath = normalizedNewPath + relativePath;
+            const folder = getAbstractFileByPath(computedNewPath);
+            if (folder && "children" in folder) {
+              actualPath = this.normalizePath(folder.path);
+            } else {
+              actualPath = computedNewPath;
+            }
+            break;
+          }
+        }
+        if (actualPath !== currentPath) {
+          folderNode.dataset.folderPath = actualPath;
+          const trackersContainer = folderNode.querySelector(`.tracker-notes__trackers`);
+          if (trackersContainer) {
+            trackersContainer.dataset.folderPath = actualPath;
+          }
+        }
+        this.updateFolderButtonHandlers(folderNode, actualPath, moveFolderUp, moveFolderDown);
+        const trackers = folderNode.querySelectorAll(`.tracker-notes__tracker`);
+        for (const tracker of Array.from(trackers)) {
+          const trackerPath = this.normalizePath(tracker.dataset.filePath || "");
+          if (!trackerPath) continue;
+          let actualTrackerPath = trackerPath;
+          for (const [oldPath, newPath] of newPathsMap.entries()) {
+            const normalizedOldPath = this.normalizePath(oldPath);
+            const normalizedNewPath = this.normalizePath(newPath);
+            if (trackerPath.startsWith(normalizedOldPath + "/")) {
+              const relativePath = trackerPath.substring(normalizedOldPath.length);
+              const computedNewPath = normalizedNewPath + relativePath;
+              const file = getAbstractFileByPath(computedNewPath);
+              if (file && "extension" in file) {
+                actualTrackerPath = this.normalizePath(file.path);
+              } else {
+                actualTrackerPath = computedNewPath;
+              }
+              break;
+            }
+          }
+          if (actualTrackerPath !== trackerPath) {
+            tracker.dataset.filePath = actualTrackerPath;
+            const link = tracker.querySelector("a.internal-link");
+            if (link) {
+              link.href = actualTrackerPath;
+              link.setAttribute("data-href", actualTrackerPath);
+            }
+          }
+        }
+      }
+    }
+  }
+  /**
+   * Updates onclick handlers for folder buttons
+   */
+  updateFolderButtonHandlers(folderElement, newPath, moveFolderUp, moveFolderDown) {
+    const orderBtnsContainer = folderElement.querySelector(`.${CSS_CLASSES.ORDER_BTN_CONTAINER}`);
+    if (orderBtnsContainer) {
+      const upButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_UP}`);
+      if (upButton) {
+        upButton.onclick = async (e3) => {
+          e3.stopPropagation();
+          await moveFolderUp(newPath);
+        };
+      }
+      const downButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_DOWN}`);
+      if (downButton) {
+        downButton.onclick = async (e3) => {
+          e3.stopPropagation();
+          await moveFolderDown(newPath);
+        };
+      }
+    }
+  }
+};
+
+// src/core/managers/block-manager.ts
+var BlockManager = class {
+  constructor(getWorkspace) {
+    this.getWorkspace = getWorkspace;
+    this.activeBlocks = /* @__PURE__ */ new Set();
+  }
+  /**
+   * Add a block to active blocks set
+   */
+  addBlock(block) {
+    this.activeBlocks.add(block);
+  }
+  /**
+   * Remove a block from active blocks set
+   */
+  removeBlock(block) {
+    this.activeBlocks.delete(block);
+  }
+  /**
+   * Clear all active blocks
+   */
+  clearAllBlocks() {
+    this.activeBlocks.forEach((block) => block.unload());
+    this.activeBlocks.clear();
+  }
+  /**
+   * Check if a folder path is relevant to a block path
+   */
+  isFolderRelevant(targetPath, blockPath) {
+    if (blockPath === targetPath) return true;
+    if (!blockPath || !targetPath) return true;
+    return targetPath.startsWith(`${blockPath}/`) || blockPath.startsWith(`${targetPath}/`);
+  }
+  /**
+   * Refresh blocks for a specific folder
+   */
+  async refreshBlocksForFolder(folderPath, normalizePath3) {
+    const normalizedPath = normalizePath3(folderPath);
+    const blocksToRefresh = Array.from(this.activeBlocks).filter((block) => {
+      const blockPath = normalizePath3(block.getFolderPath());
+      return this.isFolderRelevant(normalizedPath, blockPath);
+    });
+    for (const block of blocksToRefresh) {
+      try {
+        await block.render();
+      } catch (error) {
+        console.error("Tracker: error updating block", error);
+      }
+    }
+  }
+  /**
+   * Refresh trackers for a specific file
+   */
+  async refreshTrackersForFile(file, invalidateCacheForFile) {
+    invalidateCacheForFile(file);
     const renderPromises = [];
     for (const block of Array.from(this.activeBlocks)) {
       const hasTracker = block.containerEl.querySelector(
@@ -21218,6 +21487,9 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       await Promise.allSettled(renderPromises);
     }
   }
+  /**
+   * Refresh all active blocks with scroll position preservation
+   */
   async refreshAllBlocks() {
     const scrollPositions = /* @__PURE__ */ new Map();
     const findAndSaveScrollContainers = (root) => {
@@ -21239,7 +21511,8 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         }
       }
     };
-    for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+    const workspace = this.getWorkspace();
+    for (const leaf of workspace.getLeavesOfType("markdown")) {
       const view = leaf.view;
       if (view && view.containerEl) {
         findAndSaveScrollContainers(view.containerEl);
@@ -21291,395 +21564,10 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       });
     });
   }
-  normalizePath(path) {
-    if (!path) return "";
-    return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
-  }
-  // Helper function to get type from frontmatter file
-  async getFileTypeFromFrontmatter(file) {
-    const state = await this.ensureTrackerState(file);
-    return state.fileOpts;
-  }
-  // ---- Data Access (used by Preact components) ---------------------------------------------------------
-  async ensureTrackerState(file) {
-    const existing = this.trackerState.get(file.path);
-    if (existing) {
-      return existing;
-    }
-    const [entries, fileOpts] = await Promise.all([
-      this.trackerFileService.readAllEntries(file),
-      this.trackerFileService.getFileTypeFromFrontmatter(file)
-    ]);
-    const state = { entries, fileOpts };
-    this.trackerState.set(file.path, state);
-    return state;
-  }
-  clearTrackerState(path) {
-    this.trackerState.delete(path);
-  }
   /**
-   * Clears all backend state (trackerState, FolderTreeService cache)
-   * Called when switching to a new note to ensure fresh data
-   * Iconize cache is automatically updated by file watcher
+   * Handle tracker deletion animation
    */
-  async clearAllCaches() {
-    this.trackerState.clear();
-    this.folderTreeService.invalidate();
-  }
-  invalidateCacheForFolder(folderPath) {
-    const normalizedPath = this.normalizePath(folderPath);
-    const folder = this.app.vault.getAbstractFileByPath(normalizedPath);
-    if (folder instanceof import_obsidian10.TFolder) {
-      this.clearCacheForFolder(folder);
-    }
-  }
-  clearCacheForFolder(folder) {
-    for (const child of folder.children) {
-      if (child instanceof import_obsidian10.TFile && child.extension === "md") {
-        this.clearTrackerState(child.path);
-      } else if (child instanceof import_obsidian10.TFolder) {
-        this.clearCacheForFolder(child);
-      }
-    }
-  }
-  moveTrackerState(oldPath, newPath) {
-    if (oldPath === newPath) return;
-    const state = this.trackerState.get(oldPath);
-    if (state) {
-      this.trackerState.delete(oldPath);
-      this.trackerState.set(newPath, state);
-    } else {
-      this.trackerState.delete(newPath);
-    }
-  }
-  /**
-   * Updates trackerState after renaming multiple files/folders
-   * @param newPathsMap Map of old paths to new paths (oldPath -> newPath)
-   */
-  updateTrackerStateAfterRename(newPathsMap) {
-    for (const [oldPath, newPath] of newPathsMap.entries()) {
-      this.moveTrackerState(oldPath, newPath);
-    }
-  }
-  /**
-   * Updates trackerState for all trackers inside renamed folders
-   * @param folderPathsMap Map of old folder paths to new folder paths (oldPath -> newPath)
-   */
-  updateTrackerStateForRenamedFolders(folderPathsMap) {
-    const filePathsMap = /* @__PURE__ */ new Map();
-    for (const [oldFolderPath, newFolderPath] of folderPathsMap.entries()) {
-      const oldFolder = this.app.vault.getAbstractFileByPath(oldFolderPath);
-      if (!(oldFolder instanceof import_obsidian10.TFolder)) continue;
-      const getAllFiles = (folder) => {
-        const files2 = [];
-        for (const child of folder.children) {
-          if (child instanceof import_obsidian10.TFile && child.extension === "md") {
-            files2.push(child);
-          } else if (child instanceof import_obsidian10.TFolder) {
-            files2.push(...getAllFiles(child));
-          }
-        }
-        return files2;
-      };
-      const files = getAllFiles(oldFolder);
-      const normalizedOldPath = this.normalizePath(oldFolderPath);
-      const normalizedNewPath = this.normalizePath(newFolderPath);
-      for (const file of files) {
-        const normalizedFilePath = this.normalizePath(file.path);
-        if (normalizedFilePath.startsWith(normalizedOldPath + "/")) {
-          const relativePath = normalizedFilePath.substring(normalizedOldPath.length);
-          const newFilePath = normalizedNewPath + relativePath;
-          filePathsMap.set(file.path, newFilePath);
-        }
-      }
-    }
-    this.updateTrackerStateAfterRename(filePathsMap);
-  }
-  /**
-   * Gets normalized full path from vault root
-   * Returns the full normalized path as-is, without relative calculations
-   */
-  getRelativePath(fullPath) {
-    return this.normalizePath(fullPath);
-  }
-  /**
-   * Gets current sort order for a folder from settings or creates alphabetical order
-   */
-  getSortOrderForFolder(items, folderPath) {
-    const relativePath = this.getRelativePath(folderPath);
-    const sortOrder = this.settings.customSortOrder?.[relativePath];
-    if (sortOrder && sortOrder.length > 0) {
-      return sortOrder;
-    }
-    return items.map((item) => item instanceof import_obsidian10.TFile ? item.basename : item.name).sort((a3, b) => a3.localeCompare(b, void 0, { sensitivity: "base" }));
-  }
-  /**
-   * Saves sort order for a folder to settings
-   */
-  async saveSortOrderForFolder(folderPath, order) {
-    const relativePath = this.getRelativePath(folderPath);
-    const updatedCustomSortOrder = this.settings.customSortOrder ? { ...this.settings.customSortOrder } : {};
-    updatedCustomSortOrder[relativePath] = order;
-    this.settings.customSortOrder = updatedCustomSortOrder;
-    await this.saveSettings();
-  }
-  /**
-   * Sorts items using custom sort order if available, otherwise alphabetically
-   */
-  sortItemsByOrder(items, folderPath) {
-    const order = this.getSortOrderForFolder(items, folderPath);
-    const itemMap = /* @__PURE__ */ new Map();
-    for (const item of items) {
-      const itemName = item instanceof import_obsidian10.TFile ? item.basename : item.name;
-      itemMap.set(itemName, item);
-    }
-    const sorted = [];
-    const added = /* @__PURE__ */ new Set();
-    for (const orderedName of order) {
-      const item = itemMap.get(orderedName);
-      if (item) {
-        sorted.push(item);
-        added.add(orderedName);
-      }
-    }
-    const remaining = [];
-    for (const item of items) {
-      const itemName = item instanceof import_obsidian10.TFile ? item.basename : item.name;
-      if (!added.has(itemName)) {
-        remaining.push(item);
-      }
-    }
-    remaining.sort((a3, b) => {
-      const aName = a3 instanceof import_obsidian10.TFile ? a3.basename : a3.name;
-      const bName = b instanceof import_obsidian10.TFile ? b.basename : b.name;
-      return aName.localeCompare(bName, void 0, { sensitivity: "base" });
-    });
-    return [...sorted, ...remaining];
-  }
-  handleTrackerRenamed(oldPath, file) {
-    this.moveTrackerState(oldPath, file.path);
-  }
-  /**
-   * Handles rename events from Obsidian vault
-   */
-  handleRename(file, oldPath) {
-    if (!this.settings.customSortOrder) {
-      return;
-    }
-    const normalizedOldPath = this.normalizePath(oldPath);
-    const normalizedNewPath = this.normalizePath(file.path);
-    const isFolder = file instanceof import_obsidian10.TFolder;
-    void this.updateCustomSortOrderOnRename(normalizedOldPath, normalizedNewPath, isFolder);
-  }
-  /**
-   * Handles file deletion events - removes tracker from customSortOrder
-   */
-  async handleFileDelete(file, filePath) {
-    const folderPath = this.getFolderPathFromFile(filePath);
-    if (!folderPath) return;
-    const fileName = filePath.split("/").pop()?.replace(/\.md$/, "") || "";
-    if (!fileName) return;
-    const normalizedFolderPath = this.normalizePath(folderPath);
-    const relativePath = this.getRelativePath(normalizedFolderPath);
-    if (!this.settings.customSortOrder?.[relativePath]) {
-      return;
-    }
-    const currentSortOrder = this.settings.customSortOrder[relativePath];
-    const updatedSortOrder = currentSortOrder.filter((name) => name !== fileName);
-    await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder);
-    this.folderTreeService.invalidate(folderPath);
-  }
-  /**
-   * Handles folder deletion events - removes folder and all nested sort order configs
-   */
-  async handleFolderDelete(folderPath) {
-    if (!this.settings.customSortOrder) {
-      return;
-    }
-    const normalizedFolderPath = this.normalizePath(folderPath);
-    const relativePath = this.getRelativePath(normalizedFolderPath);
-    const updated = { ...this.settings.customSortOrder };
-    let hasChanges = false;
-    const folderPathPrefix = `${relativePath}/`;
-    const keysToDelete = [];
-    for (const key of Object.keys(updated)) {
-      if (key === relativePath || key.startsWith(folderPathPrefix)) {
-        keysToDelete.push(key);
-      }
-    }
-    for (const key of keysToDelete) {
-      delete updated[key];
-      hasChanges = true;
-    }
-    if (hasChanges) {
-      this.settings.customSortOrder = updated;
-      await this.saveSettings();
-      this.folderTreeService.updateSettings(this.settings);
-    }
-    this.folderTreeService.invalidate(folderPath);
-  }
-  /**
-   * Updates customSortOrder when a file or folder is renamed
-   */
-  async updateCustomSortOrderOnRename(oldPath, newPath, isFolder) {
-    if (!this.settings.customSortOrder) {
-      return;
-    }
-    const updated = { ...this.settings.customSortOrder };
-    let hasChanges = false;
-    if (isFolder) {
-      if (updated[oldPath]) {
-        updated[newPath] = updated[oldPath];
-        delete updated[oldPath];
-        hasChanges = true;
-      }
-      const oldPathPrefix = `${oldPath}/`;
-      const newPathPrefix = `${newPath}/`;
-      const keysToUpdate = [];
-      for (const key of Object.keys(updated)) {
-        if (key.startsWith(oldPathPrefix)) {
-          keysToUpdate.push(key);
-        }
-      }
-      for (const key of keysToUpdate) {
-        const newKey = key.replace(oldPathPrefix, newPathPrefix);
-        updated[newKey] = updated[key];
-        delete updated[key];
-        hasChanges = true;
-      }
-      const oldFolderName = oldPath.split("/").pop() || oldPath;
-      const newFolderName = newPath.split("/").pop() || newPath;
-      for (const key of Object.keys(updated)) {
-        const order = updated[key];
-        if (Array.isArray(order)) {
-          let orderChanged = false;
-          const updatedOrder = order.map((item) => {
-            if (item === oldFolderName) {
-              orderChanged = true;
-              return newFolderName;
-            }
-            return item;
-          });
-          if (orderChanged) {
-            updated[key] = updatedOrder;
-            hasChanges = true;
-          }
-        }
-      }
-    } else {
-      const oldFullFileName = oldPath.split("/").pop() || oldPath;
-      const newFullFileName = newPath.split("/").pop() || newPath;
-      const oldFileName = oldFullFileName.replace(/\.md$/, "");
-      const newFileName = newFullFileName.replace(/\.md$/, "");
-      const oldFolderPath = this.getFolderPathFromFile(oldPath);
-      const newFolderPath = this.getFolderPathFromFile(newPath);
-      const normalizedOldFolderPath = this.normalizePath(oldFolderPath);
-      const normalizedNewFolderPath = this.normalizePath(newFolderPath);
-      const foldersToCheck = /* @__PURE__ */ new Set();
-      if (normalizedOldFolderPath) {
-        foldersToCheck.add(normalizedOldFolderPath);
-      }
-      if (normalizedNewFolderPath && normalizedNewFolderPath !== normalizedOldFolderPath) {
-        foldersToCheck.add(normalizedNewFolderPath);
-      }
-      for (const folderPath of foldersToCheck) {
-        if (updated[folderPath] && Array.isArray(updated[folderPath])) {
-          const order = updated[folderPath];
-          let orderChanged = false;
-          const updatedOrder = order.map((item) => {
-            if (item === oldFileName) {
-              orderChanged = true;
-              return newFileName;
-            }
-            return item;
-          });
-          if (orderChanged) {
-            updated[folderPath] = updatedOrder;
-            hasChanges = true;
-          }
-        }
-      }
-    }
-    if (hasChanges) {
-      this.settings.customSortOrder = updated;
-      await this.saveSettings();
-      this.folderTreeService.updateSettings(this.settings);
-    }
-  }
-  /**
-   * Updates onclick handlers for folder buttons to use new path after renaming
-   * @param folderElement The folder-node element
-   * @param newPath The new path of the folder
-   */
-  updateFolderButtonHandlers(folderElement, newPath) {
-    const orderBtnsContainer = folderElement.querySelector(`.${CSS_CLASSES.ORDER_BTN_CONTAINER}`);
-    if (orderBtnsContainer) {
-      const upButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_UP}`);
-      if (upButton) {
-        upButton.onclick = async (e3) => {
-          e3.stopPropagation();
-          await this.moveFolderUp(newPath);
-        };
-      }
-      const downButton = orderBtnsContainer.querySelector(`.${CSS_CLASSES.ORDER_BTN_DOWN}`);
-      if (downButton) {
-        downButton.onclick = async (e3) => {
-          e3.stopPropagation();
-          await this.moveFolderDown(newPath);
-        };
-      }
-    }
-  }
-  async getStartTrackingDateAsync(entries, file) {
-    if (!file) {
-      return DateService.format(DateService.now(), this.settings.dateFormat);
-    }
-    const fileOpts = await this.getFileTypeFromFrontmatter(file);
-    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
-  }
-  /**
-   * Get start tracking date synchronously (for Preact components that already have fileOptions)
-   */
-  getStartTrackingDate(entries, fileOpts) {
-    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
-  }
-  invalidateCacheForFile(file) {
-    this.clearTrackerState(file.path);
-  }
-  calculateStreak(entries, endDate, trackerType, file, startTrackingDateStr) {
-    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file, startTrackingDateStr);
-  }
-  calculateBestStreak(entries, trackerType, file, startTrackingDateStr) {
-    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file, startTrackingDateStr);
-  }
-  async readAllEntries(file) {
-    const state = await this.ensureTrackerState(file);
-    return new Map(state.entries);
-  }
-  // ---- Создание привычки ----------------------------------------------------
-  async createNewTracker() {
-    new CreateTrackerModal(this.app, this).open();
-  }
-  async onTrackerCreated(folderPath, file) {
-    this.folderTreeService.invalidate(folderPath);
-    await this.ensureTrackerState(file);
-    const normalizedFolderPath = this.normalizePath(folderPath);
-    if (normalizedFolderPath) {
-      const relativePath = this.getRelativePath(normalizedFolderPath);
-      const currentSortOrder = this.settings.customSortOrder?.[relativePath] || [];
-      const updatedSortOrder = currentSortOrder.filter((name) => name !== file.basename);
-      updatedSortOrder.unshift(file.basename);
-      await this.saveSortOrderForFolder(normalizedFolderPath, updatedSortOrder);
-    }
-    for (const block of Array.from(this.activeBlocks)) {
-      const blockFolderPath = block.getFolderPath();
-      const normalizedBlockPath = this.normalizePath(blockFolderPath);
-      if (!this.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
-      await block.render();
-    }
-  }
   async onTrackerDeleted(filePath) {
-    this.clearTrackerState(filePath);
     for (const block of Array.from(this.activeBlocks)) {
       const trackersContainers = Array.from(
         block.containerEl.querySelectorAll(".tracker-notes__trackers")
@@ -21700,15 +21588,276 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       }
     }
   }
-  // ---- Read/Write --------------------------------------------------------
+};
+
+// src/core/handlers/vault-events.ts
+var VaultEventHandlers = class {
+  constructor(sortOrderManager, stateManager, folderTreeService, getSettings, normalizePath3, getFolderPathFromFile) {
+    this.sortOrderManager = sortOrderManager;
+    this.stateManager = stateManager;
+    this.folderTreeService = folderTreeService;
+    this.getSettings = getSettings;
+    this.normalizePath = normalizePath3;
+    this.getFolderPathFromFile = getFolderPathFromFile;
+  }
+  /**
+   * Handles rename events from Obsidian vault
+   */
+  handleRename(file, oldPath) {
+    const settings = this.getSettings();
+    if (!settings.customSortOrder) {
+      return;
+    }
+    const normalizedOldPath = this.normalizePath(oldPath);
+    const normalizedNewPath = this.normalizePath(file.path);
+    const isFolder = "children" in file;
+    void this.sortOrderManager.updateCustomSortOrderOnRename(
+      normalizedOldPath,
+      normalizedNewPath,
+      isFolder,
+      this.getFolderPathFromFile,
+      this.normalizePath
+    );
+  }
+  /**
+   * Handles file deletion events
+   */
+  async handleFileDelete(file, filePath) {
+    await this.sortOrderManager.handleFileDeleteSortOrder(
+      filePath,
+      this.getFolderPathFromFile,
+      this.normalizePath
+    );
+    const folderPath = this.getFolderPathFromFile(filePath);
+    if (folderPath) {
+      this.folderTreeService.invalidate(folderPath);
+    }
+  }
+  /**
+   * Handles folder deletion events
+   */
+  async handleFolderDelete(folderPath) {
+    await this.sortOrderManager.handleFolderDeleteSortOrder(
+      folderPath,
+      this.normalizePath
+    );
+    this.folderTreeService.updateSettings(this.getSettings());
+    this.folderTreeService.invalidate(folderPath);
+  }
+  /**
+   * Handle tracker renamed event
+   */
+  handleTrackerRenamed(oldPath, file) {
+    this.stateManager.moveTrackerState(oldPath, file.path);
+  }
+};
+
+// src/core/tracker-plugin.ts
+var TrackerPlugin = class extends import_obsidian10.Plugin {
+  constructor() {
+    super(...arguments);
+    this.refreshBlocksDebounceTimer = null;
+  }
+  /**
+   * Get active blocks (for external access)
+   */
+  get activeBlocks() {
+    return this.blockManager.activeBlocks;
+  }
+  /**
+   * Check if current device is mobile (based on viewport width)
+   */
+  isMobileDevice() {
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+  }
+  async onload() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.folderTreeService = new FolderTreeService(this.app);
+    this.folderTreeService.updateSettings(this.settings);
+    this.trackerFileService = new TrackerFileService(this.app);
+    this.trackerOrderService = new TrackerOrderService(this.app);
+    this.iconizeService = new IconizeService(this.app);
+    this.stateManager = new StateManager(
+      this.app,
+      this.trackerFileService,
+      this.folderTreeService
+    );
+    this.sortOrderManager = new SortOrderManager(
+      this.settings,
+      () => this.saveSettings()
+    );
+    this.blockManager = new BlockManager(
+      () => this.app.workspace
+    );
+    this.domReorderManager = new DomReorderManager(
+      () => this.blockManager.activeBlocks,
+      (p3) => this.normalizePath(p3),
+      (t3, b) => this.blockManager.isFolderRelevant(t3, b)
+    );
+    this.vaultEventHandlers = new VaultEventHandlers(
+      this.sortOrderManager,
+      this.stateManager,
+      this.folderTreeService,
+      () => this.settings,
+      (p3) => this.normalizePath(p3),
+      (p3) => this.getFolderPathFromFile(p3)
+    );
+    this.iconizeService.loadIconizeData().then(() => {
+      this.iconizeService.startWatching();
+    }).catch(() => {
+    });
+    this.addStyleSheet();
+    this.addSettingTab(new TrackerSettingsTab(this.app, this));
+    this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
+    this.registerMarkdownCodeBlockProcessor("habit", this.processTrackerBlock.bind(this));
+    this.addCommand({
+      id: "tracker-create",
+      name: "Create new tracker",
+      callback: () => this.createNewTracker()
+    });
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (file instanceof import_obsidian10.TFile || file instanceof import_obsidian10.TFolder) {
+          this.vaultEventHandlers.handleRename(file, oldPath);
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (file instanceof import_obsidian10.TFile && file.extension === "md") {
+          void this.vaultEventHandlers.handleFileDelete(file, file.path);
+        } else if (file instanceof import_obsidian10.TFolder) {
+          void this.vaultEventHandlers.handleFolderDelete(file.path);
+        }
+      })
+    );
+  }
+  async onunload() {
+    this.blockManager.clearAllBlocks();
+    this.iconizeService.stopWatching();
+  }
+  // ---- Path utilities --------------------------------------------------------
+  normalizePath(path) {
+    if (!path) return "";
+    return path.trim().replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
+  }
+  getFolderPathFromFile(filePath) {
+    if (!filePath) return "";
+    const normalizedPath = this.normalizePath(filePath);
+    const lastSlash = normalizedPath.lastIndexOf("/");
+    if (lastSlash === -1) {
+      return "";
+    }
+    return normalizedPath.substring(0, lastSlash);
+  }
+  getFolderTree(folderPath) {
+    return this.folderTreeService.getFolderTree(folderPath);
+  }
+  // ---- Stylesheet ------------------------------------------------------------
+  addStyleSheet() {
+    if (this.styleEl) return;
+    const styleEl = document.createElement("style");
+    styleEl.textContent = styles_default;
+    document.head.appendChild(styleEl);
+    this.styleEl = styleEl;
+    this.register(() => {
+      styleEl.remove();
+      if (this.styleEl === styleEl) {
+        this.styleEl = void 0;
+      }
+    });
+  }
+  // ---- Code blocks -----------------------------------------------------------
+  async processTrackerBlock(source, el, ctx) {
+    const notePath = ctx.sourcePath || null;
+    await this.stateManager.checkNoteChange(notePath);
+    const block = new TrackerBlockRenderChild(this, source, el, ctx);
+    ctx.addChild(block);
+    this.blockManager.addBlock(block);
+    await block.render();
+  }
+  removeActiveBlock(block) {
+    this.blockManager.removeBlock(block);
+  }
+  async refreshBlocksForFolder(folderPath) {
+    await this.blockManager.refreshBlocksForFolder(folderPath, (p3) => this.normalizePath(p3));
+  }
+  async refreshTrackersForFile(file) {
+    await this.blockManager.refreshTrackersForFile(file, (f4) => this.invalidateCacheForFile(f4));
+  }
+  async refreshAllBlocks() {
+    await this.blockManager.refreshAllBlocks();
+  }
+  // ---- Data Access -----------------------------------------------------------
+  async getFileTypeFromFrontmatter(file) {
+    const state = await this.stateManager.ensureTrackerState(file);
+    return state.fileOpts;
+  }
+  invalidateCacheForFolder(folderPath) {
+    this.stateManager.invalidateCacheForFolder(folderPath, (p3) => this.normalizePath(p3));
+  }
+  invalidateCacheForFile(file) {
+    this.stateManager.clearTrackerState(file.path);
+  }
+  handleTrackerRenamed(oldPath, file) {
+    this.vaultEventHandlers.handleTrackerRenamed(oldPath, file);
+  }
+  async getStartTrackingDateAsync(entries, file) {
+    if (!file) {
+      return DateService.format(DateService.now(), this.settings.dateFormat);
+    }
+    const fileOpts = await this.getFileTypeFromFrontmatter(file);
+    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
+  }
+  getStartTrackingDate(entries, fileOpts) {
+    return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
+  }
+  calculateStreak(entries, endDate, trackerType, file, startTrackingDateStr) {
+    return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file, startTrackingDateStr);
+  }
+  calculateBestStreak(entries, trackerType, file, startTrackingDateStr) {
+    return this.trackerFileService.calculateBestStreak(entries, this.settings, trackerType, file, startTrackingDateStr);
+  }
+  async readAllEntries(file) {
+    const state = await this.stateManager.ensureTrackerState(file);
+    return new Map(state.entries);
+  }
+  // ---- Tracker CRUD ----------------------------------------------------------
+  async createNewTracker() {
+    new CreateTrackerModal(this.app, this).open();
+  }
+  async onTrackerCreated(folderPath, file) {
+    this.folderTreeService.invalidate(folderPath);
+    await this.stateManager.ensureTrackerState(file);
+    const normalizedFolderPath = this.normalizePath(folderPath);
+    if (normalizedFolderPath) {
+      const currentSortOrder = this.settings.customSortOrder?.[normalizedFolderPath] || [];
+      const updatedSortOrder = currentSortOrder.filter((name) => name !== file.basename);
+      updatedSortOrder.unshift(file.basename);
+      await this.sortOrderManager.saveSortOrderForFolder(
+        normalizedFolderPath,
+        updatedSortOrder,
+        (p3) => this.normalizePath(p3)
+      );
+    }
+    for (const block of Array.from(this.blockManager.activeBlocks)) {
+      const blockFolderPath = block.getFolderPath();
+      const normalizedBlockPath = this.normalizePath(blockFolderPath);
+      if (!this.blockManager.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
+      await block.render();
+    }
+  }
+  async onTrackerDeleted(filePath) {
+    this.stateManager.clearTrackerState(filePath);
+    await this.blockManager.onTrackerDeleted(filePath);
+  }
+  // ---- File operations -------------------------------------------------------
   async ensureFileWithHeading(filePath, type = "good-habit") {
     return this.trackerFileService.ensureFileWithHeading(filePath, type);
   }
-  // Парсит YAML frontmatter и возвращает объект данных
   parseFrontmatterData(frontmatter) {
     return this.trackerFileService.parseFrontmatterData(frontmatter);
   }
-  // Форматирует данные в YAML формат
   formatDataToYaml(data) {
     return this.trackerFileService.formatDataToYaml(data);
   }
@@ -21718,7 +21867,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
   }
   async writeLogLine(file, dateIso, value) {
     try {
-      const state = await this.ensureTrackerState(file);
+      const state = await this.stateManager.ensureTrackerState(file);
       const normalizedValue = parseMaybeNumber(value);
       state.entries.set(dateIso, normalizedValue);
       await this.trackerFileService.writeLogLine(file, dateIso, value);
@@ -21729,7 +21878,6 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       throw error;
     }
   }
-  // Simple file picker: suggests recently opened/suitable files
   async pickTrackerFile() {
     const files = this.app.vault.getMarkdownFiles().filter((f4) => f4.path.startsWith(this.settings.trackersFolder + "/"));
     if (files.length === 0) {
@@ -21741,9 +21889,11 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       new FilePickerModal(this.app, files, resolve2).open();
     });
   }
+  // ---- Settings --------------------------------------------------------------
   async saveSettings() {
     await this.saveData(this.settings);
     this.folderTreeService.updateSettings(this.settings);
+    this.sortOrderManager.updateSettings(this.settings);
     if (this.refreshBlocksDebounceTimer) {
       clearTimeout(this.refreshBlocksDebounceTimer);
     }
@@ -21752,15 +21902,14 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       this.refreshBlocksDebounceTimer = null;
     }, DEBOUNCE_DELAY_MS);
   }
+  // ---- Tracker editing -------------------------------------------------------
   editTracker(file) {
     new EditTrackerModal(this.app, this, file).open();
   }
-  /**
-   * Alias for editTracker for use by Preact components
-   */
   openEditTrackerModal(file) {
     this.editTracker(file);
   }
+  // ---- Tracker ordering ------------------------------------------------------
   async moveTrackerUp(file) {
     const folderPath = this.getFolderPathFromFile(file.path);
     const folder = this.app.vault.getAbstractFileByPath(folderPath);
@@ -21768,13 +21917,21 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const trackers = folder.children.filter(
       (f4) => f4 instanceof import_obsidian10.TFile && f4.extension === "md"
     );
-    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
+    const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
+      trackers,
+      folderPath,
+      (p3) => this.normalizePath(p3)
+    );
     const currentIndex = sortedTrackers.findIndex((t3) => t3.path === file.path);
     if (currentIndex <= 0) return;
     [sortedTrackers[currentIndex - 1], sortedTrackers[currentIndex]] = [sortedTrackers[currentIndex], sortedTrackers[currentIndex - 1]];
     const newOrder = sortedTrackers.map((t3) => t3.basename);
-    await this.saveSortOrderForFolder(folderPath, newOrder);
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
+    await this.sortOrderManager.saveSortOrderForFolder(
+      folderPath,
+      newOrder,
+      (p3) => this.normalizePath(p3)
+    );
+    await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
   async moveTrackerDown(file) {
@@ -21784,13 +21941,21 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     const trackers = folder.children.filter(
       (f4) => f4 instanceof import_obsidian10.TFile && f4.extension === "md"
     );
-    const sortedTrackers = this.sortItemsByOrder(trackers, folderPath);
+    const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
+      trackers,
+      folderPath,
+      (p3) => this.normalizePath(p3)
+    );
     const currentIndex = sortedTrackers.findIndex((t3) => t3.path === file.path);
     if (currentIndex < 0 || currentIndex >= sortedTrackers.length - 1) return;
     [sortedTrackers[currentIndex], sortedTrackers[currentIndex + 1]] = [sortedTrackers[currentIndex + 1], sortedTrackers[currentIndex]];
     const newOrder = sortedTrackers.map((t3) => t3.basename);
-    await this.saveSortOrderForFolder(folderPath, newOrder);
-    await this.swapTrackerElementsInDOM(folderPath, sortedTrackers);
+    await this.sortOrderManager.saveSortOrderForFolder(
+      folderPath,
+      newOrder,
+      (p3) => this.normalizePath(p3)
+    );
+    await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
   async moveFolderUp(folderPath) {
@@ -21807,13 +21972,21 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         (f4) => f4 instanceof import_obsidian10.TFolder
       );
     }
-    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
+    const sortedFolders = this.sortOrderManager.sortItemsByOrder(
+      folders,
+      parentFolderPath || "",
+      (p3) => this.normalizePath(p3)
+    );
     const currentIndex = sortedFolders.findIndex((f4) => f4.path === folderPath);
     if (currentIndex <= 0) return;
     [sortedFolders[currentIndex - 1], sortedFolders[currentIndex]] = [sortedFolders[currentIndex], sortedFolders[currentIndex - 1]];
     const newOrder = sortedFolders.map((f4) => f4.name);
-    await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
-    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
+    await this.sortOrderManager.saveSortOrderForFolder(
+      parentFolderPath || "",
+      newOrder,
+      (p3) => this.normalizePath(p3)
+    );
+    await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
   }
   async moveFolderDown(folderPath) {
@@ -21830,105 +22003,27 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
         (f4) => f4 instanceof import_obsidian10.TFolder
       );
     }
-    const sortedFolders = this.sortItemsByOrder(folders, parentFolderPath || "");
+    const sortedFolders = this.sortOrderManager.sortItemsByOrder(
+      folders,
+      parentFolderPath || "",
+      (p3) => this.normalizePath(p3)
+    );
     const currentIndex = sortedFolders.findIndex((f4) => f4.path === folderPath);
     if (currentIndex < 0 || currentIndex >= sortedFolders.length - 1) return;
     [sortedFolders[currentIndex], sortedFolders[currentIndex + 1]] = [sortedFolders[currentIndex + 1], sortedFolders[currentIndex]];
     const newOrder = sortedFolders.map((f4) => f4.name);
-    await this.saveSortOrderForFolder(parentFolderPath || "", newOrder);
-    await this.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
+    await this.sortOrderManager.saveSortOrderForFolder(
+      parentFolderPath || "",
+      newOrder,
+      (p3) => this.normalizePath(p3)
+    );
+    await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
   }
-  /**
-   * Updates button handlers for all folders and trackers in DOM after folder renaming
-   * Also updates data-folder-path and data-file-path for all nested elements
-   * @param newPathsMap Map of old paths to new paths
-   */
-  async updateAllFolderButtonHandlersAfterRename(newPathsMap) {
-    for (const block of Array.from(this.activeBlocks)) {
-      const hierarchyContainer = block.containerEl.querySelector(`.tracker-notes__hierarchy`);
-      if (!hierarchyContainer) continue;
-      const allFolderNodes = hierarchyContainer.querySelectorAll(`.tracker-notes__folder-node`);
-      for (const folderNode of Array.from(allFolderNodes)) {
-        const currentPath = this.normalizePath(folderNode.dataset.folderPath || "");
-        if (!currentPath) continue;
-        let actualPath = currentPath;
-        for (const [oldPath, newPath] of newPathsMap.entries()) {
-          const normalizedOldPath = this.normalizePath(oldPath);
-          const normalizedNewPath = this.normalizePath(newPath);
-          if (currentPath === normalizedOldPath) {
-            const folder = this.app.vault.getAbstractFileByPath(normalizedNewPath);
-            if (folder instanceof import_obsidian10.TFolder) {
-              actualPath = this.normalizePath(folder.path);
-            } else {
-              actualPath = normalizedNewPath;
-            }
-            break;
-          } else if (currentPath.startsWith(normalizedOldPath + "/")) {
-            const relativePath = currentPath.substring(normalizedOldPath.length);
-            const computedNewPath = normalizedNewPath + relativePath;
-            const folder = this.app.vault.getAbstractFileByPath(computedNewPath);
-            if (folder instanceof import_obsidian10.TFolder) {
-              actualPath = this.normalizePath(folder.path);
-            } else {
-              actualPath = computedNewPath;
-            }
-            break;
-          }
-        }
-        if (actualPath !== currentPath) {
-          folderNode.dataset.folderPath = actualPath;
-          const trackersContainer = folderNode.querySelector(`.tracker-notes__trackers`);
-          if (trackersContainer) {
-            trackersContainer.dataset.folderPath = actualPath;
-          }
-        }
-        this.updateFolderButtonHandlers(folderNode, actualPath);
-        const trackers = folderNode.querySelectorAll(`.tracker-notes__tracker`);
-        for (const tracker of Array.from(trackers)) {
-          const trackerPath = this.normalizePath(tracker.dataset.filePath || "");
-          if (!trackerPath) continue;
-          let actualTrackerPath = trackerPath;
-          for (const [oldPath, newPath] of newPathsMap.entries()) {
-            const normalizedOldPath = this.normalizePath(oldPath);
-            const normalizedNewPath = this.normalizePath(newPath);
-            if (trackerPath.startsWith(normalizedOldPath + "/")) {
-              const relativePath = trackerPath.substring(normalizedOldPath.length);
-              const computedNewPath = normalizedNewPath + relativePath;
-              const file = this.app.vault.getAbstractFileByPath(computedNewPath);
-              if (file instanceof import_obsidian10.TFile) {
-                actualTrackerPath = this.normalizePath(file.path);
-              } else {
-                actualTrackerPath = computedNewPath;
-              }
-              break;
-            }
-          }
-          if (actualTrackerPath !== trackerPath) {
-            tracker.dataset.filePath = actualTrackerPath;
-            const link = tracker.querySelector("a.internal-link");
-            if (link) {
-              link.href = actualTrackerPath;
-              link.setAttribute("data-href", actualTrackerPath);
-            }
-          }
-        }
-      }
-    }
-  }
-  // Methods for safe file modification (ignoring internal changes)
-  /**
-   * Gets icon for a path from Iconize plugin
-   * @param path - Path to file or folder
-   * @param isFile - Whether the path is a file (true) or folder (false)
-   */
+  // ---- Iconize integration ---------------------------------------------------
   getIconForPath(path, isFile = false) {
-    const icon = this.iconizeService.getIcon(path, isFile);
-    return icon;
+    return this.iconizeService.getIcon(path, isFile);
   }
-  /**
-   * Renders icon in a container element
-   */
   renderIcon(icon, container) {
     this.iconizeService.renderIcon(icon, container);
   }

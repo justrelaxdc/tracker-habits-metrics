@@ -9,7 +9,6 @@ import type {
 } from "../domain/chart-types";
 import { CHART_CONFIG, DATE_FORMATS, TrackerType } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
-import { formatDate, parseDate, addDays } from "../utils/date";
 import { countWords } from "../utils/misc";
 import { DateService } from "./date-service";
 
