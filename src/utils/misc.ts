@@ -3,10 +3,6 @@ export function parseMaybeNumber(value: string): string | number {
   return Number.isFinite(numeric) ? numeric : value;
 }
 
-export function escapeRegExp(source: string): string {
-  return source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export function countWords(text: string): number {
   const trimmed = text.trim();
   if (trimmed === '') return 0;

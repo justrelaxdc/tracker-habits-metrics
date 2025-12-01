@@ -20938,7 +20938,6 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     this.folderTreeService = new FolderTreeService(this.app);
     this.folderTreeService.updateSettings(this.settings);
     this.trackerFileService = new TrackerFileService(this.app);
-    this.statisticsService = new StatisticsService();
     this.trackerOrderService = new TrackerOrderService(this.app);
     this.iconizeService = new IconizeService(this.app);
     this.iconizeService.loadIconizeData().then(() => {

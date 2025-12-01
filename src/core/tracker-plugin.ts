@@ -13,10 +13,9 @@ import { EditTrackerModal } from "../ui/modals/edit-tracker-modal";
 import { FilePickerModal } from "../ui/modals/file-picker-modal";
 import trackerStyles from "../styles/tracker.css";
 import { DateService } from "../services/date-service";
-import { StatisticsService } from "../services/statistics-service";
 import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
-import { FILE_UPDATE_DELAY_MS, ANIMATION_DURATION_MS, ANIMATION_DURATION_SHORT_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS, CSS_CLASSES, DEBOUNCE_DELAY_MS } from "../constants";
+import { FILE_UPDATE_DELAY_MS, SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, MOBILE_BREAKPOINT, NOTICE_TIMEOUT_MS, UI_CONSTANTS, ERROR_MESSAGES, MODAL_LABELS, CSS_CLASSES, DEBOUNCE_DELAY_MS } from "../constants";
 import { showNoticeIfNotMobile } from "../utils/notifications";
 import { parseFilename, formatFilename } from "../utils/filename-parser";
 
@@ -29,7 +28,6 @@ export default class TrackerPlugin extends Plugin {
   private trackerState: Map<string, { entries: Map<string, string | number>; fileOpts: TrackerFileOptions }> = new Map();
   private currentNotePath: string | null = null;
   private refreshBlocksDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private statisticsService: StatisticsService;
   private trackerOrderService: TrackerOrderService;
   private iconizeService: IconizeService;
 
@@ -46,7 +44,6 @@ export default class TrackerPlugin extends Plugin {
     this.folderTreeService = new FolderTreeService(this.app);
     this.folderTreeService.updateSettings(this.settings);
     this.trackerFileService = new TrackerFileService(this.app);
-    this.statisticsService = new StatisticsService();
     this.trackerOrderService = new TrackerOrderService(this.app);
     this.iconizeService = new IconizeService(this.app);
     
