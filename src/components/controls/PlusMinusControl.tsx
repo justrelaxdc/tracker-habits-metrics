@@ -4,8 +4,9 @@ import type { PlusMinusControlProps } from "../types";
 
 /**
  * Plus/Minus counter control
+ * Note: No onValueChange callback needed - writeLogLine already updates the store
  */
-export function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }: PlusMinusControlProps) {
+export function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries }: PlusMinusControlProps) {
   const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
   
   const currentValue = entries.get(dateIso);
@@ -26,11 +27,10 @@ export function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, 
   const writeValue = useCallback(async (newValue: number) => {
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("PlusMinusControl: write error", err);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
 
   // Handle minus click
   const handleMinus = useCallback(async () => {

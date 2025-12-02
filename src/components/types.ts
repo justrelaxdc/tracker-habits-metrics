@@ -4,13 +4,10 @@ import type { FolderNode, TrackerFileOptions, TrackerEntries } from "../domain/t
 import type { TrackerTypeValue, ViewModeValue } from "../constants";
 
 /**
- * Common props passed to tracker components
+ * Context value for tracker components
+ * Only contains onDateChange callback - other values are passed as props
  */
 export interface TrackerContextValue {
-  plugin: TrackerPlugin;
-  dateIso: string;
-  viewMode: ViewModeValue;
-  opts: Record<string, string>;
   onDateChange: (newDate: string) => void;
 }
 
@@ -76,6 +73,7 @@ export interface DatePickerProps {
 
 /**
  * Props for control components
+ * Note: onValueChange was removed - writeLogLine/deleteEntry already update the store
  */
 export interface BaseControlProps {
   file: TFile;
@@ -83,7 +81,6 @@ export interface BaseControlProps {
   plugin: TrackerPlugin;
   fileOptions: TrackerFileOptions;
   entries: TrackerEntries;
-  onValueChange: () => void;
 }
 
 /**

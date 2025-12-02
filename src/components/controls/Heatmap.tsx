@@ -15,14 +15,13 @@ interface HeatmapDay {
 
 /**
  * Heatmap control for habits
+ * Note: No onValueChange callback needed - writeLogLine already updates the store
  */
 export function Heatmap({ 
   file, 
   dateIso, 
   plugin, 
-  fileOptions, 
   entries, 
-  onValueChange,
   daysToShow,
   trackerType,
   startTrackingDate,
@@ -107,11 +106,10 @@ export function Heatmap({
     
     try {
       await plugin.writeLogLine(file, day.dateStr, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("Heatmap: write error", err);
     }
-  }, [plugin, file, onValueChange, days]);
+  }, [plugin, file, days]);
 
   // Touch event handlers to prevent sidebar opening on horizontal scroll
   const handleTouchStart = useCallback((e: TouchEvent) => {

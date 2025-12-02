@@ -17,6 +17,9 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
   private folderPath: string;
   private readonly opts: Record<string, string>;
   private readonly ctx: MarkdownPostProcessorContext;
+  
+  // Cached date extraction result (sourcePath doesn't change for a given instance)
+  private cachedExtractedDate: string | undefined | null = null; // null = not computed yet
 
   constructor(
     plugin: TrackerPlugin,
@@ -47,7 +50,11 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
       // Determine initial date
       let initialDate: string | undefined = this.opts.date;
       if (!initialDate && this.ctx.sourcePath) {
-        initialDate = this.extractDateFromNotePath(this.ctx.sourcePath);
+        // Use cached date extraction result (lazy compute)
+        if (this.cachedExtractedDate === null) {
+          this.cachedExtractedDate = this.extractDateFromNotePath(this.ctx.sourcePath);
+        }
+        initialDate = this.cachedExtractedDate;
       }
 
       const dateIso = DateService.resolveDateIso(initialDate, this.plugin.settings.dateFormat);

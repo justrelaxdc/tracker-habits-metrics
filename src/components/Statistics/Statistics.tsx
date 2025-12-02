@@ -1,6 +1,6 @@
 import { useMemo } from "preact/hooks";
 import { CSS_CLASSES, TrackerType, STATS_LABELS } from "../../constants";
-import { StatisticsService } from "../../services/statistics-service";
+import { statisticsService } from "../../services/statistics-service";
 import { DateService } from "../../services/date-service";
 import type { StatisticsProps } from "../types";
 import type { StatisticsResult } from "../../domain/statistics-types";
@@ -215,9 +215,6 @@ function MetricStats({ result, unit }: MetricStatsProps) {
     </Section>
   );
 }
-
-// Singleton instance - StatisticsService is stateless
-const statisticsService = new StatisticsService();
 
 /**
  * Main Statistics component

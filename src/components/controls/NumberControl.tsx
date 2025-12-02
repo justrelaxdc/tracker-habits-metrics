@@ -4,8 +4,9 @@ import type { NumberControlProps } from "../types";
 
 /**
  * Number input control with debounce
+ * Note: No onValueChange callback needed - writeLogLine/deleteEntry already update the store
  */
-export function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }: NumberControlProps) {
+export function NumberControl({ file, dateIso, plugin, entries }: NumberControlProps) {
   const currentValue = entries.get(dateIso);
   const initialValue = currentValue != null && !isNaN(Number(currentValue)) ? String(currentValue) : "";
   
@@ -32,7 +33,6 @@ export function NumberControl({ file, dateIso, plugin, fileOptions, entries, onV
       const doDelete = async () => {
         try {
           await plugin.deleteEntry(file, dateIso);
-          await onValueChange();
         } catch (err) {
           console.error("NumberControl: delete error", err);
         }
@@ -53,7 +53,6 @@ export function NumberControl({ file, dateIso, plugin, fileOptions, entries, onV
     const doWrite = async () => {
       try {
         await plugin.writeLogLine(file, dateIso, String(numVal));
-        await onValueChange();
       } catch (err) {
         console.error("NumberControl: write error", err);
       }
@@ -64,7 +63,7 @@ export function NumberControl({ file, dateIso, plugin, fileOptions, entries, onV
     } else {
       debounceRef.current = setTimeout(doWrite, DEBOUNCE_DELAY_MS);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
 
   // Handle input change
   const handleChange = useCallback((e: Event) => {

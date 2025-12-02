@@ -2,8 +2,9 @@ import { App, normalizePath } from "obsidian";
 import { trackerStore } from "../store";
 import type { IconizeData } from "../store";
 
-// Polling interval for checking icon file changes (10 seconds)
-const ICONIZE_POLL_INTERVAL_MS = 10000;
+// Polling interval for checking icon file changes (2 seconds)
+// stat() is a very lightweight operation - only checks file metadata, not content
+const ICONIZE_POLL_INTERVAL_MS = 2000;
 
 /**
  * Service for integration with Iconize plugin
@@ -16,8 +17,19 @@ export class IconizeService {
   private watchInterval: ReturnType<typeof setInterval> | null = null;
   private lastModifiedTime: number = 0;
   private iconDataPath: string = "";
+  
+  // Callback to check if there are active tracker blocks
+  private hasActiveBlocks: (() => boolean) | null = null;
 
   constructor(private readonly app: App) {}
+
+  /**
+   * Set callback to check for active blocks
+   * Polling only happens when trackers are displayed
+   */
+  setActiveBlocksChecker(checker: () => boolean): void {
+    this.hasActiveBlocks = checker;
+  }
 
   /**
    * Loads icon data from Iconize plugin data file
@@ -65,14 +77,20 @@ export class IconizeService {
 
   /**
    * Starts watching the icon data file for changes
-   * Uses a 10 second interval to reduce overhead
+   * Uses a 2 second interval, only checks when there are active blocks
+   * stat() is lightweight - only reads file metadata
    */
   startWatching(): void {
     // Stop existing watcher if any
     this.stopWatching();
     
-    // Check for file changes every 10 seconds (increased from 2 seconds)
+    // Check for file changes every 2 seconds (only when active blocks exist)
     this.watchInterval = setInterval(async () => {
+      // Skip if no active tracker blocks are displayed
+      if (this.hasActiveBlocks && !this.hasActiveBlocks()) {
+        return;
+      }
+      
       if (!this.iconDataPath) return;
       
       try {
@@ -97,93 +115,6 @@ export class IconizeService {
     if (this.watchInterval) {
       clearInterval(this.watchInterval);
       this.watchInterval = null;
-    }
-  }
-
-  /**
-   * Gets icon for a given path (file or folder)
-   * Only returns icon if it's explicitly set for this path - no inheritance from parent folders
-   * @param path - Path to file or folder
-   * @param isFile - Whether the path is a file (true) or folder (false) - not used anymore but kept for compatibility
-   * @returns Icon string (emoji or Lucide icon name) or null if not found
-   */
-  getIcon(path: string, isFile: boolean = false): string | null {
-    if (!this.iconData) {
-      return null;
-    }
-
-    // Normalize path (remove leading slash, use forward slashes)
-    const normalizedPath = this.normalizePath(path);
-
-    // Try exact match first (without leading slash)
-    if (this.iconData[normalizedPath]) {
-      return this.iconData[normalizedPath];
-    }
-
-    // Try with leading slash
-    const pathWithSlash = `/${normalizedPath}`;
-    if (this.iconData[pathWithSlash]) {
-      return this.iconData[pathWithSlash];
-    }
-
-    // For files, try without extension
-    if (normalizedPath.endsWith(".md")) {
-      const pathWithoutExt = normalizedPath.slice(0, -3);
-      if (this.iconData[pathWithoutExt]) {
-        return this.iconData[pathWithoutExt];
-      }
-      if (this.iconData[`/${pathWithoutExt}`]) {
-        return this.iconData[`/${pathWithoutExt}`];
-      }
-    }
-
-    // No inheritance - only return icon if explicitly set for this path
-    return null;
-  }
-
-  /**
-   * Normalizes path for Iconize format
-   */
-  private normalizePath(path: string): string {
-    if (!path) return "";
-    return path
-      .replace(/\\/g, "/")
-      .replace(/\/+/g, "/")
-      .replace(/^\/+/, "")
-      .replace(/\/$/, "");
-  }
-
-
-  /**
-   * Renders icon in a container element
-   * @deprecated Use the Icon component instead for declarative rendering
-   * @param icon - Icon string (emoji or Lucide icon name)
-   * @param container - Container element to render icon in
-   */
-  renderIcon(icon: string | null, container: HTMLElement): void {
-    if (!icon) {
-      return;
-    }
-
-    // Check if it's a Lucide icon (starts with "Li")
-    if (icon.startsWith("Li")) {
-      // For Lucide icons, Iconize typically uses format like "LiAtom"
-      // We'll create a span that Iconize can style
-      // Iconize may use CSS to render these, so we add a class and data attribute
-      const iconSpan = container.createSpan({ 
-        cls: "iconize-icon lucide-icon",
-        attr: { 
-          "data-icon": icon,
-          "aria-label": icon
-        }
-      });
-      // Add a small space after icon
-      iconSpan.style.marginRight = "0.3em";
-      iconSpan.style.display = "inline-block";
-    } else {
-      // Emoji - just add as text with space
-      const emojiSpan = container.createSpan({ text: icon });
-      emojiSpan.style.marginRight = "0.3em";
     }
   }
 

@@ -1,7 +1,6 @@
 import { signal, computed } from "@preact/signals";
 import type { TrackerSettings, TrackerEntries, TrackerFileOptions } from "../domain/types";
 import { DEFAULT_SETTINGS } from "../domain/types";
-import { DateService } from "../services/date-service";
 
 /**
  * Iconize data structure
@@ -23,13 +22,11 @@ export interface TrackerFileState {
 /**
  * Global store using @preact/signals for reactive state management
  * This eliminates prop drilling and prevents unnecessary re-renders
+ * 
+ * NOTE: Date is NOT stored globally - each TrackerBlock has its own local date signal
+ * to allow multiple blocks on the same page to have independent dates.
  */
 class TrackerStore {
-  // Current selected date in ISO format
-  readonly currentDateIso = signal<string>(
-    DateService.format(DateService.now(), DEFAULT_SETTINGS.dateFormat)
-  );
-
   // Plugin settings
   readonly settings = signal<TrackerSettings>(DEFAULT_SETTINGS);
 
@@ -44,22 +41,6 @@ class TrackerStore {
 
   // Version counter to force re-renders when entries change
   readonly entriesVersion = signal<number>(0);
-
-  /**
-   * Update current date
-   */
-  setDate(dateIso: string): void {
-    this.currentDateIso.value = dateIso;
-  }
-
-  /**
-   * Navigate by days
-   */
-  navigateByDays(days: number): void {
-    const current = DateService.parse(this.currentDateIso.value, this.settings.value.dateFormat);
-    const newDate = current.clone().add(days, "days");
-    this.currentDateIso.value = DateService.format(newDate, this.settings.value.dateFormat);
-  }
 
   /**
    * Update settings
@@ -249,18 +230,6 @@ class TrackerStore {
 
 // Singleton instance of the store
 export const trackerStore = new TrackerStore();
-
-/**
- * Computed signal for getting current entry value for a tracker
- */
-export function useTrackerEntry(filePath: string) {
-  return computed(() => {
-    const state = trackerStore.trackerStates.value.get(filePath);
-    const dateIso = trackerStore.currentDateIso.value;
-    if (!state) return null;
-    return state.entries.get(dateIso) ?? null;
-  });
-}
 
 /**
  * Computed signal for getting all entries for a tracker

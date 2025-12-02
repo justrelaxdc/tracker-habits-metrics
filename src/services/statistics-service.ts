@@ -378,3 +378,6 @@ export class StatisticsService {
     };
   }
 }
+
+// Singleton instance - StatisticsService is stateless
+export const statisticsService = new StatisticsService();

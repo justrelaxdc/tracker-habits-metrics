@@ -4,8 +4,9 @@ import type { TextControlProps } from "../types";
 
 /**
  * Text input control with save button
+ * Note: No onValueChange callback needed - writeLogLine already updates the store
  */
-export function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }: TextControlProps) {
+export function TextControl({ file, dateIso, plugin, entries }: TextControlProps) {
   const currentValue = entries.get(dateIso);
   const initialValue = currentValue != null && typeof currentValue === "string" ? currentValue : "";
   
@@ -30,7 +31,6 @@ export function TextControl({ file, dateIso, plugin, fileOptions, entries, onVal
     try {
       const val = inputValue.trim();
       await plugin.writeLogLine(file, dateIso, val);
-      await onValueChange();
 
       // Visual feedback
       if (buttonRef.current) {
@@ -44,7 +44,7 @@ export function TextControl({ file, dateIso, plugin, fileOptions, entries, onVal
     } catch (err) {
       console.error("TextControl: write error", err);
     }
-  }, [plugin, file, dateIso, inputValue, onValueChange]);
+  }, [plugin, file, dateIso, inputValue]);
 
   return (
     <div class={CSS_CLASSES.ROW}>

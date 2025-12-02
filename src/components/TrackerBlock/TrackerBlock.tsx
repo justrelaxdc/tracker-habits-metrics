@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useEffect } from "preact/hooks";
-import { useSignal, useComputed } from "@preact/signals";
+import { useCallback, useMemo } from "preact/hooks";
+import { useSignal } from "@preact/signals";
 import { CSS_CLASSES, ViewMode, ERROR_MESSAGES } from "../../constants";
 import { DateService } from "../../services/date-service";
 import type { TrackerBlockProps } from "../types";
@@ -7,11 +7,10 @@ import { TrackerContext } from "../TrackerContext";
 import { DatePicker } from "./DatePicker";
 import { LoadingIndicator } from "./LoadingIndicator";
 import { FolderNode } from "./FolderNode";
-import { trackerStore } from "../../store";
 
 /**
  * Main tracker block component - root of the Preact tree
- * Uses signals for reactive date management
+ * Uses LOCAL signal for date - each block has its own independent date state
  */
 export function TrackerBlock({
   plugin,
@@ -21,40 +20,29 @@ export function TrackerBlock({
   opts,
   folderPath,
 }: TrackerBlockProps) {
-  // Use signals for reactive state
+  // Local signals for this block's state - NOT shared between blocks
   const isUpdating = useSignal(false);
-  
-  // Initialize the store date on mount
-  useEffect(() => {
-    trackerStore.setDate(initialDateIso);
-  }, [initialDateIso]);
+  const dateIso = useSignal(initialDateIso);
 
-  // Computed value that reads from the signal
-  const dateIso = useComputed(() => trackerStore.currentDateIso.value);
-
-  // Handle date change - updates the global signal
+  // Handle date change - updates local signal only
   const handleDateChange = useCallback((newDate: string) => {
     const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
-    trackerStore.setDate(newDateIso);
-  }, [plugin.settings.dateFormat]);
+    dateIso.value = newDateIso;
+  }, [plugin.settings.dateFormat, dateIso]);
 
   // Handle date navigation
   const handleNavigate = useCallback((days: number) => {
-    const currentDateIso = trackerStore.currentDateIso.value;
-    const currentDateObj = DateService.parse(currentDateIso, plugin.settings.dateFormat);
+    const currentDateObj = DateService.parse(dateIso.value, plugin.settings.dateFormat);
     const newDate = currentDateObj.clone().add(days, "days");
     const newDateStr = DateService.format(newDate, plugin.settings.dateFormat);
-    trackerStore.setDate(newDateStr);
-  }, [plugin.settings.dateFormat]);
+    dateIso.value = newDateStr;
+  }, [plugin.settings.dateFormat, dateIso]);
 
-  // Context value for child components - uses .value to get current date
+  // Context value - only contains onDateChange callback
+  // Other values (plugin, dateIso, viewMode, opts) are passed as props
   const contextValue = useMemo(() => ({
-    plugin,
-    dateIso: dateIso.value,
-    viewMode,
-    opts,
     onDateChange: handleDateChange,
-  }), [plugin, dateIso.value, viewMode, opts, handleDateChange]);
+  }), [handleDateChange]);
 
   // Render error state if no folder tree
   if (!folderTree || (folderTree.files.length === 0 && folderTree.children.length === 0)) {

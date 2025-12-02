@@ -425,3 +425,6 @@ export class ChartService {
   }
 }
 
+// Singleton instance - ChartService is stateless, no need to create multiple instances
+export const chartService = new ChartService();
+

@@ -1686,10 +1686,6 @@ var DEFAULT_SETTINGS = {
 // src/store/tracker-store.ts
 var TrackerStore = class {
   constructor() {
-    // Current selected date in ISO format
-    this.currentDateIso = d3(
-      DateService.format(DateService.now(), DEFAULT_SETTINGS.dateFormat)
-    );
     // Plugin settings
     this.settings = d3(DEFAULT_SETTINGS);
     // Tracker entries per file path: Map<filePath, TrackerFileState>
@@ -1700,20 +1696,6 @@ var TrackerStore = class {
     this.loadingTrackers = d3(/* @__PURE__ */ new Set());
     // Version counter to force re-renders when entries change
     this.entriesVersion = d3(0);
-  }
-  /**
-   * Update current date
-   */
-  setDate(dateIso) {
-    this.currentDateIso.value = dateIso;
-  }
-  /**
-   * Navigate by days
-   */
-  navigateByDays(days) {
-    const current = DateService.parse(this.currentDateIso.value, this.settings.value.dateFormat);
-    const newDate = current.clone().add(days, "days");
-    this.currentDateIso.value = DateService.format(newDate, this.settings.value.dateFormat);
   }
   /**
    * Update settings
@@ -1980,7 +1962,7 @@ function TrackerHeader({
 }
 
 // src/components/controls/NumberControl.tsx
-function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+function NumberControl({ file, dateIso, plugin, entries }) {
   const currentValue = entries.get(dateIso);
   const initialValue = currentValue != null && !isNaN(Number(currentValue)) ? String(currentValue) : "";
   const [inputValue, setInputValue] = d2(initialValue);
@@ -2000,7 +1982,6 @@ function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueCha
       const doDelete = async () => {
         try {
           await plugin.deleteEntry(file, dateIso);
-          await onValueChange();
         } catch (err) {
           console.error("NumberControl: delete error", err);
         }
@@ -2017,7 +1998,6 @@ function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueCha
     const doWrite = async () => {
       try {
         await plugin.writeLogLine(file, dateIso, String(numVal));
-        await onValueChange();
       } catch (err) {
         console.error("NumberControl: write error", err);
       }
@@ -2027,7 +2007,7 @@ function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueCha
     } else {
       debounceRef.current = setTimeout(doWrite, DEBOUNCE_DELAY_MS);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
   const handleChange = q2((e4) => {
     const target = e4.target;
     setInputValue(target.value);
@@ -2064,7 +2044,7 @@ function NumberControl({ file, dateIso, plugin, fileOptions, entries, onValueCha
 }
 
 // src/components/controls/PlusMinusControl.tsx
-function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries }) {
   const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
   const currentValue = entries.get(dateIso);
   const initialValue = currentValue != null && !isNaN(Number(currentValue)) ? Number(currentValue) : 0;
@@ -2079,11 +2059,10 @@ function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, onValue
   const writeValue = q2(async (newValue) => {
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("PlusMinusControl: write error", err);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
   const handleMinus = q2(async () => {
     const newValue = (Number.isFinite(value) ? value : 0) - step;
     setValue(newValue);
@@ -2113,7 +2092,7 @@ function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries, onValue
 }
 
 // src/components/controls/TextControl.tsx
-function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+function TextControl({ file, dateIso, plugin, entries }) {
   const currentValue = entries.get(dateIso);
   const initialValue = currentValue != null && typeof currentValue === "string" ? currentValue : "";
   const [inputValue, setInputValue] = d2(initialValue);
@@ -2131,7 +2110,6 @@ function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChang
     try {
       const val = inputValue.trim();
       await plugin.writeLogLine(file, dateIso, val);
-      await onValueChange();
       if (buttonRef.current) {
         buttonRef.current.style.transform = "scale(0.95)";
         setTimeout(() => {
@@ -2143,7 +2121,7 @@ function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChang
     } catch (err) {
       console.error("TextControl: write error", err);
     }
-  }, [plugin, file, dateIso, inputValue, onValueChange]);
+  }, [plugin, file, dateIso, inputValue]);
   return /* @__PURE__ */ u4("div", { class: CSS_CLASSES.ROW, children: [
     /* @__PURE__ */ u4(
       "textarea",
@@ -2159,7 +2137,7 @@ function TextControl({ file, dateIso, plugin, fileOptions, entries, onValueChang
 }
 
 // src/components/controls/ScaleControl.tsx
-function ScaleControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }) {
+function ScaleControl({ file, dateIso, plugin, fileOptions, entries }) {
   const minValue = parseFloat(fileOptions.minValue || String(DEFAULTS.MIN_VALUE)) || DEFAULTS.MIN_VALUE;
   const maxValue = parseFloat(fileOptions.maxValue || String(DEFAULTS.MAX_VALUE)) || DEFAULTS.MAX_VALUE;
   const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
@@ -2191,11 +2169,10 @@ function ScaleControl({ file, dateIso, plugin, fileOptions, entries, onValueChan
   const writeValue = q2(async (newValue) => {
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("ScaleControl: write error", err);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
   const handleMouseDown = q2((e4) => {
     if (e4.button !== 0) return;
     setIsDragging(true);
@@ -2323,9 +2300,7 @@ function Heatmap({
   file,
   dateIso,
   plugin,
-  fileOptions,
   entries,
-  onValueChange,
   daysToShow,
   trackerType,
   startTrackingDate
@@ -2388,11 +2363,10 @@ function Heatmap({
     const newValue = isChecked ? 0 : 1;
     try {
       await plugin.writeLogLine(file, day.dateStr, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("Heatmap: write error", err);
     }
-  }, [plugin, file, onValueChange, days]);
+  }, [plugin, file, days]);
   const handleTouchStart = q2((e4) => {
     if (e4.touches.length === 1) {
       touchStartRef.current = {
@@ -2793,6 +2767,7 @@ var StatisticsService = class {
     };
   }
 };
+var statisticsService = new StatisticsService();
 
 // src/components/Statistics/Statistics.tsx
 function getCompletionColorClass(rate) {
@@ -2958,7 +2933,6 @@ function MetricStats({ result, unit }) {
     )
   ] });
 }
-var statisticsService = new StatisticsService();
 function Statistics({
   file,
   plugin,
@@ -17845,6 +17819,7 @@ var ChartService = class {
     ctx.restore();
   }
 };
+var chartService = new ChartService();
 
 // src/components/Chart/ChartWrapper.tsx
 Chart.register(...registerables);
@@ -17859,7 +17834,6 @@ function ChartWrapper({
 }) {
   const canvasRef = A2(null);
   const chartRef = A2(null);
-  const chartService = T2(() => new ChartService(), []);
   const trackerType = (fileOptions?.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
   const unit = fileOptions?.unit || "";
   const minLimit = fileOptions?.minLimit ? parseFloat(fileOptions.minLimit) : null;
@@ -17875,6 +17849,14 @@ function ChartWrapper({
     }
   }, [onDateClick]);
   const prevConfigRef = A2(null);
+  y2(() => {
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy();
+        chartRef.current = null;
+      }
+    };
+  }, []);
   y2(() => {
     if (!canvasRef.current) return;
     const colors2 = getThemeColors();
@@ -17945,6 +17927,7 @@ function ChartWrapper({
       );
       if (chartRef.current) {
         chartRef.current.destroy();
+        chartRef.current = null;
       }
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
@@ -17953,12 +17936,6 @@ function ChartWrapper({
       }
       prevConfigRef.current = currentConfig;
     }
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-        chartRef.current = null;
-      }
-    };
   }, [
     file,
     plugin,
@@ -17972,7 +17949,6 @@ function ChartWrapper({
     scaleMinValue,
     scaleMaxValue,
     startTrackingDateStr,
-    chartService,
     handleChartClick
   ]);
   return /* @__PURE__ */ u4("div", { class: CSS_CLASSES.CHART, style: { height: `${CHART_CONFIG.DEFAULT_HEIGHT}px` }, children: /* @__PURE__ */ u4("canvas", { ref: canvasRef, height: CHART_CONFIG.CANVAS_HEIGHT }) });
@@ -18019,10 +17995,6 @@ function TrackerItem({ file, plugin, dateIso, viewMode, opts }) {
     return () => {
     };
   }, [file.path, plugin]);
-  const handleValueChange = q2(async () => {
-    const entriesData = await plugin.readAllEntries(file);
-    trackerStore.updateTrackerEntries(file.path, entriesData);
-  }, [plugin, file]);
   const trackerType = T2(() => {
     const opts2 = fileOptions.value;
     return (opts2?.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
@@ -18115,8 +18087,7 @@ function TrackerItem({ file, plugin, dateIso, viewMode, opts }) {
       dateIso,
       plugin,
       fileOptions: currentFileOptions2,
-      entries: entries.value,
-      onValueChange: handleValueChange
+      entries: entries.value
     };
     const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
     if (isHabit) {
@@ -18315,28 +18286,20 @@ function TrackerBlock({
   folderPath
 }) {
   const isUpdating = useSignal(false);
-  y2(() => {
-    trackerStore.setDate(initialDateIso);
-  }, [initialDateIso]);
-  const dateIso = useComputed(() => trackerStore.currentDateIso.value);
+  const dateIso = useSignal(initialDateIso);
   const handleDateChange = q2((newDate) => {
     const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
-    trackerStore.setDate(newDateIso);
-  }, [plugin.settings.dateFormat]);
+    dateIso.value = newDateIso;
+  }, [plugin.settings.dateFormat, dateIso]);
   const handleNavigate = q2((days) => {
-    const currentDateIso = trackerStore.currentDateIso.value;
-    const currentDateObj = DateService.parse(currentDateIso, plugin.settings.dateFormat);
+    const currentDateObj = DateService.parse(dateIso.value, plugin.settings.dateFormat);
     const newDate = currentDateObj.clone().add(days, "days");
     const newDateStr = DateService.format(newDate, plugin.settings.dateFormat);
-    trackerStore.setDate(newDateStr);
-  }, [plugin.settings.dateFormat]);
+    dateIso.value = newDateStr;
+  }, [plugin.settings.dateFormat, dateIso]);
   const contextValue = T2(() => ({
-    plugin,
-    dateIso: dateIso.value,
-    viewMode,
-    opts,
     onDateChange: handleDateChange
-  }), [plugin, dateIso.value, viewMode, opts, handleDateChange]);
+  }), [handleDateChange]);
   if (!folderTree || folderTree.files.length === 0 && folderTree.children.length === 0) {
     return /* @__PURE__ */ u4("div", { class: CSS_CLASSES.ERROR, children: [
       "tracker: ",
@@ -18375,8 +18338,11 @@ function TrackerBlock({
 
 // src/ui/tracker-block-render-child.tsx
 var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild {
+  // null = not computed yet
   constructor(plugin, source, containerEl, ctx) {
     super(containerEl);
+    // Cached date extraction result (sourcePath doesn't change for a given instance)
+    this.cachedExtractedDate = null;
     this.plugin = plugin;
     this.source = source;
     this.opts = parseOptions(source);
@@ -18392,7 +18358,10 @@ var TrackerBlockRenderChild = class extends import_obsidian.MarkdownRenderChild 
       const viewMode = (this.opts.view ?? ViewMode.CONTROL).toLowerCase();
       let initialDate = this.opts.date;
       if (!initialDate && this.ctx.sourcePath) {
-        initialDate = this.extractDateFromNotePath(this.ctx.sourcePath);
+        if (this.cachedExtractedDate === null) {
+          this.cachedExtractedDate = this.extractDateFromNotePath(this.ctx.sourcePath);
+        }
+        initialDate = this.cachedExtractedDate;
       }
       const dateIso = DateService.resolveDateIso(initialDate, this.plugin.settings.dateFormat);
       G(
@@ -21684,7 +21653,7 @@ var TrackerOrderService = class {
 
 // src/services/iconize-service.ts
 var import_obsidian9 = require("obsidian");
-var ICONIZE_POLL_INTERVAL_MS = 1e4;
+var ICONIZE_POLL_INTERVAL_MS = 2e3;
 var IconizeService = class {
   constructor(app) {
     this.app = app;
@@ -21693,6 +21662,15 @@ var IconizeService = class {
     this.watchInterval = null;
     this.lastModifiedTime = 0;
     this.iconDataPath = "";
+    // Callback to check if there are active tracker blocks
+    this.hasActiveBlocks = null;
+  }
+  /**
+   * Set callback to check for active blocks
+   * Polling only happens when trackers are displayed
+   */
+  setActiveBlocksChecker(checker) {
+    this.hasActiveBlocks = checker;
   }
   /**
    * Loads icon data from Iconize plugin data file
@@ -21730,11 +21708,15 @@ var IconizeService = class {
   }
   /**
    * Starts watching the icon data file for changes
-   * Uses a 10 second interval to reduce overhead
+   * Uses a 2 second interval, only checks when there are active blocks
+   * stat() is lightweight - only reads file metadata
    */
   startWatching() {
     this.stopWatching();
     this.watchInterval = setInterval(async () => {
+      if (this.hasActiveBlocks && !this.hasActiveBlocks()) {
+        return;
+      }
       if (!this.iconDataPath) return;
       try {
         const stat = await this.app.vault.adapter.stat(this.iconDataPath);
@@ -21754,68 +21736,6 @@ var IconizeService = class {
     if (this.watchInterval) {
       clearInterval(this.watchInterval);
       this.watchInterval = null;
-    }
-  }
-  /**
-   * Gets icon for a given path (file or folder)
-   * Only returns icon if it's explicitly set for this path - no inheritance from parent folders
-   * @param path - Path to file or folder
-   * @param isFile - Whether the path is a file (true) or folder (false) - not used anymore but kept for compatibility
-   * @returns Icon string (emoji or Lucide icon name) or null if not found
-   */
-  getIcon(path, isFile = false) {
-    if (!this.iconData) {
-      return null;
-    }
-    const normalizedPath = this.normalizePath(path);
-    if (this.iconData[normalizedPath]) {
-      return this.iconData[normalizedPath];
-    }
-    const pathWithSlash = `/${normalizedPath}`;
-    if (this.iconData[pathWithSlash]) {
-      return this.iconData[pathWithSlash];
-    }
-    if (normalizedPath.endsWith(".md")) {
-      const pathWithoutExt = normalizedPath.slice(0, -3);
-      if (this.iconData[pathWithoutExt]) {
-        return this.iconData[pathWithoutExt];
-      }
-      if (this.iconData[`/${pathWithoutExt}`]) {
-        return this.iconData[`/${pathWithoutExt}`];
-      }
-    }
-    return null;
-  }
-  /**
-   * Normalizes path for Iconize format
-   */
-  normalizePath(path) {
-    if (!path) return "";
-    return path.replace(/\\/g, "/").replace(/\/+/g, "/").replace(/^\/+/, "").replace(/\/$/, "");
-  }
-  /**
-   * Renders icon in a container element
-   * @deprecated Use the Icon component instead for declarative rendering
-   * @param icon - Icon string (emoji or Lucide icon name)
-   * @param container - Container element to render icon in
-   */
-  renderIcon(icon, container) {
-    if (!icon) {
-      return;
-    }
-    if (icon.startsWith("Li")) {
-      const iconSpan = container.createSpan({
-        cls: "iconize-icon lucide-icon",
-        attr: {
-          "data-icon": icon,
-          "aria-label": icon
-        }
-      });
-      iconSpan.style.marginRight = "0.3em";
-      iconSpan.style.display = "inline-block";
-    } else {
-      const emojiSpan = container.createSpan({ text: icon });
-      emojiSpan.style.marginRight = "0.3em";
     }
   }
   /**
@@ -22651,6 +22571,7 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
       (t4, b3) => this.blockManager.isFolderRelevant(t4, b3)
     );
     trackerStore.setSettings(this.settings);
+    this.iconizeService.setActiveBlocksChecker(() => this.blockManager.activeBlocks.size > 0);
     this.iconizeService.loadIconizeData().then(() => {
       this.iconizeService.startWatching();
     }).catch(() => {
@@ -22976,13 +22897,6 @@ var TrackerPlugin = class extends import_obsidian10.Plugin {
     );
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || "", sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || "");
-  }
-  // ---- Iconize integration ---------------------------------------------------
-  getIconForPath(path, isFile = false) {
-    return this.iconizeService.getIcon(path, isFile);
-  }
-  renderIcon(icon, container) {
-    this.iconizeService.renderIcon(icon, container);
   }
 };
 

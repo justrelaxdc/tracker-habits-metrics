@@ -80,13 +80,6 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     };
   }, [file.path, plugin]);
 
-  // Handle value change - updates the store directly
-  const handleValueChange = useCallback(async () => {
-    // Read fresh entries from file and update store
-    const entriesData = await plugin.readAllEntries(file);
-    trackerStore.updateTrackerEntries(file.path, entriesData);
-  }, [plugin, file]);
-
   // Determine tracker type
   const trackerType = useMemo(() => {
     const opts = fileOptions.value;
@@ -208,13 +201,14 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     const currentFileOptions = fileOptions.value;
     if (isLoading.value || !currentFileOptions) return null;
 
+    // Note: No onValueChange callback needed - writeLogLine/deleteEntry 
+    // already update the store directly via trackerStore signals
     const controlProps = {
       file,
       dateIso,
       plugin,
       fileOptions: currentFileOptions,
       entries: entries.value,
-      onValueChange: handleValueChange,
     };
 
     const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;

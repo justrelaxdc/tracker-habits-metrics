@@ -4,8 +4,9 @@ import type { ScaleControlProps } from "../types";
 
 /**
  * Scale/Progress bar control with drag support
+ * Note: No onValueChange callback needed - writeLogLine already updates the store
  */
-export function ScaleControl({ file, dateIso, plugin, fileOptions, entries, onValueChange }: ScaleControlProps) {
+export function ScaleControl({ file, dateIso, plugin, fileOptions, entries }: ScaleControlProps) {
   const minValue = parseFloat(fileOptions.minValue || String(DEFAULTS.MIN_VALUE)) || DEFAULTS.MIN_VALUE;
   const maxValue = parseFloat(fileOptions.maxValue || String(DEFAULTS.MAX_VALUE)) || DEFAULTS.MAX_VALUE;
   const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
@@ -45,11 +46,10 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions, entries, onVa
   const writeValue = useCallback(async (newValue: number) => {
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
-      await onValueChange();
     } catch (err) {
       console.error("ScaleControl: write error", err);
     }
-  }, [plugin, file, dateIso, onValueChange]);
+  }, [plugin, file, dateIso]);
 
   // Handle mouse down
   const handleMouseDown = useCallback((e: MouseEvent) => {

@@ -91,6 +91,10 @@ export default class TrackerPlugin extends Plugin {
     // Initialize global store with settings
     trackerStore.setSettings(this.settings);
     
+    // Set up Iconize service with active blocks checker
+    // Polling only happens when there are tracker blocks displayed
+    this.iconizeService.setActiveBlocksChecker(() => this.blockManager.activeBlocks.size > 0);
+    
     // Load Iconize data asynchronously
     this.iconizeService.loadIconizeData().then(() => {
       this.iconizeService.startWatching();
@@ -494,15 +498,5 @@ export default class TrackerPlugin extends Plugin {
 
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || '');
-  }
-
-  // ---- Iconize integration ---------------------------------------------------
-
-  getIconForPath(path: string, isFile: boolean = false): string | null {
-    return this.iconizeService.getIcon(path, isFile);
-  }
-
-  renderIcon(icon: string | null, container: HTMLElement): void {
-    this.iconizeService.renderIcon(icon, container);
   }
 }

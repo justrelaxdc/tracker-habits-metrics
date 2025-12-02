@@ -1,7 +1,7 @@
-import { useRef, useEffect, useMemo, useCallback } from "preact/hooks";
+import { useRef, useEffect, useCallback, useMemo } from "preact/hooks";
 import { Chart, registerables } from "chart.js";
 import { CSS_CLASSES, CHART_CONFIG, TrackerType } from "../../constants";
-import { ChartService } from "../../services/chart-service";
+import { chartService } from "../../services/chart-service";
 import { DateService } from "../../services/date-service";
 import { getThemeColors } from "../../utils/theme";
 import type { ChartWrapperProps } from "../types";
@@ -24,7 +24,6 @@ export function ChartWrapper({
 }: ChartWrapperProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<TrackerChartInstance | null>(null);
-  const chartService = useMemo(() => new ChartService(), []);
 
   // Get tracker type and options
   const trackerType = (fileOptions?.mode ?? TrackerType.GOOD_HABIT).toLowerCase();
@@ -55,6 +54,16 @@ export function ChartWrapper({
     scaleMinValue: number | null;
     scaleMaxValue: number | null;
   } | null>(null);
+
+  // Cleanup chart on unmount only - separate from create/update
+  useEffect(() => {
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy();
+        chartRef.current = null;
+      }
+    };
+  }, []);
 
   // Create/update chart
   useEffect(() => {
@@ -143,9 +152,10 @@ export function ChartWrapper({
         handleChartClick
       );
 
-      // Destroy existing chart if any
+      // Destroy existing chart if config changed (recreate needed)
       if (chartRef.current) {
         chartRef.current.destroy();
+        chartRef.current = null;
       }
 
       // Create new chart
@@ -159,14 +169,6 @@ export function ChartWrapper({
       // Store current config for next update comparison
       prevConfigRef.current = currentConfig;
     }
-
-    // Cleanup on unmount
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-        chartRef.current = null;
-      }
-    };
   }, [
     file,
     plugin,
@@ -180,7 +182,6 @@ export function ChartWrapper({
     scaleMinValue,
     scaleMaxValue,
     startTrackingDateStr,
-    chartService,
     handleChartClick,
   ]);
 
