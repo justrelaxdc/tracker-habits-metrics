@@ -5,6 +5,7 @@ import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType } from "../constants";
 import { isTrackerValueTrue } from "../utils/validation";
 import { DateService } from "./date-service";
 import { getEntryValueByDate, determineStartTrackingDate } from "./entry-utils";
+import { logError } from "../utils/notifications";
 
 export class TrackerFileService {
   // Cache for file content to avoid redundant reads
@@ -144,7 +145,7 @@ export class TrackerFileService {
         entries.set(date, value);
       });
     } catch (error) {
-      console.error("Tracker: error reading all entries", error);
+      logError("Tracker: error reading all entries", error);
     }
 
     return entries;
@@ -194,7 +195,7 @@ export class TrackerFileService {
       await this.app.vault.modify(file, newContent);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error("Tracker: write error", error);
+      logError("Tracker: write error", error);
       throw new Error(errorMsg);
     }
   }
@@ -243,7 +244,7 @@ export class TrackerFileService {
       await this.app.vault.modify(file, newContent);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error("Tracker: delete entry error", error);
+      logError("Tracker: delete entry error", error);
       throw new Error(errorMsg);
     }
   }
@@ -279,7 +280,7 @@ export class TrackerFileService {
         fileOpts.mode = TrackerType.GOOD_HABIT;
       }
     } catch (error) {
-      console.error("Tracker: error reading frontmatter", error);
+      logError("Tracker: error reading frontmatter", error);
       fileOpts.mode = TrackerType.GOOD_HABIT;
     }
     return fileOpts;

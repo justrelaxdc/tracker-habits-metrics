@@ -4,6 +4,7 @@ import { Modal, Notice, Setting } from "obsidian";
 import type TrackerPlugin from "../../core/tracker-plugin";
 import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES, TRACKER_TYPE_LABELS, PLACEHOLDERS, DEFAULTS } from "../../constants";
 import { DateService } from "../../services/date-service";
+import { logError } from "../../utils/notifications";
 
 export class EditTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
@@ -156,7 +157,7 @@ export class EditTrackerModal extends Modal {
             warningEl.style.display = "none";
           }
         } catch (error) {
-          console.error("Tracker: error checking data", error);
+          logError("Tracker: error checking data", error);
           warningEl.style.display = "none";
         }
       });
@@ -330,7 +331,7 @@ export class EditTrackerModal extends Modal {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
-        console.error("Tracker: error deleting tracker", error);
+        logError("Tracker: error deleting tracker", error);
       }
     });
     
@@ -481,12 +482,7 @@ export class EditTrackerModal extends Modal {
               } catch (renameError) {
                 // If rename threw exception, log and use original file
                 const errorMsg = renameError instanceof Error ? renameError.message : String(renameError);
-                console.error("Tracker: error renaming file", {
-                  oldPath,
-                  newFileName: name.replace(/[<>:"/\\|?*]/g, "_") + ".md",
-                  error: errorMsg,
-                  renameError
-                });
+                logError("Tracker: error renaming file", renameError);
                 // Continue with original file
               }
             }
@@ -516,7 +512,7 @@ export class EditTrackerModal extends Modal {
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
-            console.error("Tracker: error updating tracker", error);
+            logError("Tracker: error updating tracker", error);
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);

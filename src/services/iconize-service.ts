@@ -1,6 +1,7 @@
 import { App, normalizePath } from "obsidian";
 import { trackerStore } from "../store";
 import type { IconizeData } from "../store";
+import { logError } from "../utils/notifications";
 
 // Polling interval for checking icon file changes (2 seconds)
 // stat() is a very lightweight operation - only checks file metadata, not content
@@ -67,7 +68,7 @@ export class IconizeService {
       }
     } catch (error) {
       // Silently fail if Iconize is not installed or data is invalid
-      console.error("[Iconize] Error loading data:", error);
+      logError("[Iconize] Error loading data", error);
       this.iconData = null;
       this.dataLoaded = true;
       this.lastModifiedTime = 0;

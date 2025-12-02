@@ -1,5 +1,6 @@
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
 import { SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, UI_CONSTANTS } from "../../constants";
+import { logError } from "../../utils/notifications";
 
 /**
  * Manages active tracker blocks and their lifecycle
@@ -59,7 +60,7 @@ export class BlockManager {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: error updating block", error);
+        logError("Tracker: error updating block", error);
       }
     }
   }
@@ -68,32 +69,22 @@ export class BlockManager {
 
   /**
    * Refresh all active blocks with scroll position preservation
+   * Uses targeted queries instead of querySelectorAll('*') for better performance
    */
   async refreshAllBlocks(): Promise<void> {
     const scrollPositions = new Map<HTMLElement, { top: number; left: number }>();
     
-    const findAndSaveScrollContainers = (root: HTMLElement) => {
-      const style = window.getComputedStyle(root);
+    // Save scroll position for a container if it's scrollable
+    const saveScrollIfScrollable = (el: HTMLElement | null) => {
+      if (!el) return;
+      const style = window.getComputedStyle(el);
       if (style.overflow === 'auto' || style.overflow === 'scroll' || 
           style.overflowY === 'auto' || style.overflowY === 'scroll' ||
           style.overflowX === 'auto' || style.overflowX === 'scroll') {
-        scrollPositions.set(root, {
-          top: root.scrollTop,
-          left: root.scrollLeft
+        scrollPositions.set(el, {
+          top: el.scrollTop,
+          left: el.scrollLeft
         });
-      }
-      
-      const allElements = root.querySelectorAll('*');
-      for (const el of Array.from(allElements) as HTMLElement[]) {
-        const elStyle = window.getComputedStyle(el);
-        if (elStyle.overflow === 'auto' || elStyle.overflow === 'scroll' || 
-            elStyle.overflowY === 'auto' || elStyle.overflowY === 'scroll' ||
-            elStyle.overflowX === 'auto' || elStyle.overflowX === 'scroll') {
-          scrollPositions.set(el, {
-            top: el.scrollTop,
-            left: el.scrollLeft
-          });
-        }
       }
     };
     
@@ -101,23 +92,22 @@ export class BlockManager {
     for (const leaf of workspace.getLeavesOfType('markdown')) {
       const view = leaf.view as any;
       if (view && view.containerEl) {
-        findAndSaveScrollContainers(view.containerEl);
+        // Check container itself
+        saveScrollIfScrollable(view.containerEl);
         
+        // Known Obsidian scroll containers - use targeted queries
         const cmScroller = view.containerEl.querySelector('.cm-scroller') as HTMLElement;
-        if (cmScroller) {
-          scrollPositions.set(cmScroller, {
-            top: cmScroller.scrollTop,
-            left: cmScroller.scrollLeft
-          });
-        }
+        saveScrollIfScrollable(cmScroller);
         
         const previewView = view.containerEl.querySelector('.markdown-preview-view') as HTMLElement;
-        if (previewView) {
-          scrollPositions.set(previewView, {
-            top: previewView.scrollTop,
-            left: previewView.scrollLeft
-          });
-        }
+        saveScrollIfScrollable(previewView);
+        
+        // Check for other common scroll containers without querying all elements
+        const cmContent = view.containerEl.querySelector('.cm-content') as HTMLElement;
+        saveScrollIfScrollable(cmContent);
+        
+        const markdownSourceView = view.containerEl.querySelector('.markdown-source-view') as HTMLElement;
+        saveScrollIfScrollable(markdownSourceView);
       }
     }
     
@@ -127,7 +117,7 @@ export class BlockManager {
       try {
         await block.render();
       } catch (error) {
-        console.error("Tracker: error updating block", error);
+        logError("Tracker: error updating block", error);
       }
     }
     

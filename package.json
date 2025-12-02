@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact",
+    "build": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --minify --tree-shaking=true",
     "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --watch"
   },
   "dependencies": {

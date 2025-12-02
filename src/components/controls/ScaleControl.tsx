@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, DEFAULTS } from "../../constants";
 import type { ScaleControlProps } from "../types";
+import { logError } from "../../utils/notifications";
 
 /**
  * Scale/Progress bar control with drag support
@@ -47,7 +48,7 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions, entries }: Sc
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
     } catch (err) {
-      console.error("ScaleControl: write error", err);
+      logError("ScaleControl: write error", err);
     }
   }, [plugin, file, dateIso]);
 

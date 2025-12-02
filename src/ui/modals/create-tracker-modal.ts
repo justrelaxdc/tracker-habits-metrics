@@ -6,6 +6,7 @@ import { FolderSuggest } from "../suggest/folder-suggest";
 import { populateTrackerTypeSelector, isMetricType } from "../components/tracker-type-selector";
 import { TrackerType, MODAL_LABELS, PLACEHOLDERS, DEFAULTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants";
 import { sanitizeFileName } from "../../utils/validation";
+import { logError } from "../../utils/notifications";
 
 export class CreateTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
@@ -304,7 +305,7 @@ export class CreateTrackerModal extends Modal {
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           new Notice(`${ERROR_MESSAGES.CREATE_ERROR}: ${errorMsg}`);
-          console.error("Tracker: error creating tracker", error);
+          logError("Tracker: error creating tracker", error);
         }
       });
     });

@@ -116,7 +116,7 @@ export class DomReorderManager {
       }
 
       if (!parentContainer) {
-        console.warn(`Tracker: Could not find parent container for ${parentFolderPath}`);
+        logWarning(`Tracker: Could not find parent container for ${parentFolderPath}`);
         continue;
       }
 
@@ -150,12 +150,12 @@ export class DomReorderManager {
       }
 
       if (sortedFolderElements.length === 0) {
-        console.warn(`Tracker: No folder elements found in DOM. Parent: ${parentFolderPath}`);
+        logWarning(`Tracker: No folder elements found in DOM. Parent: ${parentFolderPath}`);
         continue;
       }
 
       if (sortedFolderElements.length < foldersInNewOrder.length) {
-        console.warn(`Tracker: Some folders not found in DOM. Expected ${foldersInNewOrder.length}, found ${sortedFolderElements.length}. Parent: ${parentFolderPath}`);
+        logWarning(`Tracker: Some folders not found in DOM. Expected ${foldersInNewOrder.length}, found ${sortedFolderElements.length}. Parent: ${parentFolderPath}`);
       }
 
       for (const element of sortedFolderElements) {

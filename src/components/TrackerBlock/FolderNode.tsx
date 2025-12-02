@@ -5,6 +5,7 @@ import { normalizePath } from "../../utils/path";
 import type { FolderNodeProps } from "../types";
 import { TrackerItem } from "../TrackerItem/TrackerItem";
 import { Icon } from "../Icon";
+import { ErrorBoundary } from "../TrackerItem/ErrorBoundary";
 
 /**
  * Folder node component - renders a folder with its trackers and subfolders
@@ -61,14 +62,15 @@ export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNode
       {node.files.length > 0 && (
         <div class={CSS_CLASSES.TRACKERS_CONTAINER} data-folder-path={normalizePath(node.path)}>
           {node.files.map((file: TFile) => (
-            <TrackerItem
-              key={file.path}
-              file={file}
-              plugin={plugin}
-              dateIso={dateIso}
-              viewMode={viewMode}
-              opts={opts}
-            />
+            <ErrorBoundary key={file.path}>
+              <TrackerItem
+                file={file}
+                plugin={plugin}
+                dateIso={dateIso}
+                viewMode={viewMode}
+                opts={opts}
+              />
+            </ErrorBoundary>
           ))}
         </div>
       )}

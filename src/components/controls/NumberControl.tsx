@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, ANIMATION_DURATION_MS, DEBOUNCE_DELAY_MS } from "../../constants";
 import type { NumberControlProps } from "../types";
+import { logError } from "../../utils/notifications";
 
 /**
  * Number input control with debounce
@@ -34,7 +35,7 @@ export function NumberControl({ file, dateIso, plugin, entries }: NumberControlP
         try {
           await plugin.deleteEntry(file, dateIso);
         } catch (err) {
-          console.error("NumberControl: delete error", err);
+          logError("NumberControl: delete error", err);
         }
       };
 
@@ -54,7 +55,7 @@ export function NumberControl({ file, dateIso, plugin, entries }: NumberControlP
       try {
         await plugin.writeLogLine(file, dateIso, String(numVal));
       } catch (err) {
-        console.error("NumberControl: write error", err);
+        logError("NumberControl: write error", err);
       }
     };
 

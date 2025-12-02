@@ -4,6 +4,7 @@ import { statisticsService } from "../../services/statistics-service";
 import { DateService } from "../../services/date-service";
 import type { StatisticsProps } from "../types";
 import type { StatisticsResult } from "../../domain/statistics-types";
+import { logError } from "../../utils/notifications";
 
 /**
  * Helper to get completion rate color class
@@ -245,7 +246,7 @@ export function Statistics({
         startTrackingDateStr
       );
     } catch (error) {
-      console.error("Statistics: error calculating statistics", error);
+      logError("Statistics: error calculating statistics", error);
       return null;
     }
   }, [file, plugin, dateIso, daysToShow, trackerType, entries, fileOptions]);

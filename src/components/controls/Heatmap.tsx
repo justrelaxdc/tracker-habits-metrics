@@ -3,6 +3,7 @@ import { CSS_CLASSES, TrackerType } from "../../constants";
 import { DateService } from "../../services/date-service";
 import { isTrackerValueTrue } from "../../utils/validation";
 import type { HeatmapProps } from "../types";
+import { logError } from "../../utils/notifications";
 
 interface HeatmapDay {
   dateStr: string;
@@ -107,7 +108,7 @@ export function Heatmap({
     try {
       await plugin.writeLogLine(file, day.dateStr, String(newValue));
     } catch (err) {
-      console.error("Heatmap: write error", err);
+      logError("Heatmap: write error", err);
     }
   }, [plugin, file, days]);
 

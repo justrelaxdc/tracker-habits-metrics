@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, ANIMATION_DURATION_MS, PLACEHOLDERS, MODAL_LABELS } from "../../constants";
 import type { TextControlProps } from "../types";
+import { logError } from "../../utils/notifications";
 
 /**
  * Text input control with save button
@@ -42,7 +43,7 @@ export function TextControl({ file, dateIso, plugin, entries }: TextControlProps
         }, ANIMATION_DURATION_MS);
       }
     } catch (err) {
-      console.error("TextControl: write error", err);
+      logError("TextControl: write error", err);
     }
   }, [plugin, file, dateIso, inputValue]);
 

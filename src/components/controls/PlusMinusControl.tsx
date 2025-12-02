@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, ANIMATION_DURATION_MS, DEFAULTS } from "../../constants";
 import type { PlusMinusControlProps } from "../types";
+import { logError } from "../../utils/notifications";
 
 /**
  * Plus/Minus counter control
@@ -28,7 +29,7 @@ export function PlusMinusControl({ file, dateIso, plugin, fileOptions, entries }
     try {
       await plugin.writeLogLine(file, dateIso, String(newValue));
     } catch (err) {
-      console.error("PlusMinusControl: write error", err);
+      logError("PlusMinusControl: write error", err);
     }
   }, [plugin, file, dateIso]);
 

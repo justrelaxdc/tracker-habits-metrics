@@ -16,6 +16,7 @@ import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
 import { MOBILE_BREAKPOINT, ERROR_MESSAGES, MODAL_LABELS, DEBOUNCE_DELAY_MS } from "../constants";
 import { trackerStore } from "../store";
+import { logError } from "../utils/notifications";
 
 // Managers
 import { StateManager } from "./managers/state-manager";
@@ -313,7 +314,7 @@ export default class TrackerPlugin extends Plugin {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
-      console.error("Tracker: write error", error);
+      logError("Tracker: write error", error);
       throw error;
     }
   }
@@ -330,7 +331,7 @@ export default class TrackerPlugin extends Plugin {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
-      console.error("Tracker: delete entry error", error);
+      logError("Tracker: delete entry error", error);
       throw error;
     }
   }

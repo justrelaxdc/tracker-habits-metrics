@@ -11,12 +11,12 @@ export interface TrackerState {
 
 /**
  * Manages tracker state caching with LRU eviction policy
- * Uses Map<string, number> for O(1) access time tracking instead of array with O(n) indexOf
+ * Uses Map insertion order for O(1) LRU eviction - oldest entries are at the front
  */
 export class StateManager {
+  // Map maintains insertion order - oldest entries are first
+  // When accessing an entry, we delete and re-insert to move it to the end
   private trackerState: Map<string, TrackerState> = new Map();
-  // LRU tracking: Map of filePath -> last access timestamp
-  private accessTimestamps: Map<string, number> = new Map();
 
   constructor(
     private readonly app: App,
@@ -25,31 +25,15 @@ export class StateManager {
   ) {}
 
   /**
-   * Update access timestamp for LRU cache - O(1) operation
-   */
-  private updateAccessTime(filePath: string): void {
-    this.accessTimestamps.set(filePath, Date.now());
-  }
-
-  /**
-   * Find and evict least recently used cache entry - O(n) only when eviction needed
+   * Evict least recently used cache entry - O(1) operation
+   * Map maintains insertion order, so first entry is oldest
    */
   private evictIfNeeded(): void {
     if (this.trackerState.size >= MAX_CACHE_SIZE) {
-      // Find the entry with the oldest timestamp
-      let oldestPath: string | null = null;
-      let oldestTime = Infinity;
-      
-      for (const [path, timestamp] of this.accessTimestamps) {
-        if (timestamp < oldestTime) {
-          oldestTime = timestamp;
-          oldestPath = path;
-        }
-      }
-      
-      if (oldestPath) {
-        this.trackerState.delete(oldestPath);
-        this.accessTimestamps.delete(oldestPath);
+      // Get first (oldest) entry and remove it
+      const firstKey = this.trackerState.keys().next().value;
+      if (firstKey) {
+        this.trackerState.delete(firstKey);
       }
     }
   }
@@ -60,12 +44,13 @@ export class StateManager {
   async ensureTrackerState(file: TFile): Promise<TrackerState> {
     const existing = this.trackerState.get(file.path);
     if (existing) {
-      // Update access time for LRU - O(1)
-      this.updateAccessTime(file.path);
+      // Move to end (most recently used) by deleting and re-inserting - O(1)
+      this.trackerState.delete(file.path);
+      this.trackerState.set(file.path, existing);
       return existing;
     }
     
-    // Evict LRU entry if cache is full
+    // Evict LRU entry if cache is full - O(1)
     this.evictIfNeeded();
     
     const [entries, fileOpts] = await Promise.all([
@@ -73,8 +58,8 @@ export class StateManager {
       this.trackerFileService.getFileTypeFromFrontmatter(file)
     ]);
     const state = { entries, fileOpts };
+    // New entries are added at the end (most recently used)
     this.trackerState.set(file.path, state);
-    this.updateAccessTime(file.path);
     return state;
   }
 
@@ -83,7 +68,6 @@ export class StateManager {
    */
   clearTrackerState(path: string): void {
     this.trackerState.delete(path);
-    this.accessTimestamps.delete(path);
   }
 
   /**
@@ -92,7 +76,6 @@ export class StateManager {
    */
   async clearAllCaches(): Promise<void> {
     this.trackerState.clear();
-    this.accessTimestamps.clear();
     this.folderTreeService.invalidate();
   }
 
@@ -125,24 +108,14 @@ export class StateManager {
     if (oldPath === newPath) return;
     
     const state = this.trackerState.get(oldPath);
-    const timestamp = this.accessTimestamps.get(oldPath);
     
     if (state) {
-      // Move state to new path
+      // Move state to new path (delete old, insert new at end)
       this.trackerState.delete(oldPath);
       this.trackerState.set(newPath, state);
-      
-      // Move timestamp to new path
-      this.accessTimestamps.delete(oldPath);
-      if (timestamp !== undefined) {
-        this.accessTimestamps.set(newPath, timestamp);
-      } else {
-        this.updateAccessTime(newPath);
-      }
     } else {
       // Just clean up any stale entries
       this.trackerState.delete(newPath);
-      this.accessTimestamps.delete(newPath);
     }
   }
 

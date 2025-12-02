@@ -53,6 +53,8 @@ export function ChartWrapper({
     maxLimit: number | null;
     scaleMinValue: number | null;
     scaleMaxValue: number | null;
+    dateIso: string;
+    daysToShow: number;
   } | null>(null);
 
   // Cleanup chart on unmount only - separate from create/update
@@ -98,6 +100,8 @@ export function ChartWrapper({
       maxLimit,
       scaleMinValue,
       scaleMaxValue,
+      dateIso,
+      daysToShow,
     };
 
     // Check if we can update existing chart or need to recreate
@@ -110,30 +114,21 @@ export function ChartWrapper({
       prevConfigRef.current.scaleMaxValue === currentConfig.scaleMaxValue;
 
     if (canUpdate && chartRef.current) {
-      // Update existing chart data instead of recreating
-      const config = chartService.createChartConfig(
-        chartData,
-        colors,
-        {
-          dateIso,
-          daysToShow,
-          metricType: trackerType,
-          unit,
-          minLimit,
-          maxLimit,
-          scaleMinValue,
-          scaleMaxValue,
-        },
-        handleChartClick
-      );
-
-      // Update chart data and options
-      chartRef.current.data = config.data;
-      if (config.options) {
-        Object.assign(chartRef.current.options, config.options);
+      // Only data changed (entries, dateIso, or daysToShow) - update data directly
+      // This is much faster than recreating the entire chart config
+      const dataset = chartRef.current.data.datasets[0];
+      if (dataset) {
+        dataset.data = chartData.values;
+        dataset.pointBackgroundColor = chartData.pointBackgroundColors;
+        dataset.pointBorderColor = chartData.pointBorderColors;
+        dataset.pointRadius = chartData.pointRadii;
+        dataset.pointBorderWidth = chartData.pointBorderWidths;
       }
+      chartRef.current.data.labels = chartData.labels;
       chartRef.current.dateStrings = chartData.dateStrings;
-      chartRef.current.update('none'); // 'none' mode for faster updates
+      
+      // Update chart with minimal animation
+      chartRef.current.update('none');
     } else {
       // Create chart config
       const config = chartService.createChartConfig(

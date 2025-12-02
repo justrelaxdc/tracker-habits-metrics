@@ -6,6 +6,7 @@ import type { TrackerFileOptions, TrackerEntries } from "../../domain/types";
 import { TrackerHeader } from "./TrackerHeader";
 import { useTrackerContext } from "../TrackerContext";
 import { trackerStore } from "../../store";
+import { logError } from "../../utils/notifications";
 
 // Controls
 import { NumberControl } from "../controls/NumberControl";
@@ -26,21 +27,20 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
   const isLoading = useSignal(true);
 
   // Get tracker state from the store (reactive)
+  // Access entriesVersion to trigger recomputation on any entry change
   const trackerState = useComputed(() => {
-    // Access version to trigger recomputation on any entry change
     trackerStore.entriesVersion.value;
     return trackerStore.getTrackerState(file.path);
   });
 
-  // Computed entries from store
-  const entries = useComputed<TrackerEntries>(() => {
+  // Derive values directly from trackerState to avoid redundant computed signals
+  const entries = useMemo<TrackerEntries>(() => {
     return trackerState.value?.entries ?? new Map();
-  });
+  }, [trackerState.value]);
 
-  // Computed file options from store
-  const fileOptions = useComputed<TrackerFileOptions | null>(() => {
+  const fileOptions = useMemo<TrackerFileOptions | null>(() => {
     return trackerState.value?.fileOptions ?? null;
-  });
+  }, [trackerState.value]);
 
   // Load data on mount only
   useEffect(() => {
@@ -66,7 +66,7 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
 
         isLoading.value = false;
       } catch (error) {
-        console.error("TrackerItem: error loading data", error);
+        logError("TrackerItem: error loading data", error);
         isLoading.value = false;
       }
     };
@@ -82,16 +82,16 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
 
   // Determine tracker type
   const trackerType = useMemo(() => {
-    const opts = fileOptions.value;
+    const opts = fileOptions;
     return (opts?.mode ?? TrackerType.GOOD_HABIT).toLowerCase() as typeof TrackerType[keyof typeof TrackerType];
-  }, [fileOptions.value]);
+  }, [fileOptions]);
 
   // Calculate display name
   const displayName = useMemo(() => {
     const baseName = file.basename;
-    const unit = fileOptions.value?.unit || "";
+    const unit = fileOptions?.unit || "";
     return unit ? `${baseName} (${unit})` : baseName;
-  }, [file, fileOptions.value]);
+  }, [file, fileOptions]);
 
   // Extract settings values for reactivity
   const {
@@ -142,14 +142,14 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
 
   // Get start tracking date
   const startTrackingDate = useMemo(() => {
-    const opts = fileOptions.value;
+    const opts = fileOptions;
     if (!opts) return null;
-    return plugin.getStartTrackingDate(entries.value, opts);
-  }, [plugin, entries.value, fileOptions.value]);
+    return plugin.getStartTrackingDate(entries, opts);
+  }, [plugin, entries, fileOptions]);
 
   // Calculate limit progress for header
   const limitProgress = useMemo(() => {
-    const opts = fileOptions.value;
+    const opts = fileOptions;
     if (!opts || plugin.settings.disableLimitReaction) return null;
 
     const minLimit = opts.minLimit ? parseFloat(opts.minLimit) : null;
@@ -157,7 +157,7 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
 
     if (minLimit === null && maxLimit === null) return null;
 
-    const currentValue = entries.value.get(dateIso);
+    const currentValue = entries.get(dateIso);
     const value = currentValue != null ? Number(currentValue) : null;
 
     if (value === null || isNaN(value)) {
@@ -194,11 +194,11 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       width: `${progressPercent}%`,
       color: progressColor,
     };
-  }, [fileOptions.value, plugin.settings.disableLimitReaction, entries.value, dateIso]);
+  }, [fileOptions, plugin.settings.disableLimitReaction, entries, dateIso]);
 
   // Render control based on tracker type
   const renderControl = () => {
-    const currentFileOptions = fileOptions.value;
+    const currentFileOptions = fileOptions;
     if (isLoading.value || !currentFileOptions) return null;
 
     // Note: No onValueChange callback needed - writeLogLine/deleteEntry 
@@ -208,7 +208,7 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       dateIso,
       plugin,
       fileOptions: currentFileOptions,
-      entries: entries.value,
+      entries: entries,
     };
 
     const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
@@ -238,8 +238,8 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     }
   };
 
-  const currentFileOptions = fileOptions.value;
-  const currentEntries = entries.value;
+  const currentFileOptions = fileOptions;
+  const currentEntries = entries;
 
   // Display mode - just show value
   if (viewMode === ViewMode.DISPLAY) {

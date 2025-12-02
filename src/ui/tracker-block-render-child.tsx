@@ -10,6 +10,7 @@ import { DateService } from "../services/date-service";
 import { ViewMode, ERROR_MESSAGES } from "../constants";
 import { TrackerBlock } from "../components/TrackerBlock";
 import type { ViewModeValue } from "../constants";
+import { logError } from "../utils/notifications";
 
 export class TrackerBlockRenderChild extends MarkdownRenderChild {
   private readonly plugin: TrackerPlugin;
@@ -78,7 +79,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         text: `tracker: ${ERROR_MESSAGES.RENDER_ERROR}: ${errorMsg}`,
         cls: "tracker-notes__error",
       });
-      console.error("Tracker: error processing block", error);
+      logError("Tracker: error processing block", error);
     }
   }
 
@@ -124,7 +125,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         }
       }
     } catch (error) {
-      console.error("Tracker: Error reading note filename", error);
+      logError("Tracker: Error reading note filename", error);
     }
 
     return undefined;
