@@ -11,10 +11,12 @@ export interface TrackerState {
 
 /**
  * Manages tracker state caching with LRU eviction policy
+ * Uses Map<string, number> for O(1) access time tracking instead of array with O(n) indexOf
  */
 export class StateManager {
   private trackerState: Map<string, TrackerState> = new Map();
-  private accessOrder: string[] = []; // LRU tracking: most recently used at the end
+  // LRU tracking: Map of filePath -> last access timestamp
+  private accessTimestamps: Map<string, number> = new Map();
 
   constructor(
     private readonly app: App,
@@ -23,24 +25,31 @@ export class StateManager {
   ) {}
 
   /**
-   * Update access order for LRU cache
+   * Update access timestamp for LRU cache - O(1) operation
    */
-  private updateAccessOrder(filePath: string): void {
-    const index = this.accessOrder.indexOf(filePath);
-    if (index !== -1) {
-      this.accessOrder.splice(index, 1);
-    }
-    this.accessOrder.push(filePath);
+  private updateAccessTime(filePath: string): void {
+    this.accessTimestamps.set(filePath, Date.now());
   }
 
   /**
-   * Evict least recently used cache entry if cache is full
+   * Find and evict least recently used cache entry - O(n) only when eviction needed
    */
   private evictIfNeeded(): void {
     if (this.trackerState.size >= MAX_CACHE_SIZE) {
-      const lruKey = this.accessOrder.shift();
-      if (lruKey) {
-        this.trackerState.delete(lruKey);
+      // Find the entry with the oldest timestamp
+      let oldestPath: string | null = null;
+      let oldestTime = Infinity;
+      
+      for (const [path, timestamp] of this.accessTimestamps) {
+        if (timestamp < oldestTime) {
+          oldestTime = timestamp;
+          oldestPath = path;
+        }
+      }
+      
+      if (oldestPath) {
+        this.trackerState.delete(oldestPath);
+        this.accessTimestamps.delete(oldestPath);
       }
     }
   }
@@ -51,8 +60,8 @@ export class StateManager {
   async ensureTrackerState(file: TFile): Promise<TrackerState> {
     const existing = this.trackerState.get(file.path);
     if (existing) {
-      // Update access order for LRU
-      this.updateAccessOrder(file.path);
+      // Update access time for LRU - O(1)
+      this.updateAccessTime(file.path);
       return existing;
     }
     
@@ -65,19 +74,16 @@ export class StateManager {
     ]);
     const state = { entries, fileOpts };
     this.trackerState.set(file.path, state);
-    this.updateAccessOrder(file.path);
+    this.updateAccessTime(file.path);
     return state;
   }
 
   /**
-   * Clear tracker state for a specific path
+   * Clear tracker state for a specific path - O(1)
    */
   clearTrackerState(path: string): void {
     this.trackerState.delete(path);
-    const index = this.accessOrder.indexOf(path);
-    if (index !== -1) {
-      this.accessOrder.splice(index, 1);
-    }
+    this.accessTimestamps.delete(path);
   }
 
   /**
@@ -86,7 +92,7 @@ export class StateManager {
    */
   async clearAllCaches(): Promise<void> {
     this.trackerState.clear();
-    this.accessOrder = [];
+    this.accessTimestamps.clear();
     this.folderTreeService.invalidate();
   }
 
@@ -96,9 +102,6 @@ export class StateManager {
   invalidateCacheForFolder(folderPath: string, normalizePath: (p: string) => string): void {
     const normalizedPath = normalizePath(folderPath);
     const folder = this.app.vault.getAbstractFileByPath(normalizedPath);
-    if (folder instanceof this.app.vault.adapter.constructor) {
-      // This is a workaround since we can't import TFolder here directly
-    }
     // Use duck typing to check if it's a folder
     if (folder && 'children' in folder) {
       this.clearCacheForFolder(folder as TFolder);
@@ -116,26 +119,30 @@ export class StateManager {
   }
 
   /**
-   * Move tracker state from old path to new path
+   * Move tracker state from old path to new path - O(1)
    */
   moveTrackerState(oldPath: string, newPath: string): void {
     if (oldPath === newPath) return;
+    
     const state = this.trackerState.get(oldPath);
+    const timestamp = this.accessTimestamps.get(oldPath);
+    
     if (state) {
+      // Move state to new path
       this.trackerState.delete(oldPath);
       this.trackerState.set(newPath, state);
       
-      // Update access order
-      const index = this.accessOrder.indexOf(oldPath);
-      if (index !== -1) {
-        this.accessOrder[index] = newPath;
+      // Move timestamp to new path
+      this.accessTimestamps.delete(oldPath);
+      if (timestamp !== undefined) {
+        this.accessTimestamps.set(newPath, timestamp);
+      } else {
+        this.updateAccessTime(newPath);
       }
     } else {
+      // Just clean up any stale entries
       this.trackerState.delete(newPath);
-      const index = this.accessOrder.indexOf(newPath);
-      if (index !== -1) {
-        this.accessOrder.splice(index, 1);
-      }
+      this.accessTimestamps.delete(newPath);
     }
   }
 
@@ -190,4 +197,3 @@ export class StateManager {
     this.updateTrackerStateAfterRename(filePathsMap);
   }
 }
-

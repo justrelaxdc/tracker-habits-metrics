@@ -1,13 +1,14 @@
-import { App, TFile, normalizePath } from "obsidian";
+import { App, normalizePath } from "obsidian";
+import { trackerStore } from "../store";
+import type { IconizeData } from "../store";
 
-interface IconizeData {
-  settings?: any;
-  [path: string]: string | any;
-}
+// Polling interval for checking icon file changes (10 seconds)
+const ICONIZE_POLL_INTERVAL_MS = 10000;
 
 /**
  * Service for integration with Iconize plugin
  * Reads icon data from .obsidian/plugins/obsidian-icon-folder/data.json
+ * Updates the global store which triggers reactive updates in Icon components
  */
 export class IconizeService {
   private iconData: IconizeData | null = null;
@@ -20,6 +21,7 @@ export class IconizeService {
 
   /**
    * Loads icon data from Iconize plugin data file
+   * Updates the global store for reactive updates
    */
   async loadIconizeData(): Promise<void> {
     const configDir = this.app.vault.configDir || ".obsidian";
@@ -33,10 +35,13 @@ export class IconizeService {
         this.iconData = JSON.parse(content);
         this.dataLoaded = true;
         
+        // Update global store for reactive updates
+        trackerStore.setIconizeData(this.iconData);
+        
         // Get file modification time
         try {
           const stat = await this.app.vault.adapter.stat(relativePath);
-          this.lastModifiedTime = stat.mtime || 0;
+          this.lastModifiedTime = stat?.mtime || 0;
         } catch {
           // If stat fails, use current time
           this.lastModifiedTime = Date.now();
@@ -46,6 +51,7 @@ export class IconizeService {
         this.iconData = null;
         this.dataLoaded = true;
         this.lastModifiedTime = 0;
+        trackerStore.setIconizeData(null);
       }
     } catch (error) {
       // Silently fail if Iconize is not installed or data is invalid
@@ -53,23 +59,25 @@ export class IconizeService {
       this.iconData = null;
       this.dataLoaded = true;
       this.lastModifiedTime = 0;
+      trackerStore.setIconizeData(null);
     }
   }
 
   /**
    * Starts watching the icon data file for changes
+   * Uses a 10 second interval to reduce overhead
    */
   startWatching(): void {
     // Stop existing watcher if any
     this.stopWatching();
     
-    // Check for file changes every 2 seconds
+    // Check for file changes every 10 seconds (increased from 2 seconds)
     this.watchInterval = setInterval(async () => {
       if (!this.iconDataPath) return;
       
       try {
         const stat = await this.app.vault.adapter.stat(this.iconDataPath);
-        const currentMtime = stat.mtime || 0;
+        const currentMtime = stat?.mtime || 0;
         
         // If file was modified, reload data
         if (currentMtime > this.lastModifiedTime) {
@@ -79,7 +87,7 @@ export class IconizeService {
       } catch {
         // File might not exist or be inaccessible, ignore
       }
-    }, 2000);
+    }, ICONIZE_POLL_INTERVAL_MS);
   }
 
   /**
@@ -148,6 +156,7 @@ export class IconizeService {
 
   /**
    * Renders icon in a container element
+   * @deprecated Use the Icon component instead for declarative rendering
    * @param icon - Icon string (emoji or Lucide icon name)
    * @param container - Container element to render icon in
    */
@@ -179,60 +188,26 @@ export class IconizeService {
   }
 
   /**
-   * Updates icon path when a file or folder is renamed
-   * This preserves the icon association after rename
+   * Called when a file or folder is renamed
+   * Iconize plugin automatically updates its data.json with the new path,
+   * so we just need to reload data after a short delay to pick up the changes
    */
   updateIconPath(oldPath: string, newPath: string): void {
-    if (!this.iconData) {
-      return;
-    }
+    // Iconize automatically updates icons for renamed files
+    // We just need to reload data after a short delay to pick up the changes
+    this.reloadAfterDelay(300);
+  }
 
-    const oldNormalized = this.normalizePath(oldPath);
-    const newNormalized = this.normalizePath(newPath);
-
-    // Check all possible path formats that might be stored
-    const pathVariants = [
-      oldNormalized,
-      `/${oldNormalized}`,
-      oldNormalized.endsWith(".md") ? oldNormalized.slice(0, -3) : null,
-      oldNormalized.endsWith(".md") ? `/${oldNormalized.slice(0, -3)}` : null,
-    ].filter(Boolean) as string[];
-
-    // Find which variant has an icon
-    let iconValue: string | null = null;
-    let foundPath: string | null = null;
-    
-    for (const variant of pathVariants) {
-      if (this.iconData[variant] && typeof this.iconData[variant] === 'string') {
-        iconValue = this.iconData[variant];
-        foundPath = variant;
-        break;
-      }
-    }
-
-    // If we found an icon, update it to the new path
-    if (iconValue && foundPath) {
-      // Determine the new path format based on the old format
-      let newPathKey: string;
-      if (foundPath.startsWith('/')) {
-        newPathKey = `/${newNormalized}`;
-      } else {
-        newPathKey = newNormalized;
-      }
-      
-      // Handle .md extension
-      if (foundPath.endsWith('.md') || (!foundPath.includes('.') && newPath.endsWith('.md'))) {
-        // Keep consistent with old format
-      } else if (newPath.endsWith('.md') && !newPathKey.endsWith('.md')) {
-        newPathKey = newPathKey.slice(0, -3);
-      }
-
-      // Update the icon data in memory
-      this.iconData[newPathKey] = iconValue;
-      
-      // Remove old path entry
-      delete this.iconData[foundPath];
-    }
+  /**
+   * Reload icon data after a delay
+   * Useful after file operations where Iconize needs time to update its data
+   */
+  private reloadAfterDelay(delayMs: number): void {
+    setTimeout(async () => {
+      // Force reload by resetting mtime check
+      this.lastModifiedTime = 0;
+      await this.loadIconizeData();
+    }, delayMs);
   }
 
   /**
@@ -241,6 +216,6 @@ export class IconizeService {
   invalidateCache(): void {
     this.dataLoaded = false;
     this.iconData = null;
+    trackerStore.setIconizeData(null);
   }
 }
-

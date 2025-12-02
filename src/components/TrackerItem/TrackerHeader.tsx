@@ -1,9 +1,11 @@
 import { useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, MODAL_LABELS } from "../../constants";
 import type { TrackerHeaderProps } from "../types";
+import { Icon } from "../Icon";
 
 /**
  * Tracker header with title, icon, and action buttons
+ * Uses declarative Icon component for file icons
  */
 export function TrackerHeader({
   file,
@@ -15,18 +17,6 @@ export function TrackerHeader({
   limitProgress,
 }: TrackerHeaderProps) {
   const headerRef = useRef<HTMLDivElement>(null);
-  const iconContainerRef = useRef<HTMLSpanElement>(null);
-
-  // Render tracker icon
-  useEffect(() => {
-    if (iconContainerRef.current) {
-      const trackerIcon = plugin.getIconForPath(file.path, true);
-      if (trackerIcon) {
-        iconContainerRef.current.innerHTML = '';
-        plugin.renderIcon(trackerIcon, iconContainerRef.current);
-      }
-    }
-  }, [plugin, file.path]);
 
   // Apply limit progress styles
   useEffect(() => {
@@ -51,7 +41,7 @@ export function TrackerHeader({
   return (
     <div ref={headerRef} class={CSS_CLASSES.TRACKER_HEADER}>
       <div class={CSS_CLASSES.TRACKER_TITLE}>
-        <span ref={iconContainerRef} class="tracker-notes__tracker-icon" />
+        <Icon path={file.path} isFile={true} className="tracker-notes__tracker-icon" />
         <a
           class="internal-link"
           href={file.path}
@@ -100,4 +90,3 @@ export function TrackerHeader({
     </div>
   );
 }
-

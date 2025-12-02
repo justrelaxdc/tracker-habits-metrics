@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "preact/hooks";
+import { useCallback, useMemo, useEffect } from "preact/hooks";
+import { useSignal, useComputed } from "@preact/signals";
 import { CSS_CLASSES, ViewMode, ERROR_MESSAGES } from "../../constants";
 import { DateService } from "../../services/date-service";
 import type { TrackerBlockProps } from "../types";
@@ -6,9 +7,11 @@ import { TrackerContext } from "../TrackerContext";
 import { DatePicker } from "./DatePicker";
 import { LoadingIndicator } from "./LoadingIndicator";
 import { FolderNode } from "./FolderNode";
+import { trackerStore } from "../../store";
 
 /**
  * Main tracker block component - root of the Preact tree
+ * Uses signals for reactive date management
  */
 export function TrackerBlock({
   plugin,
@@ -18,43 +21,40 @@ export function TrackerBlock({
   opts,
   folderPath,
 }: TrackerBlockProps) {
-  const [dateIso, setDateIso] = useState(initialDateIso);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [pendingDate, setPendingDate] = useState<string | null>(null);
+  // Use signals for reactive state
+  const isUpdating = useSignal(false);
+  
+  // Initialize the store date on mount
+  useEffect(() => {
+    trackerStore.setDate(initialDateIso);
+  }, [initialDateIso]);
 
-  // Handle date change with debouncing
-  const handleDateChange = useCallback(async (newDate: string) => {
+  // Computed value that reads from the signal
+  const dateIso = useComputed(() => trackerStore.currentDateIso.value);
+
+  // Handle date change - updates the global signal
+  const handleDateChange = useCallback((newDate: string) => {
     const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
-    setDateIso(newDateIso);
-    setPendingDate(newDateIso);
-    
-    setIsUpdating(true);
-    try {
-      // The date change will propagate through props
-      // Components will re-render with new date
-    } finally {
-      setIsUpdating(false);
-      setPendingDate(null);
-    }
+    trackerStore.setDate(newDateIso);
   }, [plugin.settings.dateFormat]);
 
   // Handle date navigation
   const handleNavigate = useCallback((days: number) => {
-    const referenceIso = pendingDate ?? dateIso;
-    const currentDateObj = DateService.parse(referenceIso, plugin.settings.dateFormat);
+    const currentDateIso = trackerStore.currentDateIso.value;
+    const currentDateObj = DateService.parse(currentDateIso, plugin.settings.dateFormat);
     const newDate = currentDateObj.clone().add(days, "days");
     const newDateStr = DateService.format(newDate, plugin.settings.dateFormat);
-    handleDateChange(newDateStr);
-  }, [pendingDate, dateIso, plugin.settings.dateFormat, handleDateChange]);
+    trackerStore.setDate(newDateStr);
+  }, [plugin.settings.dateFormat]);
 
-  // Context value for child components
+  // Context value for child components - uses .value to get current date
   const contextValue = useMemo(() => ({
     plugin,
-    dateIso,
+    dateIso: dateIso.value,
     viewMode,
     opts,
     onDateChange: handleDateChange,
-  }), [plugin, dateIso, viewMode, opts, handleDateChange]);
+  }), [plugin, dateIso.value, viewMode, opts, handleDateChange]);
 
   // Render error state if no folder tree
   if (!folderTree || (folderTree.files.length === 0 && folderTree.children.length === 0)) {
@@ -76,12 +76,12 @@ export function TrackerBlock({
             <span class="tracker-notes__header-label">{folderName}</span>
           </div>
           <DatePicker
-            dateIso={dateIso}
+            dateIso={dateIso.value}
             onDateChange={handleDateChange}
             onNavigate={handleNavigate}
-            isUpdating={isUpdating}
+            isUpdating={isUpdating.value}
           />
-          <LoadingIndicator isActive={isUpdating} />
+          <LoadingIndicator isActive={isUpdating.value} />
         </div>
       )}
 
@@ -90,7 +90,7 @@ export function TrackerBlock({
           <FolderNode
             node={folderTree}
             plugin={plugin}
-            dateIso={dateIso}
+            dateIso={dateIso.value}
             viewMode={viewMode}
             opts={opts}
           />
@@ -99,4 +99,3 @@ export function TrackerBlock({
     </TrackerContext.Provider>
   );
 }
-

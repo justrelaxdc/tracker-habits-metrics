@@ -9,6 +9,7 @@ export {
 } from "./controls";
 export { Statistics } from "./Statistics";
 export { ChartWrapper } from "./Chart";
+export { Icon } from "./Icon";
 export { TrackerContext, useTrackerContext } from "./TrackerContext";
 export * from "./types";
 

@@ -7,6 +7,7 @@
     "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --watch"
   },
   "dependencies": {
+    "@preact/signals": "^2.5.1",
     "chart.js": "^4.4.0",
     "preact": "^10.19.3"
   },

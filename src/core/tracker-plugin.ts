@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS } from "../domain/types";
 import { FolderTreeService } from "../services/folder-tree-service";
 import { TrackerFileService } from "../services/tracker-file-service";
 import { parseMaybeNumber } from "../utils/misc";
+import { normalizePath, getFolderFromFilePath } from "../utils/path";
 import { TrackerSettingsTab } from "../ui/tracker-settings-tab";
 import { CreateTrackerModal } from "../ui/modals/create-tracker-modal";
 import { EditTrackerModal } from "../ui/modals/edit-tracker-modal";
@@ -14,13 +15,13 @@ import { DateService } from "../services/date-service";
 import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
 import { MOBILE_BREAKPOINT, ERROR_MESSAGES, MODAL_LABELS, DEBOUNCE_DELAY_MS } from "../constants";
+import { trackerStore } from "../store";
 
 // Managers
 import { StateManager } from "./managers/state-manager";
 import { SortOrderManager } from "./managers/sort-order-manager";
 import { DomReorderManager } from "./managers/dom-reorder";
 import { BlockManager } from "./managers/block-manager";
-import { VaultEventHandlers } from "./handlers/vault-events";
 
 export default class TrackerPlugin extends Plugin {
   settings: TrackerSettings;
@@ -36,7 +37,6 @@ export default class TrackerPlugin extends Plugin {
   private sortOrderManager: SortOrderManager;
   private domReorderManager: DomReorderManager;
   private blockManager: BlockManager;
-  private vaultEventHandlers: VaultEventHandlers;
   
   // UI
   private styleEl?: HTMLStyleElement;
@@ -84,18 +84,12 @@ export default class TrackerPlugin extends Plugin {
     
     this.domReorderManager = new DomReorderManager(
       () => this.blockManager.activeBlocks,
-      (p) => this.normalizePath(p),
+      (p) => normalizePath(p),
       (t, b) => this.blockManager.isFolderRelevant(t, b)
     );
     
-    this.vaultEventHandlers = new VaultEventHandlers(
-      this.sortOrderManager,
-      this.stateManager,
-      this.folderTreeService,
-      () => this.settings,
-      (p) => this.normalizePath(p),
-      (p) => this.getFolderPathFromFile(p)
-    );
+    // Initialize global store with settings
+    trackerStore.setSettings(this.settings);
     
     // Load Iconize data asynchronously
     this.iconizeService.loadIconizeData().then(() => {
@@ -114,52 +108,25 @@ export default class TrackerPlugin extends Plugin {
       name: "Create new tracker",
       callback: () => this.createNewTracker()
     });
-
-    // Register vault event handlers
-    this.registerEvent(
-      this.app.vault.on('rename', (file, oldPath) => {
-        if (file instanceof TFile || file instanceof TFolder) {
-          this.vaultEventHandlers.handleRename(file, oldPath);
-        }
-      })
-    );
-
-    this.registerEvent(
-      this.app.vault.on('delete', (file) => {
-        if (file instanceof TFile && file.extension === 'md') {
-          void this.vaultEventHandlers.handleFileDelete(file, file.path);
-        } else if (file instanceof TFolder) {
-          void this.vaultEventHandlers.handleFolderDelete(file.path);
-        }
-      })
-    );
+    
+    // Note: Vault event subscriptions for rename/delete removed.
+    // Sort order cleanup is now handled lazily in FolderTreeService.
   }
 
   async onunload() {
     this.blockManager.clearAllBlocks();
     this.iconizeService.stopWatching();
+    trackerStore.clear();
   }
 
   // ---- Path utilities --------------------------------------------------------
 
-  private normalizePath(path: string): string {
-    if (!path) return "";
-    return path
-      .trim()
-      .replace(/\\/g, "/")
-      .replace(/\/+/g, "/")
-      .replace(/^\/+/, "")
-      .replace(/\/$/, "");
-  }
-
+  /**
+   * Get folder path from a file path
+   * Uses shared utility function from utils/path
+   */
   getFolderPathFromFile(filePath: string): string {
-    if (!filePath) return "";
-    const normalizedPath = this.normalizePath(filePath);
-    const lastSlash = normalizedPath.lastIndexOf("/");
-    if (lastSlash === -1) {
-      return "";
-    }
-    return normalizedPath.substring(0, lastSlash);
+    return getFolderFromFilePath(filePath);
   }
 
   getFolderTree(folderPath: string) {
@@ -196,15 +163,28 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async refreshBlocksForFolder(folderPath: string) {
-    await this.blockManager.refreshBlocksForFolder(folderPath, (p) => this.normalizePath(p));
+    await this.blockManager.refreshBlocksForFolder(folderPath, (p) => normalizePath(p));
   }
 
-  refreshTrackersForFile(file: TFile): void {
-    this.blockManager.refreshTrackersForFile(
-      file, 
-      (f) => this.invalidateCacheForFile(f),
-      (path) => this.refreshTracker(path)
-    );
+  /**
+   * Refresh tracker data for a specific file
+   * Uses signals to trigger reactive updates
+   */
+  async refreshTrackersForFile(file: TFile): Promise<void> {
+    // Invalidate caches
+    this.invalidateCacheForFile(file);
+    
+    // Reload data and update store (signals will trigger re-renders)
+    const [entriesData, fileOpts] = await Promise.all([
+      this.trackerFileService.readAllEntries(file),
+      this.trackerFileService.getFileTypeFromFrontmatter(file)
+    ]);
+    
+    trackerStore.setTrackerState(file.path, {
+      entries: entriesData,
+      fileOptions: fileOpts,
+      lastUpdated: Date.now(),
+    });
   }
 
   async refreshAllBlocks() {
@@ -219,7 +199,7 @@ export default class TrackerPlugin extends Plugin {
   }
 
   invalidateCacheForFolder(folderPath: string): void {
-    this.stateManager.invalidateCacheForFolder(folderPath, (p) => this.normalizePath(p));
+    this.stateManager.invalidateCacheForFolder(folderPath, (p) => normalizePath(p));
   }
 
   invalidateCacheForFile(file: TFile): void {
@@ -227,48 +207,12 @@ export default class TrackerPlugin extends Plugin {
     this.trackerFileService.invalidateFileCache(file.path);
   }
 
-  // Simple callback registry for tracker refresh
-  private trackerRefreshCallbacks = new Map<string, () => void>();
-
-  /**
-   * Register a refresh callback for a tracker
-   */
-  registerTrackerRefresh(filePath: string, callback: () => void): void {
-    this.trackerRefreshCallbacks.set(filePath, callback);
-  }
-
-  /**
-   * Unregister a refresh callback for a tracker
-   */
-  unregisterTrackerRefresh(filePath: string): void {
-    this.trackerRefreshCallbacks.delete(filePath);
-  }
-
-  /**
-   * Directly call the refresh callback for a specific tracker
-   */
-  refreshTracker(filePath: string): void {
-    const callback = this.trackerRefreshCallbacks.get(filePath);
-    if (callback) {
-      callback();
-    }
-  }
-
-  /**
-   * Update callback registration when a tracker file is renamed
-   */
-  updateTrackerRefreshPath(oldPath: string, newPath: string): void {
-    const callback = this.trackerRefreshCallbacks.get(oldPath);
-    if (callback) {
-      this.trackerRefreshCallbacks.delete(oldPath);
-      this.trackerRefreshCallbacks.set(newPath, callback);
-    }
-  }
+  // Note: trackerRefreshCallbacks removed - using signals for reactivity
 
   handleTrackerRenamed(oldPath: string, file: TFile): void {
-    this.vaultEventHandlers.handleTrackerRenamed(oldPath, file);
-    // Update callback registration for the renamed file
-    this.updateTrackerRefreshPath(oldPath, file.path);
+    // Move tracker state to new path in both managers and store
+    this.stateManager.moveTrackerState(oldPath, file.path);
+    trackerStore.moveTrackerState(oldPath, file.path);
     // Update icon path in Iconize service to preserve icon after rename
     this.iconizeService.updateIconPath(oldPath, file.path);
   }
@@ -307,7 +251,7 @@ export default class TrackerPlugin extends Plugin {
   async onTrackerCreated(folderPath: string, file: TFile) {
     this.folderTreeService.invalidate(folderPath);
     await this.stateManager.ensureTrackerState(file);
-    const normalizedFolderPath = this.normalizePath(folderPath);
+    const normalizedFolderPath = normalizePath(folderPath);
     
     if (normalizedFolderPath) {
       const currentSortOrder = this.settings.customSortOrder?.[normalizedFolderPath] || [];
@@ -316,13 +260,13 @@ export default class TrackerPlugin extends Plugin {
       await this.sortOrderManager.saveSortOrderForFolder(
         normalizedFolderPath,
         updatedSortOrder,
-        (p) => this.normalizePath(p)
+        (p) => normalizePath(p)
       );
     }
     
     for (const block of Array.from(this.blockManager.activeBlocks)) {
       const blockFolderPath = block.getFolderPath();
-      const normalizedBlockPath = this.normalizePath(blockFolderPath);
+      const normalizedBlockPath = normalizePath(blockFolderPath);
       if (!this.blockManager.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
       await block.render();
     }
@@ -357,6 +301,10 @@ export default class TrackerPlugin extends Plugin {
       const state = await this.stateManager.ensureTrackerState(file);
       const normalizedValue = parseMaybeNumber(value);
       state.entries.set(dateIso, normalizedValue);
+      
+      // Update global store for reactive updates
+      trackerStore.updateSingleEntry(file.path, dateIso, normalizedValue);
+      
       await this.trackerFileService.writeLogLine(file, dateIso, value);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -370,6 +318,10 @@ export default class TrackerPlugin extends Plugin {
     try {
       const state = await this.stateManager.ensureTrackerState(file);
       state.entries.delete(dateIso);
+      
+      // Update global store for reactive updates
+      trackerStore.deleteEntry(file.path, dateIso);
+      
       await this.trackerFileService.deleteEntry(file, dateIso);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -428,7 +380,7 @@ export default class TrackerPlugin extends Plugin {
     ) as TFile[];
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
-      trackers, folderPath, (p) => this.normalizePath(p)
+      trackers, folderPath, (p) => normalizePath(p)
     );
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
@@ -439,7 +391,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedTrackers.map(t => t.basename);
     await this.sortOrderManager.saveSortOrderForFolder(
-      folderPath, newOrder, (p) => this.normalizePath(p)
+      folderPath, newOrder, (p) => normalizePath(p)
     );
 
     await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
@@ -456,7 +408,7 @@ export default class TrackerPlugin extends Plugin {
     ) as TFile[];
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
-      trackers, folderPath, (p) => this.normalizePath(p)
+      trackers, folderPath, (p) => normalizePath(p)
     );
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
@@ -467,7 +419,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedTrackers.map(t => t.basename);
     await this.sortOrderManager.saveSortOrderForFolder(
-      folderPath, newOrder, (p) => this.normalizePath(p)
+      folderPath, newOrder, (p) => normalizePath(p)
     );
 
     await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
@@ -491,7 +443,7 @@ export default class TrackerPlugin extends Plugin {
     }
 
     const sortedFolders = this.sortOrderManager.sortItemsByOrder(
-      folders, parentFolderPath || '', (p) => this.normalizePath(p)
+      folders, parentFolderPath || '', (p) => normalizePath(p)
     );
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
@@ -502,7 +454,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedFolders.map(f => f.name);
     await this.sortOrderManager.saveSortOrderForFolder(
-      parentFolderPath || '', newOrder, (p) => this.normalizePath(p)
+      parentFolderPath || '', newOrder, (p) => normalizePath(p)
     );
 
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
@@ -526,7 +478,7 @@ export default class TrackerPlugin extends Plugin {
     }
 
     const sortedFolders = this.sortOrderManager.sortItemsByOrder(
-      folders, parentFolderPath || '', (p) => this.normalizePath(p)
+      folders, parentFolderPath || '', (p) => normalizePath(p)
     );
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
@@ -537,7 +489,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedFolders.map(f => f.name);
     await this.sortOrderManager.saveSortOrderForFolder(
-      parentFolderPath || '', newOrder, (p) => this.normalizePath(p)
+      parentFolderPath || '', newOrder, (p) => normalizePath(p)
     );
 
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);

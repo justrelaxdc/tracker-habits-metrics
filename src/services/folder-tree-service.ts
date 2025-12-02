@@ -5,6 +5,9 @@ import { normalizePath } from "../utils/path";
 export class FolderTreeService {
   private readonly cache = new Map<string, FolderNode | null>();
   private customSortOrder: Record<string, string[]> | undefined = undefined;
+  private settings: TrackerSettings | null = null;
+  private pendingCleanup: Set<string> = new Set();
+  private cleanupDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly app: App) {}
 
@@ -12,7 +15,86 @@ export class FolderTreeService {
    * Updates settings for sorting
    */
   updateSettings(settings: TrackerSettings): void {
+    this.settings = settings;
     this.customSortOrder = settings.customSortOrder;
+  }
+
+  /**
+   * Schedule lazy cleanup of sort order for a folder path
+   * Cleanup is debounced to avoid excessive saves
+   */
+  private scheduleLazyCleanup(folderPath: string, existingNames: Set<string>): void {
+    if (!this.settings || !this.customSortOrder) return;
+    
+    const normalizedPath = normalizePath(folderPath);
+    const sortOrder = this.customSortOrder[normalizedPath];
+    if (!sortOrder) return;
+    
+    // Check if cleanup is needed (if any names in sortOrder don't exist)
+    const needsCleanup = sortOrder.some(name => !existingNames.has(name));
+    if (!needsCleanup) return;
+    
+    // Mark this path for cleanup
+    this.pendingCleanup.add(normalizedPath);
+    
+    // Debounce the actual cleanup/save operation
+    if (this.cleanupDebounceTimer) {
+      clearTimeout(this.cleanupDebounceTimer);
+    }
+    this.cleanupDebounceTimer = setTimeout(() => {
+      this.performLazyCleanup();
+    }, 5000); // Wait 5 seconds before saving to batch multiple cleanups
+  }
+
+  /**
+   * Perform the actual cleanup of stale sort order entries
+   */
+  private performLazyCleanup(): void {
+    if (!this.settings || !this.customSortOrder || this.pendingCleanup.size === 0) {
+      this.pendingCleanup.clear();
+      return;
+    }
+
+    let hasChanges = false;
+    
+    for (const folderPath of this.pendingCleanup) {
+      const sortOrder = this.customSortOrder[folderPath];
+      if (!sortOrder) continue;
+      
+      // Get current items in the folder
+      const folder = this.app.vault.getAbstractFileByPath(folderPath);
+      if (!folder || !(folder instanceof TFolder)) {
+        // Folder no longer exists - remove the entire sort order
+        delete this.customSortOrder[folderPath];
+        hasChanges = true;
+        continue;
+      }
+      
+      const existingNames = new Set<string>();
+      for (const child of folder.children) {
+        if (child instanceof TFile) {
+          existingNames.add(child.basename);
+        } else if (child instanceof TFolder) {
+          existingNames.add(child.name);
+        }
+      }
+      
+      // Filter out non-existent items
+      const cleanedOrder = sortOrder.filter(name => existingNames.has(name));
+      if (cleanedOrder.length !== sortOrder.length) {
+        if (cleanedOrder.length === 0) {
+          delete this.customSortOrder[folderPath];
+        } else {
+          this.customSortOrder[folderPath] = cleanedOrder;
+        }
+        hasChanges = true;
+      }
+    }
+    
+    this.pendingCleanup.clear();
+    
+    // Note: We don't save here because the plugin handles saving
+    // The customSortOrder reference is shared with settings
   }
 
   private cacheKey(folderPath: string, maxDepth: number): string {
@@ -60,6 +142,7 @@ export class FolderTreeService {
 
   /**
    * Sorts items using custom sort order if available, otherwise alphabetically
+   * Also schedules lazy cleanup of stale sort order entries
    */
   private sortItems<T extends TFile | TFolder>(
     items: T[],
@@ -86,6 +169,9 @@ export class FolderTreeService {
       itemMap.set(itemName, item);
       itemNames.add(itemName);
     }
+    
+    // Schedule lazy cleanup of stale entries in sort order
+    this.scheduleLazyCleanup(relativePath, itemNames);
     
     // Build sorted array based on custom order
     const sorted: T[] = [];

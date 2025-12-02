@@ -1,0 +1,286 @@
+import { signal, computed } from "@preact/signals";
+import type { TrackerSettings, TrackerEntries, TrackerFileOptions } from "../domain/types";
+import { DEFAULT_SETTINGS } from "../domain/types";
+import { DateService } from "../services/date-service";
+
+/**
+ * Iconize data structure
+ */
+export interface IconizeData {
+  settings?: any;
+  [path: string]: string | any;
+}
+
+/**
+ * Tracker state for a single tracker file
+ */
+export interface TrackerFileState {
+  entries: TrackerEntries;
+  fileOptions: TrackerFileOptions;
+  lastUpdated: number;
+}
+
+/**
+ * Global store using @preact/signals for reactive state management
+ * This eliminates prop drilling and prevents unnecessary re-renders
+ */
+class TrackerStore {
+  // Current selected date in ISO format
+  readonly currentDateIso = signal<string>(
+    DateService.format(DateService.now(), DEFAULT_SETTINGS.dateFormat)
+  );
+
+  // Plugin settings
+  readonly settings = signal<TrackerSettings>(DEFAULT_SETTINGS);
+
+  // Tracker entries per file path: Map<filePath, TrackerFileState>
+  readonly trackerStates = signal<Map<string, TrackerFileState>>(new Map());
+
+  // Iconize data for file/folder icons
+  readonly iconizeData = signal<IconizeData | null>(null);
+
+  // Loading state for individual trackers
+  readonly loadingTrackers = signal<Set<string>>(new Set());
+
+  // Version counter to force re-renders when entries change
+  readonly entriesVersion = signal<number>(0);
+
+  /**
+   * Update current date
+   */
+  setDate(dateIso: string): void {
+    this.currentDateIso.value = dateIso;
+  }
+
+  /**
+   * Navigate by days
+   */
+  navigateByDays(days: number): void {
+    const current = DateService.parse(this.currentDateIso.value, this.settings.value.dateFormat);
+    const newDate = current.clone().add(days, "days");
+    this.currentDateIso.value = DateService.format(newDate, this.settings.value.dateFormat);
+  }
+
+  /**
+   * Update settings
+   */
+  setSettings(settings: TrackerSettings): void {
+    this.settings.value = settings;
+  }
+
+  /**
+   * Get tracker state for a file
+   */
+  getTrackerState(filePath: string): TrackerFileState | undefined {
+    return this.trackerStates.value.get(filePath);
+  }
+
+  /**
+   * Set tracker state for a file
+   */
+  setTrackerState(filePath: string, state: TrackerFileState): void {
+    const newMap = new Map(this.trackerStates.value);
+    newMap.set(filePath, state);
+    this.trackerStates.value = newMap;
+  }
+
+  /**
+   * Update entries for a specific tracker
+   */
+  updateTrackerEntries(filePath: string, entries: TrackerEntries): void {
+    const currentState = this.trackerStates.value.get(filePath);
+    if (currentState) {
+      const newMap = new Map(this.trackerStates.value);
+      newMap.set(filePath, {
+        ...currentState,
+        entries,
+        lastUpdated: Date.now(),
+      });
+      this.trackerStates.value = newMap;
+      this.entriesVersion.value++;
+    }
+  }
+
+  /**
+   * Update a single entry value for a tracker
+   */
+  updateSingleEntry(filePath: string, dateIso: string, value: string | number): void {
+    const currentState = this.trackerStates.value.get(filePath);
+    if (currentState) {
+      const newEntries = new Map(currentState.entries);
+      newEntries.set(dateIso, value);
+      
+      const newMap = new Map(this.trackerStates.value);
+      newMap.set(filePath, {
+        ...currentState,
+        entries: newEntries,
+        lastUpdated: Date.now(),
+      });
+      this.trackerStates.value = newMap;
+      this.entriesVersion.value++;
+    }
+  }
+
+  /**
+   * Delete an entry from a tracker
+   */
+  deleteEntry(filePath: string, dateIso: string): void {
+    const currentState = this.trackerStates.value.get(filePath);
+    if (currentState) {
+      const newEntries = new Map(currentState.entries);
+      newEntries.delete(dateIso);
+      
+      const newMap = new Map(this.trackerStates.value);
+      newMap.set(filePath, {
+        ...currentState,
+        entries: newEntries,
+        lastUpdated: Date.now(),
+      });
+      this.trackerStates.value = newMap;
+      this.entriesVersion.value++;
+    }
+  }
+
+  /**
+   * Clear tracker state for a file
+   */
+  clearTrackerState(filePath: string): void {
+    const newMap = new Map(this.trackerStates.value);
+    newMap.delete(filePath);
+    this.trackerStates.value = newMap;
+  }
+
+  /**
+   * Move tracker state from old path to new path (for rename operations)
+   */
+  moveTrackerState(oldPath: string, newPath: string): void {
+    const state = this.trackerStates.value.get(oldPath);
+    if (state) {
+      const newMap = new Map(this.trackerStates.value);
+      newMap.delete(oldPath);
+      newMap.set(newPath, state);
+      this.trackerStates.value = newMap;
+    }
+  }
+
+  /**
+   * Set loading state for a tracker
+   */
+  setTrackerLoading(filePath: string, isLoading: boolean): void {
+    const newSet = new Set(this.loadingTrackers.value);
+    if (isLoading) {
+      newSet.add(filePath);
+    } else {
+      newSet.delete(filePath);
+    }
+    this.loadingTrackers.value = newSet;
+  }
+
+  /**
+   * Check if tracker is loading
+   */
+  isTrackerLoading(filePath: string): boolean {
+    return this.loadingTrackers.value.has(filePath);
+  }
+
+  /**
+   * Update iconize data
+   */
+  setIconizeData(data: IconizeData | null): void {
+    this.iconizeData.value = data;
+  }
+
+  /**
+   * Get icon for a path
+   */
+  getIcon(path: string): string | null {
+    const data = this.iconizeData.value;
+    if (!data) return null;
+
+    const normalizedPath = this.normalizePath(path);
+
+    // Try exact match first
+    if (data[normalizedPath]) {
+      return data[normalizedPath];
+    }
+
+    // Try with leading slash
+    const pathWithSlash = `/${normalizedPath}`;
+    if (data[pathWithSlash]) {
+      return data[pathWithSlash];
+    }
+
+    // For files, try without extension
+    if (normalizedPath.endsWith(".md")) {
+      const pathWithoutExt = normalizedPath.slice(0, -3);
+      if (data[pathWithoutExt]) {
+        return data[pathWithoutExt];
+      }
+      if (data[`/${pathWithoutExt}`]) {
+        return data[`/${pathWithoutExt}`];
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Normalize path for iconize format
+   */
+  private normalizePath(path: string): string {
+    if (!path) return "";
+    return path
+      .replace(/\\/g, "/")
+      .replace(/\/+/g, "/")
+      .replace(/^\/+/, "")
+      .replace(/\/$/, "");
+  }
+
+  /**
+   * Clear all state (for plugin unload)
+   */
+  clear(): void {
+    this.trackerStates.value = new Map();
+    this.loadingTrackers.value = new Set();
+    this.iconizeData.value = null;
+    this.entriesVersion.value = 0;
+  }
+}
+
+// Singleton instance of the store
+export const trackerStore = new TrackerStore();
+
+/**
+ * Computed signal for getting current entry value for a tracker
+ */
+export function useTrackerEntry(filePath: string) {
+  return computed(() => {
+    const state = trackerStore.trackerStates.value.get(filePath);
+    const dateIso = trackerStore.currentDateIso.value;
+    if (!state) return null;
+    return state.entries.get(dateIso) ?? null;
+  });
+}
+
+/**
+ * Computed signal for getting all entries for a tracker
+ */
+export function useTrackerEntries(filePath: string) {
+  return computed(() => {
+    // Access version to trigger recomputation
+    trackerStore.entriesVersion.value;
+    const state = trackerStore.trackerStates.value.get(filePath);
+    return state?.entries ?? new Map();
+  });
+}
+
+/**
+ * Computed signal for getting file options for a tracker
+ */
+export function useTrackerOptions(filePath: string) {
+  return computed(() => {
+    const state = trackerStore.trackerStates.value.get(filePath);
+    return state?.fileOptions ?? null;
+  });
+}
+

@@ -1,4 +1,3 @@
-import type { TFile } from "obsidian";
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
 import { SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, UI_CONSTANTS } from "../../constants";
 
@@ -65,17 +64,7 @@ export class BlockManager {
     }
   }
 
-  /**
-   * Refresh a specific tracker by calling its registered callback
-   */
-  refreshTrackersForFile(
-    file: TFile,
-    invalidateCacheForFile: (file: TFile) => void,
-    refreshTracker: (filePath: string) => void
-  ): void {
-    invalidateCacheForFile(file);
-    refreshTracker(file.path);
-  }
+  // Note: refreshTrackersForFile removed - using signals for reactivity
 
   /**
    * Refresh all active blocks with scroll position preservation
