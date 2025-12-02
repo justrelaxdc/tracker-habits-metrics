@@ -223,6 +223,7 @@ export default class TrackerPlugin extends Plugin {
 
   invalidateCacheForFile(file: TFile): void {
     this.stateManager.clearTrackerState(file.path);
+    this.trackerFileService.invalidateFileCache(file.path);
   }
 
   handleTrackerRenamed(oldPath: string, file: TFile): void {

@@ -46,6 +46,16 @@ export function ChartWrapper({
     }
   }, [onDateClick]);
 
+  // Track previous values to determine if we can update vs recreate
+  const prevConfigRef = useRef<{
+    trackerType: string;
+    unit: string;
+    minLimit: number | null;
+    maxLimit: number | null;
+    scaleMinValue: number | null;
+    scaleMaxValue: number | null;
+  } | null>(null);
+
   // Create/update chart
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -72,34 +82,82 @@ export function ChartWrapper({
       todayStr
     );
 
-    // Create chart config
-    const config = chartService.createChartConfig(
-      chartData,
-      colors,
-      {
-        dateIso,
-        daysToShow,
-        metricType: trackerType,
-        unit,
-        minLimit,
-        maxLimit,
-        scaleMinValue,
-        scaleMaxValue,
-      },
-      handleChartClick
-    );
+    const currentConfig = {
+      trackerType,
+      unit,
+      minLimit,
+      maxLimit,
+      scaleMinValue,
+      scaleMaxValue,
+    };
 
-    // Destroy existing chart if any
-    if (chartRef.current) {
-      chartRef.current.destroy();
-    }
+    // Check if we can update existing chart or need to recreate
+    const canUpdate = chartRef.current && prevConfigRef.current &&
+      prevConfigRef.current.trackerType === currentConfig.trackerType &&
+      prevConfigRef.current.unit === currentConfig.unit &&
+      prevConfigRef.current.minLimit === currentConfig.minLimit &&
+      prevConfigRef.current.maxLimit === currentConfig.maxLimit &&
+      prevConfigRef.current.scaleMinValue === currentConfig.scaleMinValue &&
+      prevConfigRef.current.scaleMaxValue === currentConfig.scaleMaxValue;
 
-    // Create new chart
-    const ctx = canvasRef.current.getContext("2d");
-    if (ctx) {
-      chartRef.current = new Chart(ctx, config) as TrackerChartInstance;
-      // Store date strings for click handling
+    if (canUpdate && chartRef.current) {
+      // Update existing chart data instead of recreating
+      const config = chartService.createChartConfig(
+        chartData,
+        colors,
+        {
+          dateIso,
+          daysToShow,
+          metricType: trackerType,
+          unit,
+          minLimit,
+          maxLimit,
+          scaleMinValue,
+          scaleMaxValue,
+        },
+        handleChartClick
+      );
+
+      // Update chart data and options
+      chartRef.current.data = config.data;
+      if (config.options) {
+        Object.assign(chartRef.current.options, config.options);
+      }
       chartRef.current.dateStrings = chartData.dateStrings;
+      chartRef.current.update('none'); // 'none' mode for faster updates
+    } else {
+      // Create chart config
+      const config = chartService.createChartConfig(
+        chartData,
+        colors,
+        {
+          dateIso,
+          daysToShow,
+          metricType: trackerType,
+          unit,
+          minLimit,
+          maxLimit,
+          scaleMinValue,
+          scaleMaxValue,
+        },
+        handleChartClick
+      );
+
+      // Destroy existing chart if any
+      if (chartRef.current) {
+        chartRef.current.destroy();
+      }
+
+      // Create new chart
+      const ctx = canvasRef.current.getContext("2d");
+      if (ctx) {
+        chartRef.current = new Chart(ctx, config) as TrackerChartInstance;
+        // Store date strings for click handling
+        chartRef.current.dateStrings = chartData.dateStrings;
+      }
+
+      // Store current config for next update comparison
+      prevConfigRef.current = currentConfig;
     }
 
     // Cleanup on unmount

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "preact/hooks";
+import { useState, useEffect, useCallback, useMemo, memo } from "preact/hooks";
 import { CSS_CLASSES, TrackerType, ViewMode } from "../../constants";
 import type { TrackerItemProps } from "../types";
 import type { TrackerFileOptions, TrackerEntries } from "../../domain/types";
@@ -17,7 +17,7 @@ import { ChartWrapper } from "../Chart/ChartWrapper";
 /**
  * Single tracker item component
  */
-export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerItemProps) {
+function TrackerItemComponent({ file, plugin, dateIso, viewMode, opts }: TrackerItemProps) {
   const { onDateChange } = useTrackerContext();
   const [fileOptions, setFileOptions] = useState<TrackerFileOptions | null>(null);
   const [entries, setEntries] = useState<TrackerEntries>(new Map());
@@ -295,4 +295,27 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     </div>
   );
 }
+
+/**
+ * Memoized tracker item component to prevent unnecessary re-renders
+ */
+export const TrackerItem = memo(TrackerItemComponent, (prevProps, nextProps) => {
+  // Re-render if file path, date, view mode, or plugin changes
+  if (prevProps.file.path !== nextProps.file.path) return false;
+  if (prevProps.dateIso !== nextProps.dateIso) return false;
+  if (prevProps.viewMode !== nextProps.viewMode) return false;
+  if (prevProps.plugin !== nextProps.plugin) return false;
+  
+  // Shallow compare opts object
+  const prevOpts = prevProps.opts;
+  const nextOpts = nextProps.opts;
+  const prevKeys = Object.keys(prevOpts);
+  const nextKeys = Object.keys(nextOpts);
+  if (prevKeys.length !== nextKeys.length) return false;
+  for (const key of prevKeys) {
+    if (prevOpts[key] !== nextOpts[key]) return false;
+  }
+  
+  return true;
+});
 

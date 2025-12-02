@@ -5,12 +5,25 @@ import type { DateWrapper } from "../domain/date-types";
  * Abstracts moment.js and native Date API
  */
 export class DateService {
+  // Cache moment availability check
+  private static _momentAvailable: boolean | null = null;
+  private static _moment: any = null;
+
   private static momentAvailable(): boolean {
-    return typeof (window as any).moment !== 'undefined';
+    if (this._momentAvailable === null) {
+      this._momentAvailable = typeof (window as any).moment !== 'undefined';
+      if (this._momentAvailable) {
+        this._moment = (window as any).moment;
+      }
+    }
+    return this._momentAvailable;
   }
 
   private static getMoment(): any {
-    return (window as any).moment;
+    if (this._moment === null && this.momentAvailable()) {
+      this._moment = (window as any).moment;
+    }
+    return this._moment;
   }
 
   /**

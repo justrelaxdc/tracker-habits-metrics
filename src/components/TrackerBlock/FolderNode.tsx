@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "preact/hooks";
+import { useCallback, useRef, useEffect, memo } from "preact/hooks";
 import type { TFile } from "obsidian";
 import { CSS_CLASSES, MODAL_LABELS } from "../../constants";
 import { normalizePath } from "../../utils/path";
@@ -8,7 +8,7 @@ import { TrackerItem } from "../TrackerItem/TrackerItem";
 /**
  * Folder node component - renders a folder with its trackers and subfolders
  */
-export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNodeProps) {
+function FolderNodeComponent({ node, plugin, dateIso, viewMode, opts }: FolderNodeProps) {
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const shouldShowHeader = node.files.length > 0 || (node.level > 0 && node.children.length > 0);
@@ -106,4 +106,31 @@ export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNode
     </div>
   );
 }
+
+/**
+ * Memoized folder node component to prevent unnecessary re-renders
+ */
+export const FolderNode = memo(FolderNodeComponent, (prevProps, nextProps) => {
+  // Re-render if node structure, date, view mode, or plugin changes
+  if (prevProps.node.path !== nextProps.node.path) return false;
+  if (prevProps.node.files.length !== nextProps.node.files.length) return false;
+  if (prevProps.node.children.length !== nextProps.node.children.length) return false;
+  if (!prevProps.node.files.every((f, i) => f.path === nextProps.node.files[i]?.path)) return false;
+  if (!prevProps.node.children.every((c, i) => c.path === nextProps.node.children[i]?.path)) return false;
+  if (prevProps.dateIso !== nextProps.dateIso) return false;
+  if (prevProps.viewMode !== nextProps.viewMode) return false;
+  if (prevProps.plugin !== nextProps.plugin) return false;
+  
+  // Shallow compare opts object
+  const prevOpts = prevProps.opts;
+  const nextOpts = nextProps.opts;
+  const prevKeys = Object.keys(prevOpts);
+  const nextKeys = Object.keys(nextOpts);
+  if (prevKeys.length !== nextKeys.length) return false;
+  for (const key of prevKeys) {
+    if (prevOpts[key] !== nextOpts[key]) return false;
+  }
+  
+  return true;
+});
 

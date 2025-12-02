@@ -14,6 +14,8 @@ export interface TrackerState {
 export class StateManager {
   private trackerState: Map<string, TrackerState> = new Map();
   private currentNotePath: string | null = null;
+  // Track which files are referenced by which notes for selective cache invalidation
+  private noteFileReferences: Map<string, Set<string>> = new Map();
 
   constructor(
     private readonly app: App,
@@ -22,11 +24,39 @@ export class StateManager {
   ) {}
 
   /**
-   * Check if note changed and clear caches if needed
+   * Check if note changed and selectively clear caches
+   * Only clears caches for files that are no longer referenced
    */
   async checkNoteChange(notePath: string | null): Promise<boolean> {
     if (notePath !== this.currentNotePath) {
-      await this.clearAllCaches();
+      const oldNotePath = this.currentNotePath;
+      
+      // Clear caches for files that were only referenced by the old note
+      if (oldNotePath) {
+        const oldNoteFiles = this.noteFileReferences.get(oldNotePath);
+        if (oldNoteFiles) {
+          // Check if any other note references these files
+          const filesToKeep = new Set<string>();
+          for (const [otherNotePath, files] of this.noteFileReferences.entries()) {
+            if (otherNotePath !== oldNotePath) {
+              for (const filePath of files) {
+                filesToKeep.add(filePath);
+              }
+            }
+          }
+          
+          // Clear caches for files that are no longer referenced
+          for (const filePath of oldNoteFiles) {
+            if (!filesToKeep.has(filePath)) {
+              this.clearTrackerState(filePath);
+            }
+          }
+          
+          // Remove old note's file references
+          this.noteFileReferences.delete(oldNotePath);
+        }
+      }
+      
       this.currentNotePath = notePath;
       return true;
     }
@@ -34,9 +64,26 @@ export class StateManager {
   }
 
   /**
+   * Register a file reference for the current note
+   */
+  registerFileReference(filePath: string): void {
+    if (!this.currentNotePath) return;
+    
+    let fileSet = this.noteFileReferences.get(this.currentNotePath);
+    if (!fileSet) {
+      fileSet = new Set();
+      this.noteFileReferences.set(this.currentNotePath, fileSet);
+    }
+    fileSet.add(filePath);
+  }
+
+  /**
    * Ensure tracker state is loaded for a file
    */
   async ensureTrackerState(file: TFile): Promise<TrackerState> {
+    // Register file reference for current note
+    this.registerFileReference(file.path);
+    
     const existing = this.trackerState.get(file.path);
     if (existing) {
       return existing;
@@ -60,9 +107,11 @@ export class StateManager {
 
   /**
    * Clears all backend state (trackerState, FolderTreeService cache)
+   * Use sparingly - prefer selective cache invalidation
    */
   async clearAllCaches(): Promise<void> {
     this.trackerState.clear();
+    this.noteFileReferences.clear();
     this.folderTreeService.invalidate();
   }
 

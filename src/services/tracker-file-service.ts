@@ -7,7 +7,49 @@ import { DateService } from "./date-service";
 import { getEntryValueByDate, determineStartTrackingDate } from "./entry-utils";
 
 export class TrackerFileService {
+  // Cache for file content to avoid redundant reads
+  private fileContentCache: Map<string, { content: string; timestamp: number; fileMtime: number }> = new Map();
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
   constructor(private readonly app: App) {}
+
+  /**
+   * Get cached file content or read from vault
+   */
+  private async getFileContent(file: TFile): Promise<string> {
+    const cacheKey = file.path;
+    const cached = this.fileContentCache.get(cacheKey);
+    const now = Date.now();
+    const fileMtime = file.stat?.mtime || 0;
+    
+    // Check if cache is valid (not expired and file hasn't been modified)
+    if (cached) {
+      const cacheAge = now - cached.timestamp;
+      // Cache is valid if it's not expired and file mtime matches cached mtime
+      if (cacheAge < this.CACHE_TTL_MS && cached.fileMtime === fileMtime) {
+        return cached.content;
+      }
+    }
+    
+    // Read file and cache it
+    const content = await this.app.vault.read(file);
+    // Use current file mtime (should be available after read)
+    const latestMtime = file.stat?.mtime || now;
+    this.fileContentCache.set(cacheKey, {
+      content,
+      timestamp: now,
+      fileMtime: latestMtime
+    });
+    
+    return content;
+  }
+
+  /**
+   * Invalidate cache for a specific file
+   */
+  invalidateFileCache(filePath: string): void {
+    this.fileContentCache.delete(filePath);
+  }
 
   async ensureFileWithHeading(filePath: string, type: string = "good-habit"): Promise<TFile> {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
@@ -91,7 +133,7 @@ export class TrackerFileService {
   async readAllEntries(file: TFile): Promise<Map<string, string | number>> {
     const entries = new Map<string, string | number>();
     try {
-      const raw = await this.app.vault.read(file);
+      const raw = await this.getFileContent(file);
       const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
       if (!frontmatterMatch) return entries;
 
@@ -115,7 +157,9 @@ export class TrackerFileService {
 
   async writeLogLine(file: TFile, dateIso: string, value: string) {
     try {
-      const content = await this.app.vault.read(file);
+      const content = await this.getFileContent(file);
+      // Invalidate cache after write
+      this.invalidateFileCache(file.path);
       const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
 
       if (!frontmatterMatch) {
@@ -158,7 +202,7 @@ export class TrackerFileService {
   async getFileTypeFromFrontmatter(file: TFile): Promise<TrackerFileOptions> {
     const fileOpts: TrackerFileOptions = {};
     try {
-      const fileContent = await this.app.vault.read(file);
+      const fileContent = await this.getFileContent(file);
       const frontmatterMatch = fileContent.match(/^---\n([\s\S]*?)\n---/);
       if (frontmatterMatch) {
         const frontmatter = frontmatterMatch[1];
