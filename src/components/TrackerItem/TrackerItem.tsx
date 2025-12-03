@@ -33,14 +33,14 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     return trackerStore.getTrackerState(file.path);
   });
 
-  // Derive values directly from trackerState to avoid redundant computed signals
-  const entries = useMemo<TrackerEntries>(() => {
+  // Use computed signals for reactive values - properly tracks signal changes
+  const entries = useComputed(() => {
     return trackerState.value?.entries ?? new Map();
-  }, [trackerState.value]);
+  });
 
-  const fileOptions = useMemo<TrackerFileOptions | null>(() => {
+  const fileOptions = useComputed(() => {
     return trackerState.value?.fileOptions ?? null;
-  }, [trackerState.value]);
+  });
 
   // Load data on mount only
   useEffect(() => {
@@ -79,49 +79,49 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
   }, [file.path, plugin]);
 
   // Determine tracker type
-  const trackerType = useMemo(() => {
-    const opts = fileOptions;
+  const trackerType = useComputed(() => {
+    const opts = fileOptions.value;
     return (opts?.mode ?? TrackerType.GOOD_HABIT).toLowerCase() as typeof TrackerType[keyof typeof TrackerType];
-  }, [fileOptions]);
+  });
 
   // Calculate display name
-  const displayName = useMemo(() => {
+  const displayName = useComputed(() => {
     const baseName = file.basename;
-    const unit = fileOptions?.unit || "";
+    const unit = fileOptions.value?.unit || "";
     return unit ? `${baseName} (${unit})` : baseName;
-  }, [file, fileOptions]);
+  });
 
   // Check if tracker is a habit type (habits don't show charts)
-  const isHabitType = useMemo(() => {
-    return trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
-  }, [trackerType]);
+  const isHabitType = useComputed(() => {
+    const type = trackerType.value;
+    return type === TrackerType.GOOD_HABIT || type === TrackerType.BAD_HABIT;
+  });
 
-  // Calculate settings for visualization - use useMemo with signal dependency for reactivity
-  // Access trackerStore.settings.value directly in useMemo to track changes
-  const daysToShow = useMemo(() => {
+  // Calculate settings for visualization - use useComputed for reactivity
+  const daysToShow = useComputed(() => {
     const settings = trackerStore.settings.value;
     return parseInt(opts.days) || settings.daysToShow;
-  }, [opts.days, trackerStore.settings.value]);
+  });
 
-  // Use useMemo for reactive values that depend on both props and signals
-  const shouldShowChart = useMemo(() => {
+  // Use useComputed for reactive values that depend on both props and signals
+  const shouldShowChart = useComputed(() => {
     // Habits never show charts
-    if (isHabitType) return false;
+    if (isHabitType.value) return false;
 
     const settings = trackerStore.settings.value;
     const showChart = opts.showChart === "true" ||
       (opts.showChart === undefined && settings.showChartByDefault);
     const hideOnMobile = plugin.isMobileDevice() && settings.hideChartOnMobile;
     return showChart && !hideOnMobile;
-  }, [opts.showChart, isHabitType, trackerStore.settings.value, plugin]);
+  });
 
-  const shouldShowStats = useMemo(() => {
+  const shouldShowStats = useComputed(() => {
     const settings = trackerStore.settings.value;
     const showStats = opts.showStats === "true" ||
       (opts.showStats === undefined && settings.showStatsByDefault);
     const hideOnMobile = plugin.isMobileDevice() && settings.hideStatsOnMobile;
     return showStats && !hideOnMobile;
-  }, [opts.showStats, trackerStore.settings.value, plugin]);
+  });
 
   // Event handlers
   const handleEdit = useCallback(() => {
@@ -137,14 +137,14 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
   }, [plugin, file]);
 
   // Get start tracking date
-  const startTrackingDate = useMemo(() => {
-    const opts = fileOptions;
+  const startTrackingDate = useComputed(() => {
+    const opts = fileOptions.value;
     if (!opts) return null;
-    return plugin.getStartTrackingDate(entries, opts);
-  }, [plugin, entries, fileOptions]);
+    return plugin.getStartTrackingDate(entries.value, opts);
+  });
 
-  // Calculate limit progress for header - use useMemo with signal dependencies
-  const limitProgress = useMemo(() => {
+  // Calculate limit progress for header - use useComputed for reactivity
+  const limitProgress = useComputed(() => {
     // Access trackerState to ensure reactivity
     const state = trackerState.value;
     const opts = state?.fileOptions ?? null;
@@ -195,11 +195,11 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       width: `${progressPercent}%`,
       color: progressColor,
     };
-  }, [trackerState.value, trackerStore.settings.value, dateIso]);
+  });
 
   // Render control based on tracker type
   const renderControl = () => {
-    const currentFileOptions = fileOptions;
+    const currentFileOptions = fileOptions.value;
     if (isLoading.value || !currentFileOptions) return null;
 
     // Note: No onValueChange callback needed - writeLogLine/deleteEntry 
@@ -209,23 +209,24 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       dateIso,
       plugin,
       fileOptions: currentFileOptions,
-      entries: entries,
+      entries: entries.value,
     };
 
-    const isHabit = trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
+    const type = trackerType.value;
+    const isHabit = type === TrackerType.GOOD_HABIT || type === TrackerType.BAD_HABIT;
 
     if (isHabit) {
       return (
         <Heatmap
           {...controlProps}
-          daysToShow={daysToShow}
-          trackerType={trackerType}
-          startTrackingDate={startTrackingDate}
+          daysToShow={daysToShow.value}
+          trackerType={type}
+          startTrackingDate={startTrackingDate.value}
         />
       );
     }
 
-    switch (trackerType) {
+    switch (type) {
       case TrackerType.NUMBER:
         return <NumberControl {...controlProps} />;
       case TrackerType.PLUSMINUS:
@@ -235,12 +236,12 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       case TrackerType.SCALE:
         return <ScaleControl {...controlProps} />;
       default:
-        return <div>Unknown tracker type: {trackerType}</div>;
+        return <div>Unknown tracker type: {type}</div>;
     }
   };
 
-  const currentFileOptions = fileOptions;
-  const currentEntries = entries;
+  const currentFileOptions = fileOptions.value;
+  const currentEntries = entries.value;
 
   // Display mode - just show value
   if (viewMode === ViewMode.DISPLAY) {
@@ -249,30 +250,30 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       <div class={CSS_CLASSES.TRACKER} data-file-path={file.path}>
         <TrackerHeader
           file={file}
-          displayName={displayName}
+          displayName={displayName.value}
           plugin={plugin}
         />
         <div>{dateIso}: {currentValue ?? "—"}</div>
 
-        {shouldShowChart && currentFileOptions && (
+        {shouldShowChart.value && currentFileOptions && (
           <ChartWrapper
             file={file}
             plugin={plugin}
             dateIso={dateIso}
-            daysToShow={daysToShow}
+            daysToShow={daysToShow.value}
             entries={currentEntries}
             fileOptions={currentFileOptions}
             onDateClick={onDateChange}
           />
         )}
 
-        {shouldShowStats && currentFileOptions && (
+        {shouldShowStats.value && currentFileOptions && (
           <Statistics
             file={file}
             plugin={plugin}
             dateIso={dateIso}
-            daysToShow={daysToShow}
-            trackerType={trackerType}
+            daysToShow={daysToShow.value}
+            trackerType={trackerType.value}
             entries={currentEntries}
             fileOptions={currentFileOptions}
           />
@@ -286,37 +287,37 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     <div class={CSS_CLASSES.TRACKER} data-file-path={file.path}>
       <TrackerHeader
         file={file}
-        displayName={displayName}
+        displayName={displayName.value}
         plugin={plugin}
         onEdit={handleEdit}
         onMoveUp={handleMoveUp}
         onMoveDown={handleMoveDown}
-        limitProgress={limitProgress}
+        limitProgress={limitProgress.value}
       />
 
       <div class={CSS_CLASSES.TRACKER_CONTROLS}>
         {renderControl()}
       </div>
 
-      {shouldShowChart && currentFileOptions && (
+      {shouldShowChart.value && currentFileOptions && (
         <ChartWrapper
           file={file}
           plugin={plugin}
           dateIso={dateIso}
-          daysToShow={daysToShow}
+          daysToShow={daysToShow.value}
           entries={currentEntries}
           fileOptions={currentFileOptions}
           onDateClick={onDateChange}
         />
       )}
 
-      {shouldShowStats && currentFileOptions && (
+      {shouldShowStats.value && currentFileOptions && (
         <Statistics
           file={file}
           plugin={plugin}
           dateIso={dateIso}
-          daysToShow={daysToShow}
-          trackerType={trackerType}
+          daysToShow={daysToShow.value}
+          trackerType={trackerType.value}
           entries={currentEntries}
           fileOptions={currentFileOptions}
         />

@@ -37,6 +37,21 @@ export function Heatmap({
     const todayStart = DateService.startOfDay(today);
     const todayStr = DateService.format(todayStart, plugin.settings.dateFormat);
     
+    // Parse start tracking date once outside the loop
+    let startDateObj: ReturnType<typeof DateService.parseMultiple> | null = null;
+    if (startTrackingDate) {
+      try {
+        startDateObj = DateService.parseMultiple(startTrackingDate, [
+          plugin.settings.dateFormat,
+          "YYYY-MM-DD",
+          "DD.MM.YYYY",
+          "MM/DD/YYYY",
+        ]);
+      } catch (e) {
+        // Ignore parsing errors - startDateObj remains null
+      }
+    }
+    
     const result: HeatmapDay[] = [];
     
     // Go from newest to oldest (will be displayed with flex-direction: row-reverse)
@@ -55,20 +70,10 @@ export function Heatmap({
       // Check if date is after today
       if (DateService.isAfter(date, todayStart)) {
         isAfterToday = true;
-      } else if (startTrackingDate) {
-        // Check if date is before start tracking date
-        try {
-          const startDateObj = DateService.parseMultiple(startTrackingDate, [
-            plugin.settings.dateFormat,
-            "YYYY-MM-DD",
-            "DD.MM.YYYY",
-            "MM/DD/YYYY",
-          ]);
-          if (DateService.isBefore(date, startDateObj)) {
-            isBeforeStart = true;
-          }
-        } catch (e) {
-          // Ignore parsing errors
+      } else if (startDateObj) {
+        // Check if date is before start tracking date (using pre-parsed date)
+        if (DateService.isBefore(date, startDateObj)) {
+          isBeforeStart = true;
         }
       }
       

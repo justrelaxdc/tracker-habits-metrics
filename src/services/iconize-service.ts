@@ -3,7 +3,7 @@ import { trackerStore } from "../store";
 import type { IconizeData } from "../store";
 
 // Polling interval for checking icon data changes (0.5 seconds)
-// We use thid method until Iconize plugin implements API for reactive updates
+// We use this method until Iconize plugin implements API for reactive updates
 const ICONIZE_POLL_INTERVAL_MS = 500;
 
 /**
@@ -64,6 +64,9 @@ export class IconizeService {
   startWatching(): void {
     // Stop existing watcher if any
     this.stopWatching();
+    
+    // Load data immediately on start
+    this.loadIconizeData();
     
     // Check for data changes every interval (only when active blocks exist)
     this.watchInterval = setInterval(async () => {

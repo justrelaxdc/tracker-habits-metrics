@@ -260,5 +260,16 @@ export class FolderTreeService {
       }
     }
   }
+
+  /**
+   * Clear all timers and cleanup state (for plugin unload)
+   */
+  cleanup(): void {
+    if (this.cleanupDebounceTimer) {
+      clearTimeout(this.cleanupDebounceTimer);
+      this.cleanupDebounceTimer = null;
+    }
+    this.pendingCleanup.clear();
+  }
 }
 

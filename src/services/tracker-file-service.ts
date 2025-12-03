@@ -1,21 +1,35 @@
 import { App, TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { parseMaybeNumber } from "../utils/misc";
-import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType } from "../constants";
-import { isTrackerValueTrue } from "../utils/validation";
+import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType, MAX_FILE_CONTENT_CACHE_SIZE, CACHE_TTL_MS } from "../constants";
 import { DateService } from "./date-service";
-import { getEntryValueByDate, determineStartTrackingDate } from "./entry-utils";
+import { getEntryValueByDate, determineStartTrackingDate, isDaySuccessful } from "./entry-utils";
 import { logError } from "../utils/notifications";
 
 export class TrackerFileService {
-  // Cache for file content to avoid redundant reads
+  // LRU cache for file content to avoid redundant reads
+  // Map maintains insertion order - oldest entries are first
   private fileContentCache: Map<string, { content: string; timestamp: number; fileMtime: number }> = new Map();
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor(private readonly app: App) {}
 
   /**
+   * Evict least recently used cache entry if cache is full
+   * Map maintains insertion order - oldest entries are first
+   */
+  private evictIfNeeded(): void {
+    if (this.fileContentCache.size >= MAX_FILE_CONTENT_CACHE_SIZE) {
+      // Get first (oldest) entry and remove it
+      const firstKey = this.fileContentCache.keys().next().value;
+      if (firstKey) {
+        this.fileContentCache.delete(firstKey);
+      }
+    }
+  }
+
+  /**
    * Get cached file content or read from vault
+   * Uses LRU cache with size limit
    */
   private async getFileContent(file: TFile): Promise<string> {
     const cacheKey = file.path;
@@ -27,15 +41,24 @@ export class TrackerFileService {
     if (cached) {
       const cacheAge = now - cached.timestamp;
       // Cache is valid if it's not expired and file mtime matches cached mtime
-      if (cacheAge < this.CACHE_TTL_MS && cached.fileMtime === fileMtime) {
+      if (cacheAge < CACHE_TTL_MS && cached.fileMtime === fileMtime) {
+        // Move to end (most recently used) by deleting and re-inserting
+        this.fileContentCache.delete(cacheKey);
+        this.fileContentCache.set(cacheKey, cached);
         return cached.content;
       }
+      // Cache entry is stale, remove it
+      this.fileContentCache.delete(cacheKey);
     }
+    
+    // Evict LRU entry if cache is full
+    this.evictIfNeeded();
     
     // Read file and cache it
     const content = await this.app.vault.read(file);
     // Use current file mtime (should be available after read)
     const latestMtime = file.stat?.mtime || now;
+    // New entries are added at the end (most recently used)
     this.fileContentCache.set(cacheKey, {
       content,
       timestamp: now,
@@ -63,11 +86,13 @@ export class TrackerFileService {
     return this.app.vault.create(filePath, content);
   }
 
-  parseFrontmatterData(frontmatter: string): Record<string, string | number> {
-    // Find data: section in frontmatter
-    const dataIndex = frontmatter.indexOf('data:');
+  /**
+   * Find JSON object bounds in frontmatter after "data:" marker
+   * Returns { start, end } indices or null if not found
+   */
+  private findJsonBounds(frontmatter: string, dataIndex: number): { start: number; end: number } | null {
     if (dataIndex === -1) {
-      return {};
+      return null;
     }
     
     // Find the start of JSON object after "data:"
@@ -78,7 +103,7 @@ export class TrackerFileService {
     }
     
     if (jsonStart >= frontmatter.length || frontmatter[jsonStart] !== '{') {
-      return {};
+      return null;
     }
     
     // Extract JSON object by finding matching closing brace
@@ -120,10 +145,22 @@ export class TrackerFileService {
     
     if (braceCount !== 0) {
       // Malformed JSON
+      return null;
+    }
+    
+    return { start: jsonStart, end: jsonEnd };
+  }
+
+  parseFrontmatterData(frontmatter: string): Record<string, string | number> {
+    // Find data: section in frontmatter
+    const dataIndex = frontmatter.indexOf('data:');
+    const bounds = this.findJsonBounds(frontmatter, dataIndex);
+    
+    if (!bounds) {
       return {};
     }
     
-    const jsonString = frontmatter.substring(jsonStart, jsonEnd).trim();
+    const jsonString = frontmatter.substring(bounds.start, bounds.end).trim();
     if (jsonString === '{}') {
       return {};
     }
@@ -166,61 +203,14 @@ export class TrackerFileService {
   replaceDataInFrontmatter(frontmatter: string, newDataJson: string): string {
     let newFrontmatter = frontmatter.trim();
     const dataIndex = newFrontmatter.indexOf('data:');
+    const bounds = this.findJsonBounds(newFrontmatter, dataIndex);
     
-    if (dataIndex !== -1) {
-      // Find the JSON object after "data:"
-      let jsonStart = dataIndex + 5;
-      while (jsonStart < newFrontmatter.length && /\s/.test(newFrontmatter[jsonStart])) {
-        jsonStart++;
-      }
-      
-      if (jsonStart < newFrontmatter.length && newFrontmatter[jsonStart] === '{') {
-        // Find matching closing brace
-        let braceCount = 0;
-        let inString = false;
-        let escapeNext = false;
-        let jsonEnd = jsonStart;
-        
-        for (let i = jsonStart; i < newFrontmatter.length; i++) {
-          const char = newFrontmatter[i];
-          
-          if (escapeNext) {
-            escapeNext = false;
-            continue;
-          }
-          
-          if (char === '\\') {
-            escapeNext = true;
-            continue;
-          }
-          
-          if (char === '"') {
-            inString = !inString;
-            continue;
-          }
-          
-          if (!inString) {
-            if (char === '{') {
-              braceCount++;
-            } else if (char === '}') {
-              braceCount--;
-              if (braceCount === 0) {
-                jsonEnd = i + 1;
-                break;
-              }
-            }
-          }
-        }
-        
-        // Replace the data section
-        const dataJsonTrimmed = newDataJson.trim();
-        newFrontmatter = newFrontmatter.substring(0, dataIndex) + dataJsonTrimmed + newFrontmatter.substring(jsonEnd);
-      } else {
-        // data: exists but no JSON object, append it
-        newFrontmatter = newFrontmatter + "\n" + newDataJson.trim();
-      }
+    if (bounds) {
+      // Replace the data section
+      const dataJsonTrimmed = newDataJson.trim();
+      newFrontmatter = newFrontmatter.substring(0, dataIndex) + dataJsonTrimmed + newFrontmatter.substring(bounds.end);
     } else {
-      // No data: section, append it
+      // No data: section or malformed, append it
       newFrontmatter = newFrontmatter + "\n" + newDataJson.trim();
     }
 
@@ -504,20 +494,7 @@ export class TrackerFileService {
 
       // Use shared utility for getting entry value
       const val = getEntryValueByDate(entries, currentDate, settings);
-      let isSuccess = false;
-
-      if (isBadHabit) {
-        if (val == null || val === undefined) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== undefined) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
+      const isSuccess = isDaySuccessful(val, isBadHabit);
 
       if (isSuccess) {
         streak++;
@@ -567,20 +544,7 @@ export class TrackerFileService {
     while (!DateService.isBefore(currentDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
       // Use shared utility for getting entry value
       const val = getEntryValueByDate(entries, currentDate, settings);
-      let isSuccess = false;
-      
-      if (isBadHabit) {
-        if (val == null || val === undefined) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== undefined) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
+      const isSuccess = isDaySuccessful(val, isBadHabit);
       
       if (isSuccess) {
         currentStreak++;

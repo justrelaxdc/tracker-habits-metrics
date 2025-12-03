@@ -66,6 +66,16 @@ export function NumberControl({ file, dateIso, plugin, entries }: NumberControlP
     }
   }, [plugin, file, dateIso]);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+    };
+  }, []);
+
   // Handle input change
   const handleChange = useCallback((e: Event) => {
     const target = e.target as HTMLInputElement;

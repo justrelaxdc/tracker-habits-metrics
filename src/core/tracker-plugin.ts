@@ -23,6 +23,7 @@ import { StateManager } from "./managers/state-manager";
 import { SortOrderManager } from "./managers/sort-order-manager";
 import { DomReorderManager } from "./managers/dom-reorder";
 import { BlockManager } from "./managers/block-manager";
+import { WriteQueueManager } from "./managers/write-queue-manager";
 
 export default class TrackerPlugin extends Plugin {
   settings!: TrackerSettings;
@@ -38,6 +39,7 @@ export default class TrackerPlugin extends Plugin {
   private sortOrderManager!: SortOrderManager;
   private domReorderManager!: DomReorderManager;
   private blockManager!: BlockManager;
+  private writeQueueManager!: WriteQueueManager;
   
   // UI
   private styleEl?: HTMLStyleElement;
@@ -89,6 +91,8 @@ export default class TrackerPlugin extends Plugin {
       (t, b) => this.blockManager.isFolderRelevant(t, b)
     );
     
+    this.writeQueueManager = new WriteQueueManager();
+    
     // Initialize global store with settings
     trackerStore.setSettings(this.settings);
     
@@ -121,6 +125,12 @@ export default class TrackerPlugin extends Plugin {
   async onunload() {
     this.blockManager.clearAllBlocks();
     this.iconizeService.stopWatching();
+    this.writeQueueManager.clear();
+    this.folderTreeService.cleanup();
+    if (this.refreshBlocksDebounceTimer) {
+      clearTimeout(this.refreshBlocksDebounceTimer);
+      this.refreshBlocksDebounceTimer = null;
+    }
     trackerStore.clear();
   }
 
@@ -307,40 +317,78 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async writeLogLine(file: TFile, dateIso: string, value: string) {
-    try {
-      const state = await this.stateManager.ensureTrackerState(file);
-      const normalizedValue = parseMaybeNumber(value);
-      state.entries.set(dateIso, normalizedValue);
-      
-      // Update global store for reactive updates
-      trackerStore.updateSingleEntry(file.path, dateIso, normalizedValue);
-      
-      // Use writeLogLineFromState to avoid re-reading the file
-      await this.trackerFileService.writeLogLineFromState(file, state, dateIso, normalizedValue);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
-      logError("Tracker: write error", error);
-      throw error;
-    }
+    return this.writeQueueManager.executeWrite(file, async () => {
+      try {
+        const state = await this.stateManager.ensureTrackerState(file);
+        const normalizedValue = parseMaybeNumber(value);
+        
+        // Store original value for rollback on error
+        const originalValue = state.entries.get(dateIso);
+        
+        // Optimistically update state
+        state.entries.set(dateIso, normalizedValue);
+        trackerStore.updateSingleEntry(file.path, dateIso, normalizedValue);
+        
+        try {
+          // Use writeLogLineFromState to avoid re-reading the file
+          await this.trackerFileService.writeLogLineFromState(file, state, dateIso, normalizedValue);
+        } catch (error) {
+          // Revert optimistic update on error
+          if (originalValue !== undefined) {
+            state.entries.set(dateIso, originalValue);
+            trackerStore.updateSingleEntry(file.path, dateIso, originalValue);
+          } else {
+            state.entries.delete(dateIso);
+            trackerStore.deleteEntry(file.path, dateIso);
+          }
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+          logError("Tracker: write error", error);
+          throw error;
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+        logError("Tracker: write error", error);
+        throw error;
+      }
+    });
   }
 
   async deleteEntry(file: TFile, dateIso: string): Promise<void> {
-    try {
-      const state = await this.stateManager.ensureTrackerState(file);
-      state.entries.delete(dateIso);
-      
-      // Update global store for reactive updates
-      trackerStore.deleteEntry(file.path, dateIso);
-      
-      // Use deleteEntryFromState to avoid re-reading the file
-      await this.trackerFileService.deleteEntryFromState(file, state, dateIso);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
-      logError("Tracker: delete entry error", error);
-      throw error;
-    }
+    return this.writeQueueManager.executeWrite(file, async () => {
+      try {
+        const state = await this.stateManager.ensureTrackerState(file);
+        
+        // Store original value for rollback on error
+        const originalValue = state.entries.get(dateIso);
+        const hadValue = originalValue !== undefined;
+        
+        // Optimistically update state
+        state.entries.delete(dateIso);
+        trackerStore.deleteEntry(file.path, dateIso);
+        
+        try {
+          // Use deleteEntryFromState to avoid re-reading the file
+          await this.trackerFileService.deleteEntryFromState(file, state, dateIso);
+        } catch (error) {
+          // Revert optimistic update on error
+          if (hadValue) {
+            state.entries.set(dateIso, originalValue!);
+            trackerStore.updateSingleEntry(file.path, dateIso, originalValue!);
+          }
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+          logError("Tracker: delete entry error", error);
+          throw error;
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);
+        logError("Tracker: delete entry error", error);
+        throw error;
+      }
+    });
   }
 
   async pickTrackerFile(): Promise<TFile | null> {

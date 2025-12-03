@@ -55,12 +55,18 @@ export function ChartWrapper({
     scaleMaxValue: number | null;
     dateIso: string;
     daysToShow: number;
+    entriesHash: string;
   } | null>(null);
 
   // Cleanup chart on unmount only - separate from create/update
   useEffect(() => {
     return () => {
       if (chartRef.current) {
+        // Cleanup ResizeObserver if exists
+        const resizeObserver = (chartRef.current as any).__resizeObserver;
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        }
         chartRef.current.destroy();
         chartRef.current = null;
       }
@@ -93,6 +99,9 @@ export function ChartWrapper({
       todayStr
     );
 
+    // Create hash of entries for change detection
+    const entriesHash = JSON.stringify(Array.from(entries.entries()).sort((a, b) => a[0].localeCompare(b[0])));
+
     const currentConfig = {
       trackerType,
       unit,
@@ -102,21 +111,25 @@ export function ChartWrapper({
       scaleMaxValue,
       dateIso,
       daysToShow,
+      entriesHash,
     };
 
     // Check if we can update existing chart or need to recreate
+    // Only config changes require recreation; data changes can be updated
     const canUpdate = chartRef.current && prevConfigRef.current &&
       prevConfigRef.current.trackerType === currentConfig.trackerType &&
       prevConfigRef.current.unit === currentConfig.unit &&
       prevConfigRef.current.minLimit === currentConfig.minLimit &&
       prevConfigRef.current.maxLimit === currentConfig.maxLimit &&
       prevConfigRef.current.scaleMinValue === currentConfig.scaleMinValue &&
-      prevConfigRef.current.scaleMaxValue === currentConfig.scaleMaxValue;
+      prevConfigRef.current.scaleMaxValue === currentConfig.scaleMaxValue &&
+      prevConfigRef.current.dateIso === currentConfig.dateIso &&
+      prevConfigRef.current.daysToShow === currentConfig.daysToShow;
 
     if (canUpdate && chartRef.current) {
-      // Only data changed (entries, dateIso, or daysToShow) - update data directly
+      // Only entries changed - update data directly
       // This is much faster than recreating the entire chart config
-      const dataset = chartRef.current.data.datasets[0];
+      const dataset = chartRef.current.data.datasets[0] as any;
       if (dataset) {
         dataset.data = chartData.values;
         dataset.pointBackgroundColor = chartData.pointBackgroundColors;
@@ -129,7 +142,14 @@ export function ChartWrapper({
       
       // Update chart with minimal animation
       chartRef.current.update('none');
-    } else {
+      
+      // Store current config for next update comparison
+      prevConfigRef.current = currentConfig;
+      return;
+    }
+    
+    // Config changed or chart doesn't exist - need to recreate
+    {
       // Create chart config
       const config = chartService.createChartConfig(
         chartData,
@@ -149,6 +169,11 @@ export function ChartWrapper({
 
       // Destroy existing chart if config changed (recreate needed)
       if (chartRef.current) {
+        // Cleanup ResizeObserver if exists
+        const resizeObserver = (chartRef.current as any).__resizeObserver;
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        }
         chartRef.current.destroy();
         chartRef.current = null;
       }
@@ -159,6 +184,20 @@ export function ChartWrapper({
         chartRef.current = new Chart(ctx, config) as TrackerChartInstance;
         // Store date strings for click handling
         chartRef.current.dateStrings = chartData.dateStrings;
+        
+        // Setup ResizeObserver for responsive charts
+        const chartContainer = canvasRef.current.parentElement;
+        if (chartContainer) {
+          const resizeObserver = new ResizeObserver(() => {
+            if (chartRef.current) {
+              chartRef.current.resize();
+            }
+          });
+          resizeObserver.observe(chartContainer);
+          
+          // Store observer reference for cleanup
+          (chartRef.current as any).__resizeObserver = resizeObserver;
+        }
       }
 
       // Store current config for next update comparison
@@ -181,8 +220,8 @@ export function ChartWrapper({
   ]);
 
   return (
-    <div class={CSS_CLASSES.CHART} style={{ height: `${CHART_CONFIG.DEFAULT_HEIGHT}px` }}>
-      <canvas ref={canvasRef} height={CHART_CONFIG.CANVAS_HEIGHT} />
+    <div class={CSS_CLASSES.CHART}>
+      <canvas ref={canvasRef} />
     </div>
   );
 }

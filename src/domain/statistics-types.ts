@@ -8,8 +8,8 @@
 export interface BaseStatistics {
   /** Total number of entries in the tracker */
   totalRecords: number;
-  /** Number of days in the period */
-  periodDays: number;
+  /** Array of values for each day in the period */
+  periodDays: number[];
   /** Actual days count (considering tracking start date) */
   actualDaysCount: number;
 }

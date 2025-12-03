@@ -4,6 +4,7 @@ export const MAX_DAYS_BACK = 3650;
 export const DEFAULT_DAYS_TO_SHOW = 30;
 export const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 export const MAX_CACHE_SIZE = 100;
+export const MAX_FILE_CONTENT_CACHE_SIZE = 50; // Max number of files to cache
 export const SCROLL_RESTORE_DELAY_MS = 50;
 export const DEBOUNCE_DELAY_MS = 300;
 
@@ -236,7 +237,7 @@ export const MODAL_LABELS = {
   VALUE_FROM: 'Value "from"',
   VALUE_TO: 'Value "to"',
   LIMITS: 'Success limits',
-  LOWER_LIMIT: 'Lower limit',
+  LOWER_LIMIT: 'Lower limit (target)',
   UPPER_LIMIT: 'Upper limit',
   CREATE: 'Create',
   SAVE: 'Save',

@@ -1,6 +1,7 @@
 import type { TFile } from "obsidian";
 import type { TrackerSettings } from "../domain/types";
 import { DateService } from "./date-service";
+import { isTrackerValueTrue } from "../utils/validation";
 
 /**
  * Common date formats to try when parsing dates
@@ -107,5 +108,31 @@ export function determineStartTrackingDate(
   }
 
   return startTrackingDate;
+}
+
+/**
+ * Checks if a day is successful for streak calculation
+ * @param val Entry value for the day (can be null/undefined)
+ * @param isBadHabit Whether this is a bad habit tracker
+ * @returns true if the day is successful, false otherwise
+ */
+export function isDaySuccessful(
+  val: string | number | null | undefined,
+  isBadHabit: boolean
+): boolean {
+  if (isBadHabit) {
+    // Bad habit: success = no value or value is 0/false
+    if (val == null || val === undefined) {
+      return true;
+    }
+    const hasValue = isTrackerValueTrue(val);
+    return !hasValue;
+  } else {
+    // Good habit: success = value exists and is truthy
+    if (val != null && val !== undefined) {
+      return isTrackerValueTrue(val);
+    }
+    return false;
+  }
 }
 

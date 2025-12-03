@@ -7,6 +7,7 @@ import { logError } from "../../utils/notifications";
  */
 export class BlockManager {
   activeBlocks: Set<TrackerBlockRenderChild> = new Set();
+  private deletionTimers: Set<ReturnType<typeof setTimeout>> = new Set();
 
   constructor(
     private readonly getWorkspace: () => any
@@ -30,6 +31,10 @@ export class BlockManager {
    * Clear all active blocks
    */
   clearAllBlocks(): void {
+    // Clear all deletion timers
+    this.deletionTimers.forEach(timer => clearTimeout(timer));
+    this.deletionTimers.clear();
+    
     this.activeBlocks.forEach(block => block.unload());
     this.activeBlocks.clear();
   }
@@ -170,9 +175,14 @@ export class BlockManager {
           tracker.style.transition = "opacity 0.2s ease";
           tracker.style.opacity = "0";
           
-          setTimeout(() => {
-            tracker.remove();
+          const timer = setTimeout(() => {
+            if (tracker.isConnected) {
+              tracker.remove();
+            }
+            this.deletionTimers.delete(timer);
           }, UI_CONSTANTS.TRANSITION_OPACITY_DURATION_MS);
+          
+          this.deletionTimers.add(timer);
         }
       }
     }

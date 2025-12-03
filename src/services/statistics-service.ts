@@ -3,9 +3,8 @@ import type { TrackerSettings } from "../domain/types";
 import type { HabitStatistics, MetricStatistics, StreakInfo, StatisticsResult } from "../domain/statistics-types";
 import { TrackerType, MAX_DAYS_BACK } from "../constants";
 import { DateService } from "./date-service";
-import { isTrackerValueTrue } from "../utils/validation";
 import { countWords } from "../utils/misc";
-import { getEntryValueByDate, determineStartTrackingDate, DATE_FORMATS } from "./entry-utils";
+import { getEntryValueByDate, determineStartTrackingDate, DATE_FORMATS, isDaySuccessful } from "./entry-utils";
 
 /**
  * Service for calculating statistics for trackers
@@ -242,20 +241,7 @@ export class StatisticsService {
 
       // Use shared utility for getting entry value
       const val = getEntryValueByDate(entries, checkDate, settings);
-      let isSuccess = false;
-
-      if (isBadHabit) {
-        if (val == null || val === undefined) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== undefined) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
+      const isSuccess = isDaySuccessful(val, isBadHabit);
 
       if (isSuccess) {
         currentStreak++;
@@ -276,20 +262,7 @@ export class StatisticsService {
     
     while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
       const val = getEntryValueByDate(entries, bestCheckDate, settings);
-      let isSuccess = false;
-      
-      if (isBadHabit) {
-        if (val == null || val === undefined) {
-          isSuccess = true;
-        } else {
-          const hasValue = isTrackerValueTrue(val);
-          isSuccess = !hasValue;
-        }
-      } else {
-        if (val != null && val !== undefined) {
-          isSuccess = isTrackerValueTrue(val);
-        }
-      }
+      const isSuccess = isDaySuccessful(val, isBadHabit);
       
       if (isSuccess) {
         bestCurrentStreak++;
