@@ -1,4 +1,6 @@
 import { useComputed } from "@preact/signals";
+import { useEffect, useRef } from "preact/hooks";
+import { setIcon } from "obsidian";
 import { trackerStore } from "../../store";
 
 export interface IconProps {
@@ -15,6 +17,9 @@ export interface IconProps {
  * Uses signals to reactively update when iconize data changes
  */
 export function Icon({ path, isFile = false, className = "" }: IconProps) {
+  const iconRef = useRef<HTMLSpanElement>(null);
+  const previousIconTypeRef = useRef<'lucide' | 'emoji' | null>(null);
+  
   // Get icon reactively from store
   // Access iconizeData.value directly to ensure reactivity
   const icon = useComputed(() => {
@@ -53,32 +58,57 @@ export function Icon({ path, isFile = false, className = "" }: IconProps) {
     return null;
   });
 
+  // Render icon using Obsidian API for Lucide, text for emoji
+  useEffect(() => {
+    if (!iconRef.current || !icon.value) {
+      // Clear if icon is removed
+      if (iconRef.current) {
+        iconRef.current.innerHTML = '';
+      }
+      previousIconTypeRef.current = null;
+      return;
+    }
+
+    const iconValue = icon.value;
+    const isLucide = iconValue.startsWith("Li");
+    const currentIconType = isLucide ? 'lucide' : 'emoji';
+
+    // Clear content when switching between icon types or when icon changes
+    if (previousIconTypeRef.current !== null && previousIconTypeRef.current !== currentIconType) {
+      iconRef.current.innerHTML = '';
+    }
+
+    // Handle Lucide icons
+    if (isLucide) {
+      // Remove "Li" prefix and convert PascalCase to kebab-case
+      // e.g., "LiAlarmClockCheck" -> "alarm-clock-check"
+      const pascalCase = iconValue.substring(2);
+      const kebabCase = pascalCase.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+      // Use Obsidian's setIcon to render Lucide icon
+      setIcon(iconRef.current, kebabCase as any);
+    } else {
+      // Handle emoji - set as text content
+      iconRef.current.textContent = iconValue;
+    }
+
+    previousIconTypeRef.current = currentIconType;
+  }, [icon.value]);
+
   if (!icon.value) {
     return null;
   }
 
   const iconValue = icon.value;
+  const isLucide = iconValue.startsWith("Li");
 
-  // Check if it's a Lucide icon (starts with "Li")
-  if (iconValue.startsWith("Li")) {
-    return (
-      <span
-        class={`iconize-icon lucide-icon ${className}`.trim()}
-        data-icon={iconValue}
-        aria-label={iconValue}
-        style={{ marginRight: "0.3em", display: "inline-block" }}
-      />
-    );
-  }
-
-  // Emoji icon
+  // Use single element for both icon types
   return (
     <span
-      class={className || undefined}
-      style={{ marginRight: "0.3em" }}
-    >
-      {iconValue}
-    </span>
+      ref={iconRef}
+      class={`iconize-icon ${isLucide ? "lucide-icon" : ""} ${className}`.trim()}
+      aria-label={iconValue}
+      style={{ marginRight: "0.3em", display: "inline-block" }}
+    />
   );
 }
 

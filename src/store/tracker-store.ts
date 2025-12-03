@@ -44,9 +44,10 @@ class TrackerStore {
 
   /**
    * Update settings
+   * Creates a new object to ensure signal detects the change
    */
   setSettings(settings: TrackerSettings): void {
-    this.settings.value = settings;
+    this.settings.value = { ...settings };
   }
 
   /**

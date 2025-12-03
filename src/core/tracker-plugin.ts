@@ -358,6 +358,8 @@ export default class TrackerPlugin extends Plugin {
 
   async saveSettings() { 
     await this.saveData(this.settings);
+    // Update signal immediately for reactive UI updates
+    trackerStore.setSettings(this.settings);
     this.folderTreeService.updateSettings(this.settings);
     this.sortOrderManager.updateSettings(this.settings);
     

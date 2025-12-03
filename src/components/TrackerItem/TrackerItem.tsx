@@ -91,39 +91,37 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     return unit ? `${baseName} (${unit})` : baseName;
   }, [file, fileOptions]);
 
-  // Extract settings values for reactivity
-  const {
-    daysToShow: defaultDaysToShow,
-    showChartByDefault,
-    showStatsByDefault,
-    hideChartOnMobile,
-    hideStatsOnMobile,
-  } = plugin.settings;
-
-  // Calculate settings for visualization
-  const daysToShow = parseInt(opts.days) || defaultDaysToShow;
-
   // Check if tracker is a habit type (habits don't show charts)
   const isHabitType = useMemo(() => {
     return trackerType === TrackerType.GOOD_HABIT || trackerType === TrackerType.BAD_HABIT;
   }, [trackerType]);
 
+  // Calculate settings for visualization - use useMemo with signal dependency for reactivity
+  // Access trackerStore.settings.value directly in useMemo to track changes
+  const daysToShow = useMemo(() => {
+    const settings = trackerStore.settings.value;
+    return parseInt(opts.days) || settings.daysToShow;
+  }, [opts.days, trackerStore.settings.value]);
+
+  // Use useMemo for reactive values that depend on both props and signals
   const shouldShowChart = useMemo(() => {
     // Habits never show charts
     if (isHabitType) return false;
 
+    const settings = trackerStore.settings.value;
     const showChart = opts.showChart === "true" ||
-      (opts.showChart === undefined && showChartByDefault);
-    const hideOnMobile = plugin.isMobileDevice() && hideChartOnMobile;
+      (opts.showChart === undefined && settings.showChartByDefault);
+    const hideOnMobile = plugin.isMobileDevice() && settings.hideChartOnMobile;
     return showChart && !hideOnMobile;
-  }, [opts.showChart, isHabitType, showChartByDefault, hideChartOnMobile, plugin]);
+  }, [opts.showChart, isHabitType, trackerStore.settings.value, plugin]);
 
   const shouldShowStats = useMemo(() => {
+    const settings = trackerStore.settings.value;
     const showStats = opts.showStats === "true" ||
-      (opts.showStats === undefined && showStatsByDefault);
-    const hideOnMobile = plugin.isMobileDevice() && hideStatsOnMobile;
+      (opts.showStats === undefined && settings.showStatsByDefault);
+    const hideOnMobile = plugin.isMobileDevice() && settings.hideStatsOnMobile;
     return showStats && !hideOnMobile;
-  }, [opts.showStats, showStatsByDefault, hideStatsOnMobile, plugin]);
+  }, [opts.showStats, trackerStore.settings.value, plugin]);
 
   // Event handlers
   const handleEdit = useCallback(() => {
@@ -145,17 +143,22 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     return plugin.getStartTrackingDate(entries, opts);
   }, [plugin, entries, fileOptions]);
 
-  // Calculate limit progress for header
+  // Calculate limit progress for header - use useMemo with signal dependencies
   const limitProgress = useMemo(() => {
-    const opts = fileOptions;
-    if (!opts || plugin.settings.disableLimitReaction) return null;
+    // Access trackerState to ensure reactivity
+    const state = trackerState.value;
+    const opts = state?.fileOptions ?? null;
+    const currentEntries = state?.entries ?? new Map();
+    const settings = trackerStore.settings.value;
+    
+    if (!opts || settings.disableLimitReaction) return null;
 
     const minLimit = opts.minLimit ? parseFloat(opts.minLimit) : null;
     const maxLimit = opts.maxLimit ? parseFloat(opts.maxLimit) : null;
 
     if (minLimit === null && maxLimit === null) return null;
 
-    const currentValue = entries.get(dateIso);
+    const currentValue = currentEntries.get(dateIso);
     const value = currentValue != null ? Number(currentValue) : null;
 
     if (value === null || isNaN(value)) {
@@ -192,7 +195,7 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       width: `${progressPercent}%`,
       color: progressColor,
     };
-  }, [fileOptions, plugin.settings.disableLimitReaction, entries, dateIso]);
+  }, [trackerState.value, trackerStore.settings.value, dateIso]);
 
   // Render control based on tracker type
   const renderControl = () => {

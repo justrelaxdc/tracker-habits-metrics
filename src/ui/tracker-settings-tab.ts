@@ -2,13 +2,27 @@ import type { App } from "obsidian";
 import { PluginSettingTab, Setting } from "obsidian";
 import type TrackerPlugin from "../core/tracker-plugin";
 import { FolderSuggest } from "./suggest/folder-suggest";
+import { DEBOUNCE_DELAY_MS } from "../constants";
+import { trackerStore } from "../store";
 
 export class TrackerSettingsTab extends PluginSettingTab {
   private readonly plugin: TrackerPlugin;
+  private folderDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private daysDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(app: App, plugin: TrackerPlugin) {
     super(app, plugin);
     this.plugin = plugin;
+  }
+
+  /**
+   * Helper to update settings with immediate signal update
+   * Signal is updated immediately for reactive UI, then saveSettings persists to disk
+   */
+  private updateSettingImmediate(updater: () => void): void {
+    updater();
+    // Update signal immediately for reactive UI (saveSettings also does this, but we want it instant)
+    trackerStore.setSettings({ ...this.plugin.settings });
   }
 
   display(): void {
@@ -23,9 +37,19 @@ export class TrackerSettingsTab extends PluginSettingTab {
       .addText((t) => {
         t.setPlaceholder("0. Files/Trackers")
           .setValue(this.plugin.settings.trackersFolder)
-          .onChange(async (v) => {
-            this.plugin.settings.trackersFolder = v.trim();
-            await this.plugin.saveSettings();
+          .onChange((v) => {
+            this.updateSettingImmediate(() => {
+              this.plugin.settings.trackersFolder = v.trim();
+            });
+            
+            // Debounce saveSettings call for text inputs
+            if (this.folderDebounceTimer) {
+              clearTimeout(this.folderDebounceTimer);
+            }
+            this.folderDebounceTimer = setTimeout(async () => {
+              await this.plugin.saveSettings();
+              this.folderDebounceTimer = null;
+            }, DEBOUNCE_DELAY_MS);
           });
         new FolderSuggest(this.app, t.inputEl, folders);
       });
@@ -37,11 +61,21 @@ export class TrackerSettingsTab extends PluginSettingTab {
         t
           .setPlaceholder("30")
           .setValue(String(this.plugin.settings.daysToShow))
-          .onChange(async (v) => {
+          .onChange((v) => {
             const num = parseInt(v.trim());
             if (!isNaN(num) && num > 0) {
-              this.plugin.settings.daysToShow = num;
-              await this.plugin.saveSettings();
+              this.updateSettingImmediate(() => {
+                this.plugin.settings.daysToShow = num;
+              });
+              
+              // Debounce saveSettings call for text inputs
+              if (this.daysDebounceTimer) {
+                clearTimeout(this.daysDebounceTimer);
+              }
+              this.daysDebounceTimer = setTimeout(async () => {
+                await this.plugin.saveSettings();
+                this.daysDebounceTimer = null;
+              }, DEBOUNCE_DELAY_MS);
             }
           }),
       );
