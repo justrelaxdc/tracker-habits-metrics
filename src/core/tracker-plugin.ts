@@ -25,19 +25,19 @@ import { DomReorderManager } from "./managers/dom-reorder";
 import { BlockManager } from "./managers/block-manager";
 
 export default class TrackerPlugin extends Plugin {
-  settings: TrackerSettings;
+  settings!: TrackerSettings;
   
   // Services
-  private folderTreeService: FolderTreeService;
-  private trackerFileService: TrackerFileService;
-  private trackerOrderService: TrackerOrderService;
-  private iconizeService: IconizeService;
+  private folderTreeService!: FolderTreeService;
+  private trackerFileService!: TrackerFileService;
+  private trackerOrderService!: TrackerOrderService;
+  private iconizeService!: IconizeService;
   
   // Managers
-  private stateManager: StateManager;
-  private sortOrderManager: SortOrderManager;
-  private domReorderManager: DomReorderManager;
-  private blockManager: BlockManager;
+  private stateManager!: StateManager;
+  private sortOrderManager!: SortOrderManager;
+  private domReorderManager!: DomReorderManager;
+  private blockManager!: BlockManager;
   
   // UI
   private styleEl?: HTMLStyleElement;

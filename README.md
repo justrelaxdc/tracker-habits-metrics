@@ -144,23 +144,28 @@ data:{"2025-01-01":1,"2025-01-02":1,"2025-01-03":0}
 
 ## 📊 Statistics Explained
 
-This section breaks down every statistic.
+This section breaks down every statistic displayed in the tracker.
 
-### For Habits
-- **Total records** – count of all entries  
-- **Last N days summary** – sum/avg for selected period  
-- **Completed** – completion % and active days  
-- **Current streak** 🔥 – continuous progress up to today  
-- **Best streak** ⭐ – longest run ever recorded  
+### For Habits (Good Habit / Bad Habit)
 
-### For Metrics
-- **Total records**  
-- **Sum**  
-- **Average**  
-- **Minimum**  
-- **Maximum**  
-- **Median**  
-- **Active days**  
+**PERIOD section:**
+- **Completion rate** (or "Days without" for bad habits) – percentage of successful days in the selected period with visual progress bar  
+  - Shows completion percentage and ratio of active days to total days (e.g., "75% (15/20)")
+
+**STREAKS section:**
+- **Current streak** 🔥 – consecutive successful days from the selected date backwards  
+- **Best streak** ⭐ – longest consecutive successful period ever recorded
+
+### For Metrics (Number / Scale / Counter / Text)
+
+**PERIOD section:**
+- **Active days** 📅 – number of days with recorded values vs total days in period (e.g., "18/30")  
+- **Sum** 📈 – total sum of all values in the selected period  
+- **Average** 📊 – average value across the period  
+- **Min | Max** 📉 – minimum and maximum values in the period  
+- **Median** 📊 – median value of all entries in the period
+
+> **Note:** For text trackers, values are counted as word count. Statistics are calculated for the period specified by the `days` parameter (default: 30 days).  
 
 ---
 

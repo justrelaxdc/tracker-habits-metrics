@@ -253,6 +253,10 @@
   opacity: 0.85;
 }
 
+.tracker-notes__folder-name {
+  cursor: pointer;
+}
+
 /* ============================================
    Animations
    ============================================ */
@@ -333,6 +337,10 @@
 
 .tracker-notes__tracker-title a:hover {
   color: var(--text-accent, var(--interactive-accent));
+}
+
+.tracker-notes__tracker-icon {
+  margin-right: 0 !important;
 }
 
 /* ============================================
