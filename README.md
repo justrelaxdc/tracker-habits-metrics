@@ -6,7 +6,7 @@ Transform your Obsidian vault into a powerful tracking system. Track everything 
 
 ---
 
-<!-- 🎥 HERO GIF: main dashboard — several trackers, heatmaps, charts displayed inside a daily note or dashboard -->
+![Dashboard Preview](assets/hero.gif)
 
 ---
 
