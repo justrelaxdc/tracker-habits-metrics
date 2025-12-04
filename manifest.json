@@ -3,7 +3,7 @@
   "name": "Tracker: habits and metrics",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "A note-based tracker for habits and metrics. Features heatmaps, charts, and streaks while keeping your data in pure Markdown files. No hidden databases.",
+  "description": "A tracker for habits and metrics. Features heatmaps, charts, and streaks while keeping your data in pure Markdown files. No hidden databases.",
   "author": "Vlad Ross",
   "authorUrl": "https://t.me/vladrosss",
   "fundingUrl": "https://buymeacoffee.com/vladross",

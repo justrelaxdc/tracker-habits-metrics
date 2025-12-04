@@ -57,8 +57,6 @@ Transform your Obsidian vault into a powerful tracking system. Track everything 
 6. Configure limits, units, start date, etc.  
 7. Click **Create**.
 
-<!-- 🎥 GIF: Creation flow — open palette → create new tracker → choose type → file appears -->
-
 > You can structure trackers inside folders (up to 3 levels). The plugin will automatically interpret these folders as categories/subcategories. Folders containing the word `archive` are ignored, so old trackers can be saved there.
 
 ---
