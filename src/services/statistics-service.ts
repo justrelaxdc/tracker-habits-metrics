@@ -1,9 +1,10 @@
 import type { TFile } from "obsidian";
 import type { TrackerSettings } from "../domain/types";
+import type { DateWrapper } from "../domain/date-types";
 import type { HabitStatistics, MetricStatistics, StreakInfo, StatisticsResult } from "../domain/statistics-types";
 import { TrackerType, MAX_DAYS_BACK } from "../constants";
 import { DateService } from "./date-service";
-import { countWords } from "../utils/misc";
+import { parseTrackerValueToNumber, parseHabitValueToSuccess } from "../utils/misc";
 import { getEntryValueByDate, determineStartTrackingDate, DATE_FORMATS, isDaySuccessful } from "./entry-utils";
 
 /**
@@ -46,29 +47,11 @@ export class StatisticsService {
     while (!DateService.isAfter(currentDate, endDate)) {
       const dateStr = DateService.format(currentDate, settings.dateFormat);
       const val = entries.get(dateStr);
-      let numVal = 0;
       
-      if (val != null) {
-        if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
+      // Use unified utility for habit success calculation
+      const successVal = parseHabitValueToSuccess(val, isBadHabit);
       
-      // For bad habits: invert logic - absence or 0 = success (1), presence = failure (0)
-      // For good habits: presence = success (1), absence = failure (0)
-      if (isBadHabit) {
-        // Bad habit: success = no value or value is 0/false
-        numVal = (numVal === 0 || val == null) ? 1 : 0;
-      } else {
-        // Good habit: success = value exists and is truthy
-        numVal = (val != null && numVal > 0) ? 1 : 0;
-      }
-      
-      periodDays.push(numVal);
+      periodDays.push(successVal);
       actualDaysCount++;
       currentDate = currentDate.add(1, 'days');
     }
@@ -128,19 +111,9 @@ export class StatisticsService {
     while (!DateService.isAfter(currentDate, endDate)) {
       const dateStr = DateService.format(currentDate, settings.dateFormat);
       const val = entries.get(dateStr);
-      let numVal = 0;
       
-      if (val != null) {
-        if (metricType === TrackerType.TEXT) {
-          numVal = countWords(String(val));
-        } else if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
+      // Use unified utility for value parsing
+      const numVal = parseTrackerValueToNumber(val, metricType);
       
       periodDays.push(numVal);
       actualDaysCount++;
@@ -192,7 +165,7 @@ export class StatisticsService {
   calculateStreaks(
     entries: Map<string, string | number>,
     settings: TrackerSettings,
-    endDate: Date | any,
+    endDate: Date | DateWrapper,
     trackerType: string,
     file?: TFile,
     startTrackingDateStr?: string | null
@@ -201,13 +174,13 @@ export class StatisticsService {
     const isBadHabit = metricType === TrackerType.BAD_HABIT;
     
     // Normalize end date
-    let currentDate: any;
+    let currentDate: DateWrapper;
     if (endDate instanceof Date) {
       currentDate = DateService.fromDate(endDate);
-    } else if (endDate && typeof endDate.isValid === 'function' && typeof endDate.clone === 'function') {
+    } else if ('isValid' in endDate && typeof endDate.isValid === 'function' && typeof endDate.clone === 'function') {
       currentDate = endDate.clone();
     } else {
-      currentDate = DateService.fromDate(new Date(endDate));
+      currentDate = DateService.now();
     }
     
     if (!currentDate || !currentDate.isValid || !currentDate.isValid()) {
@@ -290,7 +263,7 @@ export class StatisticsService {
     dateIso: string,
     daysToShow: number,
     trackerType: string,
-    endDate: Date | any,
+    endDate: Date | DateWrapper,
     file?: TFile,
     startTrackingDateStr?: string | null
   ): StatisticsResult {

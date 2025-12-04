@@ -6,7 +6,9 @@ import { DEFAULT_SETTINGS } from "../domain/types";
  * Iconize data structure
  */
 export interface IconizeData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin settings structure is unknown
   settings?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin stores various data types
   [path: string]: string | any;
 }
 

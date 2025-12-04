@@ -1,5 +1,6 @@
 import { App, TFile, TFolder } from "obsidian";
 import type { FolderNode, TrackerSettings } from "../domain/types";
+import { SORT_ORDER_CLEANUP_DELAY_MS } from "../constants";
 import { normalizePath } from "../utils/path";
 
 export class FolderTreeService {
@@ -43,7 +44,7 @@ export class FolderTreeService {
     }
     this.cleanupDebounceTimer = setTimeout(() => {
       this.performLazyCleanup();
-    }, 5000); // Wait 5 seconds before saving to batch multiple cleanups
+    }, SORT_ORDER_CLEANUP_DELAY_MS);
   }
 
   /**
@@ -55,8 +56,6 @@ export class FolderTreeService {
       return;
     }
 
-    let hasChanges = false;
-    
     for (const folderPath of this.pendingCleanup) {
       const sortOrder = this.customSortOrder[folderPath];
       if (!sortOrder) continue;
@@ -66,7 +65,6 @@ export class FolderTreeService {
       if (!folder || !(folder instanceof TFolder)) {
         // Folder no longer exists - remove the entire sort order
         delete this.customSortOrder[folderPath];
-        hasChanges = true;
         continue;
       }
       
@@ -81,13 +79,12 @@ export class FolderTreeService {
       
       // Filter out non-existent items
       const cleanedOrder = sortOrder.filter(name => existingNames.has(name));
-      if (cleanedOrder.length !== sortOrder.length) {
+        if (cleanedOrder.length !== sortOrder.length) {
         if (cleanedOrder.length === 0) {
           delete this.customSortOrder[folderPath];
         } else {
           this.customSortOrder[folderPath] = cleanedOrder;
         }
-        hasChanges = true;
       }
     }
     

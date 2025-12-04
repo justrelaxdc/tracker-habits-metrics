@@ -51,7 +51,10 @@ export class EditTrackerModal extends Modal {
 
     const typeDropdown = typeSetting.controlEl.querySelector("select") as HTMLSelectElement;
     if (typeDropdown) {
-      typeDropdown.innerHTML = "";
+      // Clear existing options safely
+      while (typeDropdown.firstChild) {
+        typeDropdown.removeChild(typeDropdown.firstChild);
+      }
 
       const habitsGroup = document.createElement("optgroup");
       habitsGroup.label = MODAL_LABELS.HABITS_GROUP;
@@ -139,7 +142,7 @@ export class EditTrackerModal extends Modal {
               if (DateService.isBefore(dataDateObj, newStartDateObj)) {
                 datesToDeleteCount++;
               }
-            } catch (e) {
+            } catch {
               // If date parsing failed, skip
             }
           }
@@ -416,7 +419,7 @@ export class EditTrackerModal extends Modal {
                 if (DateService.isBefore(dataDateObj, newStartDateObj)) {
                   datesToDelete.push(dateStr);
                 }
-              } catch (e) {
+              } catch {
                 // If date parsing failed, skip
               }
             }
@@ -470,7 +473,7 @@ export class EditTrackerModal extends Modal {
                 const folderPath = this.file.parent?.path || "";
                 const newPath = folderPath ? `${folderPath}/${newFileName}` : newFileName;
                 
-                const renamedFile = await this.app.vault.rename(this.file, newPath);
+                await this.app.vault.rename(this.file, newPath);
                 
                 // Check rename success by file path change, regardless of rename return value (void/null/updated TFile)
                 const fileToCheck = this.file;
@@ -481,7 +484,6 @@ export class EditTrackerModal extends Modal {
                 }
               } catch (renameError) {
                 // If rename threw exception, log and use original file
-                const errorMsg = renameError instanceof Error ? renameError.message : String(renameError);
                 logError("Tracker: error renaming file", renameError);
                 // Continue with original file
               }
@@ -517,7 +519,7 @@ export class EditTrackerModal extends Modal {
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
-          console.error("Tracker: error updating tracker", error);
+          logError("Tracker: error updating tracker", error);
         }
     });
   }

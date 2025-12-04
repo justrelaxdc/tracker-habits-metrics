@@ -11,8 +11,10 @@ export function populateTrackerTypeSelector(
   selectElement: HTMLSelectElement,
   defaultValue: TrackerTypeValue = TrackerType.GOOD_HABIT
 ): void {
-  // Clear existing options
-  selectElement.innerHTML = "";
+  // Clear existing options safely
+  while (selectElement.firstChild) {
+    selectElement.removeChild(selectElement.firstChild);
+  }
   
   // Create Habits group
   const habitsGroup = document.createElement("optgroup");

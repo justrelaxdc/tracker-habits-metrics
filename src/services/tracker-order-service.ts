@@ -15,9 +15,6 @@ export class TrackerOrderService {
   async reorderTrackers(folderPath: string, newOrder: TFile[]): Promise<void> {
     if (newOrder.length === 0) return;
 
-    // Determine prefix width based on the number of files
-    const prefixWidth = newOrder.length >= 100 ? 3 : newOrder.length >= 10 ? 2 : 2;
-
     // Rename files with correct prefixes
     for (let i = 0; i < newOrder.length; i++) {
       const file = newOrder[i];
@@ -38,9 +35,6 @@ export class TrackerOrderService {
    */
   async reorderFolders(parentFolderPath: string, newOrder: TFolder[]): Promise<void> {
     if (newOrder.length === 0) return;
-
-    // Determine prefix width based on the number of folders
-    const prefixWidth = newOrder.length >= 100 ? 3 : newOrder.length >= 10 ? 2 : 2;
 
     // Rename folders with correct prefixes
     for (let i = 0; i < newOrder.length; i++) {

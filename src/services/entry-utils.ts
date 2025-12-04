@@ -1,17 +1,12 @@
 import type { TFile } from "obsidian";
 import type { TrackerSettings } from "../domain/types";
+import type { DateWrapper } from "../domain/date-types";
+import { DATE_FORMATS_ARRAY, DEFAULT_FALLBACK_DAYS } from "../constants";
 import { DateService } from "./date-service";
 import { isTrackerValueTrue } from "../utils/validation";
 
-/**
- * Common date formats to try when parsing dates
- */
-export const DATE_FORMATS = [
-  'YYYY-MM-DD',
-  'DD.MM.YYYY',
-  'MM/DD/YYYY',
-  'YYYY/MM/DD'
-];
+// Re-export for backward compatibility
+export const DATE_FORMATS = DATE_FORMATS_ARRAY;
 
 /**
  * Gets entry value by date, trying multiple date formats
@@ -22,7 +17,7 @@ export const DATE_FORMATS = [
  */
 export function getEntryValueByDate(
   entries: Map<string, string | number>,
-  date: any,
+  date: DateWrapper | Date,
   settings: TrackerSettings
 ): string | number | undefined {
   // Try settings format first, then common formats
@@ -64,8 +59,8 @@ export function determineStartTrackingDate(
   file: TFile | undefined,
   entries: Map<string, string | number>,
   settings: TrackerSettings,
-  currentDate: any
-): any {
+  currentDate: DateWrapper | Date
+): DateWrapper | null {
   let startTrackingDate = null;
   
   const parseFormats = ['YYYY-MM-DD', settings.dateFormat, ...DATE_FORMATS];
@@ -102,9 +97,9 @@ export function determineStartTrackingDate(
     }
   }
 
-  // Fallback: 365 days ago
+  // Fallback: DEFAULT_FALLBACK_DAYS ago
   if (!startTrackingDate) {
-    startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, 365));
+    startTrackingDate = DateService.startOfDay(DateService.subtractDays(currentDate, DEFAULT_FALLBACK_DAYS));
   }
 
   return startTrackingDate;

@@ -1,15 +1,14 @@
-import { Chart } from "chart.js";
 import type { TFile } from "obsidian";
-import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
+import type { TrackerSettings } from "../domain/types";
 import type { 
   PreparedChartData, 
   ChartConfigOptions, 
   ThemeColors,
   TrackerChartInstance 
 } from "../domain/chart-types";
-import { CHART_CONFIG, DATE_FORMATS, TrackerType } from "../constants";
+import { CHART_CONFIG, DATE_FORMAT, TrackerType } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
-import { countWords } from "../utils/misc";
+import { parseTrackerValueToNumber } from "../utils/misc";
 import { DateService } from "./date-service";
 
 /**
@@ -31,7 +30,7 @@ export class ChartService {
     
     // Parse dates
     const activeDate = dateIso 
-      ? DateService.parse(dateIso, DATE_FORMATS.ISO)
+      ? DateService.parse(dateIso, DATE_FORMAT.ISO)
       : DateService.now();
     
     // Calculate date range (show some days ahead)
@@ -67,33 +66,24 @@ export class ChartService {
         activeDateIndex = i;
       }
       
-      // Format label
+      // Format label for chart axis
       let label = '';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- moment.js global from Obsidian
       const m = (window as any).moment;
       if (m) {
-        label = m(date.toDate()).format(DATE_FORMATS.DISPLAY_SHORT);
+        label = m(date.toDate()).format(DATE_FORMAT.DISPLAY_SHORT);
       } else {
+        // Fallback to browser locale for date formatting
         const day = date.getDate();
-        const month = date.toDate().toLocaleDateString("ru", { month: "short" });
+        const month = date.toDate().toLocaleDateString(undefined, { month: "short" });
         label = `${day} ${month}`;
       }
       labels.push(label);
       dateStrings.push(dateStr);
       
-      // Get value
+      // Get value using unified utility
       const val = entries.get(dateStr);
-      let numVal = 0;
-      if (val != null) {
-        if (metricType === TrackerType.TEXT) {
-          numVal = countWords(String(val));
-        } else if (typeof val === "number") {
-          numVal = val;
-        } else if (val === "1" || String(val) === "true") {
-          numVal = 1;
-        } else {
-          numVal = Number(val) || 0;
-        }
-      }
+      const numVal = parseTrackerValueToNumber(val, metricType);
       values.push(numVal);
       maxValue = Math.max(maxValue, numVal);
       
@@ -137,7 +127,7 @@ export class ChartService {
     
     const allMaxValues: number[] = [maxValue];
     if (maxLimit !== null) allMaxValues.push(maxLimit);
-    // Если задан только minLimit (без maxLimit), используем minLimit * 2 как верхнюю границу
+    // If only minLimit is set (without maxLimit), use minLimit * 2 as upper bound
     if (minLimit !== null && maxLimit === null) {
       allMaxValues.push(minLimit * 2);
     }
@@ -172,6 +162,7 @@ export class ChartService {
     colors: ThemeColors,
     options: ChartConfigOptions,
     onChartClick: (dateStr: string) => void
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js config type is complex
   ): any {
     const { metricType, unit, minLimit, maxLimit, scaleMinValue, scaleMaxValue } = options;
     
@@ -183,6 +174,7 @@ export class ChartService {
       chartLabel = metricType === TrackerType.TEXT ? "Word count" : "Value";
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js config structure
     const config: any = {
       type: 'line',
       data: {
@@ -201,14 +193,17 @@ export class ChartService {
           pointBorderWidth: data.pointBorderWidths,
           pointHoverRadius: CHART_CONFIG.POINT_HOVER_RADIUS,
           pointHitRadius: CHART_CONFIG.POINT_HIT_RADIUS,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
           pointHoverBackgroundColor: (ctx: any) => {
             const index = ctx.dataIndex;
             return data.pointBackgroundColors[index] || colors.accentColor;
           },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
           pointHoverBorderColor: (ctx: any) => {
             const index = ctx.dataIndex;
             return data.pointBorderColors[index] || colors.accentColor;
           },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
           pointHoverBorderWidth: (ctx: any) => {
             const index = ctx.dataIndex;
             return data.pointBorderWidths[index] || CHART_CONFIG.POINT_BORDER_WIDTH;
@@ -232,6 +227,7 @@ export class ChartService {
             padding: 8,
             displayColors: false,
             callbacks: {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js tooltip context
               label: (context: any) => {
                 const value = context.parsed.y;
                 if (unit) {
@@ -297,6 +293,7 @@ export class ChartService {
             hoverBorderWidth: undefined
           }
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js event handler types
         onClick: (event: any, elements: any[], chart: any) => {
           if (elements && elements.length > 0) {
             const element = elements[0];
@@ -309,6 +306,7 @@ export class ChartService {
             }
           }
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js resize handler
         onResize: (chart: any) => {
           const trackerChart = chart as TrackerChartInstance;
           const currentColors = getThemeColors();
@@ -326,6 +324,7 @@ export class ChartService {
       },
       plugins: [{
         id: 'startLinePlugin',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js plugin hook
         beforeDraw: (chart: any) => {
           // Read data from chart instance, not from closure
           const trackerChart = chart as TrackerChartInstance;
@@ -357,7 +356,6 @@ export class ChartService {
     minLimit: number | null,
     maxLimit: number | null
   ): void {
-    const ctx = chart.ctx;
     const chartArea = chart.chartArea;
     if (!chartArea) return;
     

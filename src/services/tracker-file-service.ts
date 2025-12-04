@@ -1,5 +1,6 @@
 import { App, TFile } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
+import type { DateWrapper } from "../domain/date-types";
 import { parseMaybeNumber } from "../utils/misc";
 import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType, MAX_FILE_CONTENT_CACHE_SIZE, CACHE_TTL_MS } from "../constants";
 import { DateService } from "./date-service";
@@ -270,9 +271,7 @@ export class TrackerFileService {
    */
   async writeLogLineFromState(
     file: TFile,
-    state: { entries: Map<string, string | number> },
-    dateIso: string,
-    value: string | number
+    state: { entries: Map<string, string | number> }
   ): Promise<void> {
     try {
       // Read file only to get body and current frontmatter structure
@@ -336,8 +335,7 @@ export class TrackerFileService {
    */
   async deleteEntryFromState(
     file: TFile,
-    state: { entries: Map<string, string | number> },
-    dateIso: string
+    state: { entries: Map<string, string | number> }
   ): Promise<void> {
     try {
       // Read file only to get body and current frontmatter structure
@@ -408,6 +406,7 @@ export class TrackerFileService {
     const fileOpts: TrackerFileOptions = {};
     try {
       const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TrackerType enum cast
       fileOpts.mode = (typeMatch && typeMatch[1] ? typeMatch[1].trim() : TrackerType.GOOD_HABIT) as any;
       const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
       if (minValueMatch) fileOpts.minValue = minValueMatch[1];
@@ -456,7 +455,7 @@ export class TrackerFileService {
   calculateStreak(
     entries: Map<string, string | number>,
     settings: TrackerSettings,
-    endDate: Date | any,
+    endDate: Date | DateWrapper,
     trackerType?: string,
     file?: TFile,
     startTrackingDateStr?: string | null

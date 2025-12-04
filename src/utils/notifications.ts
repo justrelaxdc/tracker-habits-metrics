@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Notice } from "obsidian";
 import { ERROR_MESSAGES } from "../constants";
 

@@ -10,6 +10,7 @@ export class BlockManager {
   private deletionTimers: Set<ReturnType<typeof setTimeout>> = new Set();
 
   constructor(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian Workspace API not fully typed
     private readonly getWorkspace: () => any
   ) {}
 
@@ -95,6 +96,7 @@ export class BlockManager {
     
     const workspace = this.getWorkspace();
     for (const leaf of workspace.getLeavesOfType('markdown')) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian MarkdownView type not fully typed
       const view = leaf.view as any;
       if (view && view.containerEl) {
         // Check container itself
@@ -134,7 +136,7 @@ export class BlockManager {
           try {
             container.scrollTop = position.top;
             container.scrollLeft = position.left;
-          } catch (e) {
+          } catch {
             // Ignore errors if element is no longer available
           }
         }

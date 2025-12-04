@@ -7,6 +7,10 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Ignore compiled output files
+    ignores: ["main.js", "*.js", "!eslint.config.mjs"],
+  },
+  {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: {
       obsidianmd: obsidian,

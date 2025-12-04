@@ -1,6 +1,6 @@
 import type { TFile } from "obsidian";
 import type TrackerPlugin from "../core/tracker-plugin";
-import type { FolderNode, TrackerFileOptions, TrackerEntries } from "../domain/types";
+import type { FolderNode, TrackerFileOptions } from "../domain/types";
 import type { TrackerTypeValue, ViewModeValue } from "../constants";
 
 /**
@@ -94,22 +94,22 @@ export interface HeatmapProps extends BaseControlProps {
 /**
  * Props for NumberControl component
  */
-export interface NumberControlProps extends BaseControlProps {}
+export type NumberControlProps = BaseControlProps;
 
 /**
  * Props for PlusMinusControl component
  */
-export interface PlusMinusControlProps extends BaseControlProps {}
+export type PlusMinusControlProps = BaseControlProps;
 
 /**
  * Props for TextControl component
  */
-export interface TextControlProps extends BaseControlProps {}
+export type TextControlProps = BaseControlProps;
 
 /**
  * Props for ScaleControl component
  */
-export interface ScaleControlProps extends BaseControlProps {}
+export type ScaleControlProps = BaseControlProps;
 
 /**
  * Props for Statistics component

@@ -2,7 +2,6 @@ import { useEffect, useCallback, useMemo } from "preact/hooks";
 import { useSignal, useComputed } from "@preact/signals";
 import { CSS_CLASSES, TrackerType, ViewMode } from "../../constants";
 import type { TrackerItemProps } from "../types";
-import type { TrackerFileOptions } from "../../domain/types";
 import { TrackerHeader } from "./TrackerHeader";
 import { useTrackerContext } from "../TrackerContext";
 import { trackerStore } from "../../store";

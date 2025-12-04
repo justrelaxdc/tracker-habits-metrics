@@ -1,6 +1,6 @@
 import { useCallback, useRef, useMemo } from "preact/hooks";
 import { useComputed } from "@preact/signals";
-import { CSS_CLASSES, TrackerType } from "../../constants";
+import { CSS_CLASSES } from "../../constants";
 import { DateService } from "../../services/date-service";
 import { isTrackerValueTrue } from "../../utils/validation";
 import type { HeatmapProps } from "../types";
@@ -56,7 +56,6 @@ export function Heatmap({
     const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
     const today = DateService.now();
     const todayStart = DateService.startOfDay(today);
-    const todayStr = DateService.format(todayStart, plugin.settings.dateFormat);
     
     // Parse start tracking date once outside the loop
     let startDateObj: ReturnType<typeof DateService.parseMultiple> | null = null;
@@ -68,7 +67,7 @@ export function Heatmap({
           "DD.MM.YYYY",
           "MM/DD/YYYY",
         ]);
-      } catch (e) {
+      } catch {
         // Ignore parsing errors - startDateObj remains null
       }
     }

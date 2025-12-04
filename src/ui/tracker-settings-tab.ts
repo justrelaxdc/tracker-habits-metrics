@@ -16,6 +16,21 @@ export class TrackerSettingsTab extends PluginSettingTab {
   }
 
   /**
+   * Called when settings tab is closed
+   * Clears any pending debounce timers to prevent memory leaks
+   */
+  hide(): void {
+    if (this.folderDebounceTimer) {
+      clearTimeout(this.folderDebounceTimer);
+      this.folderDebounceTimer = null;
+    }
+    if (this.daysDebounceTimer) {
+      clearTimeout(this.daysDebounceTimer);
+      this.daysDebounceTimer = null;
+    }
+  }
+
+  /**
    * Helper to update settings with immediate signal update
    * Signal is updated immediately for reactive UI, then saveSettings persists to disk
    */

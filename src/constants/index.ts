@@ -1,6 +1,6 @@
 // Performance constants
 export const MOBILE_BREAKPOINT = 768;
-export const MAX_DAYS_BACK = 3650;
+export const MAX_DAYS_BACK = 3650; // ~10 years max history
 export const DEFAULT_DAYS_TO_SHOW = 30;
 export const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 export const MAX_CACHE_SIZE = 100;
@@ -15,6 +15,10 @@ export const ANIMATION_DURATION_SHORT_MS = 200; // Short animation duration for 
 export const SCROLL_RESTORE_DELAY_2_MS = 100; // Second delay for scroll restoration
 export const IMMEDIATE_TIMEOUT_MS = 0; // Immediate timeout
 export const NOTICE_TIMEOUT_MS = 2000; // Timeout for notice messages
+
+// Default fallback values
+export const DEFAULT_FALLBACK_DAYS = 365; // Fallback period when no start date found
+export const SORT_ORDER_CLEANUP_DELAY_MS = 5000; // Delay before cleaning up stale sort order entries
 
 // Tracker types
 export const TrackerType = {
@@ -177,13 +181,25 @@ export const CHART_CONFIG = {
   LINE_WIDTH: 2,
 } as const;
 
-// Date formats
-export const DATE_FORMATS = {
+// Date formats - named constants
+export const DATE_FORMAT = {
   ISO: 'YYYY-MM-DD',
   ISO_SLASH: 'YYYY/MM/DD',
   EU: 'DD.MM.YYYY',
+  US: 'MM/DD/YYYY',
   DISPLAY_SHORT: 'D MMM',
 } as const;
+
+// Array of common date formats for parsing (order matters - most common first)
+export const DATE_FORMATS_ARRAY = [
+  DATE_FORMAT.ISO,
+  DATE_FORMAT.EU,
+  DATE_FORMAT.US,
+  DATE_FORMAT.ISO_SLASH,
+] as const;
+
+// Legacy alias for backward compatibility
+export const DATE_FORMATS = DATE_FORMAT;
 
 // Error messages
 export const ERROR_MESSAGES = {

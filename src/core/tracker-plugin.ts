@@ -1,6 +1,7 @@
 import { MarkdownPostProcessorContext, Notice, Plugin, TFile, TFolder } from "obsidian";
 import { TrackerBlockRenderChild } from "../ui/tracker-block-render-child";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
+import type { DateWrapper } from "../domain/date-types";
 import { DEFAULT_SETTINGS } from "../domain/types";
 import { FolderTreeService } from "../services/folder-tree-service";
 import { TrackerFileService } from "../services/tracker-file-service";
@@ -87,7 +88,7 @@ export default class TrackerPlugin extends Plugin {
     
     this.domReorderManager = new DomReorderManager(
       () => this.blockManager.activeBlocks,
-      (p) => normalizePath(p),
+      normalizePath,
       (t, b) => this.blockManager.isFolderRelevant(t, b)
     );
     
@@ -178,7 +179,7 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async refreshBlocksForFolder(folderPath: string) {
-    await this.blockManager.refreshBlocksForFolder(folderPath, (p) => normalizePath(p));
+    await this.blockManager.refreshBlocksForFolder(folderPath, normalizePath);
   }
 
   /**
@@ -212,7 +213,7 @@ export default class TrackerPlugin extends Plugin {
   }
 
   invalidateCacheForFolder(folderPath: string): void {
-    this.stateManager.invalidateCacheForFolder(folderPath, (p) => normalizePath(p));
+    this.stateManager.invalidateCacheForFolder(folderPath, normalizePath);
   }
 
   invalidateCacheForFile(file: TFile): void {
@@ -242,7 +243,7 @@ export default class TrackerPlugin extends Plugin {
     return this.trackerFileService.getStartTrackingDate(entries, this.settings, fileOpts);
   }
 
-  calculateStreak(entries: Map<string, string | number>, endDate: Date | any, trackerType?: string, file?: TFile, startTrackingDateStr?: string | null): number {
+  calculateStreak(entries: Map<string, string | number>, endDate: Date | DateWrapper, trackerType?: string, file?: TFile, startTrackingDateStr?: string | null): number {
     return this.trackerFileService.calculateStreak(entries, this.settings, endDate, trackerType, file, startTrackingDateStr);
   }
 
@@ -280,7 +281,7 @@ export default class TrackerPlugin extends Plugin {
       await this.sortOrderManager.saveSortOrderForFolder(
         normalizedFolderPath,
         updatedSortOrder,
-        (p) => normalizePath(p)
+        normalizePath
       );
     }
     
@@ -326,7 +327,7 @@ export default class TrackerPlugin extends Plugin {
         
         try {
           // Use writeLogLineFromState to avoid re-reading the file
-          await this.trackerFileService.writeLogLineFromState(file, state, dateIso, normalizedValue);
+          await this.trackerFileService.writeLogLineFromState(file, state);
         } catch (error) {
           // Revert optimistic update on error
           if (originalValue !== undefined) {
@@ -365,7 +366,7 @@ export default class TrackerPlugin extends Plugin {
         
         try {
           // Use deleteEntryFromState to avoid re-reading the file
-          await this.trackerFileService.deleteEntryFromState(file, state, dateIso);
+          await this.trackerFileService.deleteEntryFromState(file, state);
         } catch (error) {
           // Revert optimistic update on error
           if (hadValue) {
@@ -437,7 +438,7 @@ export default class TrackerPlugin extends Plugin {
     ) as TFile[];
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
-      trackers, folderPath, (p) => normalizePath(p)
+      trackers, folderPath, normalizePath
     );
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
@@ -448,7 +449,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedTrackers.map(t => t.basename);
     await this.sortOrderManager.saveSortOrderForFolder(
-      folderPath, newOrder, (p) => normalizePath(p)
+      folderPath, newOrder, normalizePath
     );
 
     await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
@@ -465,7 +466,7 @@ export default class TrackerPlugin extends Plugin {
     ) as TFile[];
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
-      trackers, folderPath, (p) => normalizePath(p)
+      trackers, folderPath, normalizePath
     );
 
     const currentIndex = sortedTrackers.findIndex(t => t.path === file.path);
@@ -476,7 +477,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedTrackers.map(t => t.basename);
     await this.sortOrderManager.saveSortOrderForFolder(
-      folderPath, newOrder, (p) => normalizePath(p)
+      folderPath, newOrder, normalizePath
     );
 
     await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
@@ -503,7 +504,7 @@ export default class TrackerPlugin extends Plugin {
     folders = folders.filter(f => !f.name.toLowerCase().includes("archive"));
 
     const sortedFolders = this.sortOrderManager.sortItemsByOrder(
-      folders, parentFolderPath || '', (p) => normalizePath(p)
+      folders, parentFolderPath || '', normalizePath
     );
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
@@ -514,7 +515,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedFolders.map(f => f.name);
     await this.sortOrderManager.saveSortOrderForFolder(
-      parentFolderPath || '', newOrder, (p) => normalizePath(p)
+      parentFolderPath || '', newOrder, normalizePath
     );
 
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
@@ -541,7 +542,7 @@ export default class TrackerPlugin extends Plugin {
     folders = folders.filter(f => !f.name.toLowerCase().includes("archive"));
 
     const sortedFolders = this.sortOrderManager.sortItemsByOrder(
-      folders, parentFolderPath || '', (p) => normalizePath(p)
+      folders, parentFolderPath || '', normalizePath
     );
 
     const currentIndex = sortedFolders.findIndex(f => f.path === folderPath);
@@ -552,7 +553,7 @@ export default class TrackerPlugin extends Plugin {
 
     const newOrder = sortedFolders.map(f => f.name);
     await this.sortOrderManager.saveSortOrderForFolder(
-      parentFolderPath || '', newOrder, (p) => normalizePath(p)
+      parentFolderPath || '', newOrder, normalizePath
     );
 
     await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);

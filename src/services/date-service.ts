@@ -1,27 +1,57 @@
 import type { DateWrapper } from "../domain/date-types";
 
 /**
+ * Type for moment.js function (global from Obsidian)
+ * This is a simplified type that covers our usage
+ */
+type MomentFunction = {
+  (input?: string | Date, format?: string | string[], strict?: boolean): MomentObject;
+};
+
+/**
+ * Type for moment.js object instance
+ * Covers the methods we actually use
+ */
+interface MomentObject {
+  format(fmt: string): string;
+  date(): number;
+  month(): number;
+  year(): number;
+  valueOf(): number;
+  toDate(): Date;
+  isValid(): boolean;
+  clone(): MomentObject;
+  add(amount: number, unit: string): MomentObject;
+  subtract(amount: number, unit: string): MomentObject;
+  startOf(unit: string): MomentObject;
+  isBefore(other: MomentObject | Date): boolean;
+  isAfter(other: MomentObject | Date): boolean;
+}
+
+/**
  * Service for unified date operations
  * Abstracts moment.js and native Date API
  */
 export class DateService {
   // Cache moment availability check
   private static _momentAvailable: boolean | null = null;
-  private static _moment: any = null;
+  private static _moment: MomentFunction | null = null;
 
   private static momentAvailable(): boolean {
     if (this._momentAvailable === null) {
-      this._momentAvailable = typeof (window as any).moment !== 'undefined';
-      if (this._momentAvailable) {
-        this._moment = (window as any).moment;
+      const win = window as Window & { moment?: MomentFunction };
+      this._momentAvailable = typeof win.moment !== 'undefined';
+      if (this._momentAvailable && win.moment) {
+        this._moment = win.moment;
       }
     }
     return this._momentAvailable;
   }
 
-  private static getMoment(): any {
+  private static getMoment(): MomentFunction | null {
     if (this._moment === null && this.momentAvailable()) {
-      this._moment = (window as any).moment;
+      const win = window as Window & { moment?: MomentFunction };
+      this._moment = win.moment ?? null;
     }
     return this._moment;
   }
@@ -181,7 +211,7 @@ export class DateService {
 
   // Private helper methods
 
-  private static wrapMoment(momentObj: any): DateWrapper {
+  private static wrapMoment(momentObj: MomentObject): DateWrapper {
     const m = this.getMoment();
     return {
       format: (fmt: string) => momentObj.format(fmt),
@@ -196,13 +226,13 @@ export class DateService {
         if (other instanceof Date) {
           return momentObj.isBefore(m ? m(other) : other);
         }
-        return momentObj.isBefore((other as any).toDate ? (other as any).toDate() : other);
+        return momentObj.isBefore(other.toDate());
       },
       isAfter: (other: DateWrapper | Date) => {
         if (other instanceof Date) {
           return momentObj.isAfter(m ? m(other) : other);
         }
-        return momentObj.isAfter((other as any).toDate ? (other as any).toDate() : other);
+        return momentObj.isAfter(other.toDate());
       },
       isValid: () => momentObj.isValid(),
       clone: () => this.wrapMoment(momentObj.clone()),

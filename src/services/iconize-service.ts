@@ -50,7 +50,7 @@ export class IconizeService {
       
       // Update global store for reactive updates (pass new object reference)
       trackerStore.setIconizeData(iconData);
-    } catch (error) {
+    } catch {
       // Silently fail if Iconize is not installed or data is unavailable
       trackerStore.setIconizeData(null);
     }
@@ -111,7 +111,8 @@ export class IconizeService {
    * Iconize plugin automatically updates its data with the new path,
    * so we reload data after a short delay to allow the plugin to update
    */
-  updateIconPath(oldPath: string, newPath: string): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  updateIconPath(_oldPath: string, _newPath: string): void {
     // Iconize plugin updates its data asynchronously after rename
     // Small delay ensures we pick up the updated data
     setTimeout(async () => {
@@ -122,6 +123,7 @@ export class IconizeService {
   /**
    * Creates a hash string from data object for comparison
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin data structure is unknown
   private hashData(data: any): string {
     return JSON.stringify(data);
   }
@@ -129,7 +131,9 @@ export class IconizeService {
   /**
    * Gets the Iconize plugin instance
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin API not typed
   private getIconizePlugin(): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian plugins API not fully typed
     const pluginsManager = (this.app as any).plugins;
     return pluginsManager?.plugins?.['obsidian-icon-folder'] || pluginsManager?.getPlugin?.('obsidian-icon-folder');
   }

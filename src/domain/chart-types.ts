@@ -1,4 +1,4 @@
-import type { Chart, ChartConfiguration, ChartOptions, Plugin } from "chart.js";
+import type { Chart, Plugin } from "chart.js";
 
 /**
  * Theme colors extracted from Obsidian CSS variables

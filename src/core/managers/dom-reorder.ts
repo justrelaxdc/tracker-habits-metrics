@@ -192,6 +192,7 @@ export class DomReorderManager {
    */
   async updateAllFolderButtonHandlersAfterRename(
     newPathsMap: Map<string, string>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian TAbstractFile union type
     getAbstractFileByPath: (path: string) => any,
     moveFolderUp: (path: string) => Promise<void>,
     moveFolderDown: (path: string) => Promise<void>

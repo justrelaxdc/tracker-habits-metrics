@@ -16,7 +16,7 @@ export interface IconProps {
  * Declarative Icon component
  * Uses signals to reactively update when iconize data changes
  */
-export function Icon({ path, isFile = false, className = "" }: IconProps) {
+export function Icon({ path, className = "" }: IconProps) {
   const iconRef = useRef<HTMLSpanElement>(null);
   const previousIconTypeRef = useRef<'lucide' | 'emoji' | null>(null);
   
@@ -63,7 +63,9 @@ export function Icon({ path, isFile = false, className = "" }: IconProps) {
     if (!iconRef.current || !icon.value) {
       // Clear if icon is removed
       if (iconRef.current) {
-        iconRef.current.innerHTML = '';
+        while (iconRef.current.firstChild) {
+          iconRef.current.removeChild(iconRef.current.firstChild);
+        }
       }
       previousIconTypeRef.current = null;
       return;
@@ -75,7 +77,9 @@ export function Icon({ path, isFile = false, className = "" }: IconProps) {
 
     // Clear content when switching between icon types or when icon changes
     if (previousIconTypeRef.current !== null && previousIconTypeRef.current !== currentIconType) {
-      iconRef.current.innerHTML = '';
+      while (iconRef.current.firstChild) {
+        iconRef.current.removeChild(iconRef.current.firstChild);
+      }
     }
 
     // Handle Lucide icons
@@ -85,6 +89,7 @@ export function Icon({ path, isFile = false, className = "" }: IconProps) {
       const pascalCase = iconValue.substring(2);
       const kebabCase = pascalCase.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
       // Use Obsidian's setIcon to render Lucide icon
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian setIcon accepts string but typed as IconName
       setIcon(iconRef.current, kebabCase as any);
     } else {
       // Handle emoji - set as text content
