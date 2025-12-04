@@ -209,8 +209,8 @@ Feedback, ideas, and bug reports are very welcome:
 
 - Issues & feature requests:  
   https://github.com/justrelaxdc/tracker-habits-metrics/issues  
-- Telegram: https://t.me/justrelaxdc  
-- Ko‑fi: https://ko-fi.com/vladross
+- Telegram: https://t.me/vladrosss  
+- Donate: https://buymeacoffee.com/vladross
 
 ---
 
