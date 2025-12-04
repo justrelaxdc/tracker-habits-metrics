@@ -1,6 +1,6 @@
 # 📊 Tracker: Habits and Metrics
 
-> **Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and clean local data storage.**
+> **Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and local data storage.**
 
 Transform your Obsidian vault into a powerful tracking system. Track everything from simple daily habits to complex numeric metrics — all stored as human‑readable Markdown inside your vault. No external databases, no cloud, no telemetry.
 
