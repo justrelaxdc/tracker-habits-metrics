@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --minify --tree-shaking=true",
-    "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --watch"
+    "dev": "esbuild src/main.ts --bundle --target=es2020 --outfile=main.js --format=cjs --external:obsidian --loader:.css=text --jsx=automatic --jsx-import-source=preact --watch",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@preact/signals": "^2.5.1",
@@ -14,6 +15,10 @@
   "devDependencies": {
     "@types/node": "^24.10.1",
     "esbuild": "^0.23.0",
-    "obsidian": "^1.5.0"
+    "eslint": "^9.39.1",
+    "eslint-plugin-obsidianmd": "^0.1.9",
+    "globals": "^16.5.0",
+    "obsidian": "^1.5.0",
+    "typescript-eslint": "^8.48.1"
   }
 }

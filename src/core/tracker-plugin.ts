@@ -1,4 +1,4 @@
-import { App, MarkdownPostProcessorContext, Notice, Plugin, TFile, TFolder } from "obsidian";
+import { MarkdownPostProcessorContext, Notice, Plugin, TFile, TFolder } from "obsidian";
 import { TrackerBlockRenderChild } from "../ui/tracker-block-render-child";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import { DEFAULT_SETTINGS } from "../domain/types";
