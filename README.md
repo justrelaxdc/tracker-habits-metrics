@@ -1,11 +1,17 @@
+<div align="center">
+
+<img width="240" height="240" alt="image" src="assets/logo" />
+
+# Tracker: Habits and Metrics 
+
+**Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and local data storage.**
+
 ![GitHub Release](https://img.shields.io/github/v/release/justrelaxdc/tracker-habits-metrics?style=flat&color=blue)
 ![GitHub last commit](https://img.shields.io/github/last-commit/justrelaxdc/tracker-habits-metrics?style=flat&color=success)
 ![GitHub License](https://img.shields.io/github/license/justrelaxdc/tracker-habits-metrics?style=flat&color=yellow)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/vladross)
 
-# 📊 Tracker: Habits and Metrics 
-
-> **Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and local data storage.**
+</div>
 
 Transform your Obsidian vault into a powerful tracking system. Track everything from simple daily habits to complex numeric metrics — all stored as human‑readable Markdown inside your vault. No external databases, no cloud, no telemetry.
 
