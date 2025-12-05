@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="240" height="240" alt="image" src="assets/logo.png" />
+<img width="180" height="180" alt="image" src="assets/logo.png" />
 
 # Tracker: Habits and Metrics 
 
@@ -13,7 +13,7 @@
 
 </div>
 
-Transform your Obsidian vault into a powerful tracking system. Track everything from simple daily habits to complex numeric metrics — all stored as human‑readable Markdown inside your vault. No external databases, no cloud, no telemetry.
+> Transform your Obsidian vault into a powerful tracking system. Track everything from simple daily habits to complex numeric metrics — all stored as human‑readable Markdown inside your vault. No external databases, no cloud, no telemetry.
 
 ---
 
