@@ -11,7 +11,6 @@ import { TrackerSettingsTab } from "../ui/tracker-settings-tab";
 import { CreateTrackerModal } from "../ui/modals/create-tracker-modal";
 import { EditTrackerModal } from "../ui/modals/edit-tracker-modal";
 import { FilePickerModal } from "../ui/modals/file-picker-modal";
-import trackerStyles from "../styles/index.css";
 import { DateService } from "../services/date-service";
 import { TrackerOrderService } from "../services/tracker-order-service";
 import { IconizeService } from "../services/iconize-service";
@@ -59,7 +58,6 @@ export default class TrackerPlugin extends Plugin {
   private writeQueueManager!: WriteQueueManager;
   
   // UI
-  private styleEl?: HTMLStyleElement;
   private refreshBlocksDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
@@ -124,7 +122,6 @@ export default class TrackerPlugin extends Plugin {
       // Silently fail if Iconize is not installed
     });
     
-    this.addStyleSheet();
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
     this.registerMarkdownCodeBlockProcessor("habit", this.processTrackerBlock.bind(this));
@@ -163,22 +160,6 @@ export default class TrackerPlugin extends Plugin {
 
   getFolderTree(folderPath: string) {
     return this.folderTreeService.getFolderTree(folderPath);
-  }
-
-  // ---- Stylesheet ------------------------------------------------------------
-
-  private addStyleSheet() {
-    if (this.styleEl) return;
-    const styleEl = document.createElement("style");
-    styleEl.textContent = trackerStyles;
-    document.head.appendChild(styleEl);
-    this.styleEl = styleEl;
-    this.register(() => {
-      styleEl.remove();
-      if (this.styleEl === styleEl) {
-        this.styleEl = undefined;
-      }
-    });
   }
 
   // ---- Code blocks -----------------------------------------------------------
@@ -450,8 +431,8 @@ export default class TrackerPlugin extends Plugin {
     if (!folder || !(folder instanceof TFolder)) return;
 
     const trackers = folder.children.filter(
-      f => f instanceof TFile && f.extension === "md"
-    ) as TFile[];
+      (f): f is TFile => f instanceof TFile && f.extension === "md"
+    );
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
       trackers, folderPath, normalizePath
@@ -478,8 +459,8 @@ export default class TrackerPlugin extends Plugin {
     if (!folder || !(folder instanceof TFolder)) return;
 
     const trackers = folder.children.filter(
-      f => f instanceof TFile && f.extension === "md"
-    ) as TFile[];
+      (f): f is TFile => f instanceof TFile && f.extension === "md"
+    );
 
     const sortedTrackers = this.sortOrderManager.sortItemsByOrder(
       trackers, folderPath, normalizePath
@@ -506,14 +487,14 @@ export default class TrackerPlugin extends Plugin {
     let folders: TFolder[];
     if (!parentFolderPath) {
       folders = this.app.vault.getRoot().children.filter(
-        f => f instanceof TFolder
-      ) as TFolder[];
+        (f): f is TFolder => f instanceof TFolder
+      );
     } else {
       const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
       if (!parentFolder || !(parentFolder instanceof TFolder)) return;
       folders = parentFolder.children.filter(
-        f => f instanceof TFolder
-      ) as TFolder[];
+        (f): f is TFolder => f instanceof TFolder
+      );
     }
 
     // Ignore folders containing archive folder name in name (case-insensitive)
@@ -544,14 +525,14 @@ export default class TrackerPlugin extends Plugin {
     let folders: TFolder[];
     if (!parentFolderPath) {
       folders = this.app.vault.getRoot().children.filter(
-        f => f instanceof TFolder
-      ) as TFolder[];
+        (f): f is TFolder => f instanceof TFolder
+      );
     } else {
       const parentFolder = this.app.vault.getAbstractFileByPath(parentFolderPath);
       if (!parentFolder || !(parentFolder instanceof TFolder)) return;
       folders = parentFolder.children.filter(
-        f => f instanceof TFolder
-      ) as TFolder[];
+        (f): f is TFolder => f instanceof TFolder
+      );
     }
 
     // Ignore folders containing archive folder name in name (case-insensitive)

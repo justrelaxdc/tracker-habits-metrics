@@ -2,6 +2,7 @@ import { useCallback, useRef, useEffect } from "preact/hooks";
 import { CSS_CLASSES, MODAL_LABELS } from "../../constants";
 import type { TrackerHeaderProps } from "../types";
 import { Icon } from "../Icon";
+import { setCssProps } from "../../utils/theme";
 
 /**
  * Tracker header with title, icon, and action buttons
@@ -22,11 +23,15 @@ export function TrackerHeader({
   useEffect(() => {
     if (headerRef.current) {
       if (limitProgress) {
-        headerRef.current.style.setProperty('--limit-progress-width', limitProgress.width);
-        headerRef.current.style.setProperty('--limit-progress-color', limitProgress.color);
+        setCssProps(headerRef.current, {
+          '--limit-progress-width': limitProgress.width,
+          '--limit-progress-color': limitProgress.color,
+        });
       } else {
-        headerRef.current.style.setProperty('--limit-progress-width', '0%');
-        headerRef.current.style.setProperty('--limit-progress-color', 'transparent');
+        setCssProps(headerRef.current, {
+          '--limit-progress-width': '0%',
+          '--limit-progress-color': 'transparent',
+        });
       }
     }
   }, [limitProgress]);

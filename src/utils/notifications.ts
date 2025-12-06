@@ -42,8 +42,11 @@ const isDev = (): boolean => {
     return true;
   }
   // Check for other development indicators (e.g., hot reload, dev server)
-  if (typeof window !== 'undefined' && (window as any).__DEV__) {
-    return true;
+  if (typeof window !== 'undefined') {
+    const win = window as Window & { __DEV__?: boolean };
+    if (win.__DEV__) {
+      return true;
+    }
   }
   // Default to false for production builds
   return false;
@@ -59,7 +62,6 @@ export function logError(context: string, error: unknown, showToUser: boolean = 
   
   // Log errors for debugging (only in development mode)
   if (isDev()) {
-    // eslint-disable-next-line no-console
     console.error(fullMessage, error);
   }
   
@@ -76,7 +78,6 @@ export function logError(context: string, error: unknown, showToUser: boolean = 
 export function logWarning(message: string): void {
   // Log warnings for debugging (only in development mode)
   if (isDev()) {
-    // eslint-disable-next-line no-console
     console.warn(message);
   }
 }

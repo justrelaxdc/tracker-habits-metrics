@@ -20,26 +20,15 @@ export function getCSSVar(varName: string, fallback: string = '#000000'): string
  * @returns Accent color from theme or fallback
  */
 export function getAccentColor(): string {
-  // Create temporary element for more reliable CSS variable reading
-  const tempEl = document.createElement('div');
-  tempEl.style.position = 'absolute';
-  tempEl.style.visibility = 'hidden';
-  document.body.appendChild(tempEl);
+  // Try reading from root element first (more reliable)
+  const root = document.body || document.documentElement;
+  let accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
   
-  let accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
   if (!accentColor) {
-    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.COLOR_ACCENT).trim();
+    accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.COLOR_ACCENT).trim();
   }
   if (!accentColor) {
-    accentColor = getComputedStyle(tempEl).getPropertyValue(CSS_VARIABLES.ACCENT_COLOR).trim();
-  }
-  
-  document.body.removeChild(tempEl);
-  
-  // Fallback to root element
-  if (!accentColor) {
-    const root = document.body || document.documentElement;
-    accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.INTERACTIVE_ACCENT).trim();
+    accentColor = getComputedStyle(root).getPropertyValue(CSS_VARIABLES.ACCENT_COLOR).trim();
   }
   
   // Use fallback color if still not found
@@ -88,4 +77,25 @@ export function colorToRgba(color: string, alpha: number): string {
   }
   return color;
 }
+
+/**
+ * Sets CSS properties on an element using setProperty.
+ * This is the Obsidian-recommended way to apply dynamic styles.
+ * 
+ * @param element - The element to set CSS properties on
+ * @param props - Object with CSS property names and values
+ * @example
+ * setCssProps(el, { '--limit-progress-width': '50%', '--limit-progress-color': '#ff0000' })
+ * setCssProps(el, { transform: 'scale(0.98)', display: 'none' })
+ */
+export function setCssProps(element: HTMLElement, props: Record<string, string | number | null | undefined>): void {
+  for (const [key, value] of Object.entries(props)) {
+    if (value === null || value === undefined || value === '') {
+      element.style.removeProperty(key);
+    } else {
+      element.style.setProperty(key, String(value));
+    }
+  }
+}
+
 

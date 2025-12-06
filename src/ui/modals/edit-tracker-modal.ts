@@ -5,6 +5,7 @@ import type TrackerPlugin from "../../core/tracker-plugin";
 import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES, TRACKER_TYPE_LABELS, PLACEHOLDERS, DEFAULTS } from "../../constants";
 import { DateService } from "../../services/date-service";
 import { logError } from "../../utils/notifications";
+import { setCssProps } from "../../utils/theme";
 
 export class EditTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
@@ -35,7 +36,7 @@ export class EditTrackerModal extends Modal {
     const nameSetting = new Setting(contentEl).setName(MODAL_LABELS.NAME).addText((text) => {
       text.setPlaceholder(PLACEHOLDERS.TRACKER_NAME);
       text.setValue(currentName);
-      text.inputEl.style.width = "100%";
+      setCssProps(text.inputEl, { width: "100%" });
     });
 
     const typeSetting = new Setting(contentEl).setName(MODAL_LABELS.TYPE).addDropdown((dropdown) => {
@@ -97,13 +98,21 @@ export class EditTrackerModal extends Modal {
       .addText((text) => {
         text.setValue(currentStartDate);
         text.inputEl.type = "date";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     // Warning element about data before new date
     const warningEl = contentEl.createDiv({
       cls: "tracker-notes__start-date-warning",
-      attr: { style: "display: none; margin-top: 0.5em; padding: 0.75em; background: var(--background-modifier-error); color: #fff; border-radius: 4px; font-size: 0.9em;" }
+    });
+    setCssProps(warningEl, {
+      display: "none",
+      marginTop: "0.5em",
+      padding: "0.75em",
+      background: "var(--background-modifier-error)",
+      color: "#fff",
+      borderRadius: "4px",
+      fontSize: "0.9em",
     });
 
     // Date change handler for data validation
@@ -112,7 +121,7 @@ export class EditTrackerModal extends Modal {
       startDateInput.addEventListener("input", async () => {
         const newStartDate = startDateInput.value;
         if (!newStartDate || newStartDate === currentStartDate) {
-          warningEl.style.display = "none";
+          setCssProps(warningEl, { display: "none" });
           return;
         }
 
@@ -155,13 +164,13 @@ export class EditTrackerModal extends Modal {
               .replace('{count}', String(datesToDeleteCount))
               .replace('{records}', recordsText)
               .replace('{date}', formattedDate);
-            warningEl.style.display = "block";
+            setCssProps(warningEl, { display: "block" });
           } else {
-            warningEl.style.display = "none";
+            setCssProps(warningEl, { display: "none" });
           }
         } catch (error) {
           logError("Tracker: error checking data", error);
-          warningEl.style.display = "none";
+          setCssProps(warningEl, { display: "none" });
         }
       });
     }
@@ -174,7 +183,7 @@ export class EditTrackerModal extends Modal {
         const unitValue = currentType === "text" ? DEFAULTS.TEXT_UNIT : currentUnit;
         text.setPlaceholder(PLACEHOLDERS.UNIT);
         text.setValue(unitValue);
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
         if (currentType === "text") {
           text.inputEl.disabled = true;
         }
@@ -189,7 +198,7 @@ export class EditTrackerModal extends Modal {
           .setValue(currentStep || String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const minValueSetting = new Setting(contentEl)
@@ -199,7 +208,7 @@ export class EditTrackerModal extends Modal {
           .setPlaceholder(String(DEFAULTS.MIN_VALUE))
           .setValue(currentMinValue || String(DEFAULTS.MIN_VALUE))
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const maxValueSetting = new Setting(contentEl)
@@ -209,7 +218,7 @@ export class EditTrackerModal extends Modal {
           .setPlaceholder(String(DEFAULTS.MAX_VALUE))
           .setValue(currentMaxValue || String(DEFAULTS.MAX_VALUE))
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const stepSetting = new Setting(contentEl)
@@ -220,7 +229,7 @@ export class EditTrackerModal extends Modal {
           .setValue(currentStep || String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
@@ -228,10 +237,12 @@ export class EditTrackerModal extends Modal {
       text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description",
     });
-    limitsDescription.style.fontSize = "0.9em";
-    limitsDescription.style.color = "var(--text-muted, #999999)";
-    limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1em";
+    setCssProps(limitsDescription, {
+      fontSize: "0.9em",
+      color: "var(--text-muted, #999999)",
+      marginTop: "0.5em",
+      marginBottom: "1em",
+    });
 
     const maxLimitSetting = new Setting(contentEl)
       .setName(MODAL_LABELS.UPPER_LIMIT)
@@ -240,7 +251,7 @@ export class EditTrackerModal extends Modal {
           .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue(currentMaxLimit)
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const minLimitSetting = new Setting(contentEl)
@@ -250,7 +261,7 @@ export class EditTrackerModal extends Modal {
           .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue(currentMinLimit)
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const updateFieldsVisibility = () => {
@@ -260,8 +271,8 @@ export class EditTrackerModal extends Modal {
       const isText = typeDropdown.value === "text";
 
       if (isMetric) {
-        parametersHeader.style.display = "";
-        unitSetting.settingEl.style.display = "";
+        setCssProps(parametersHeader, { display: "" });
+        setCssProps(unitSetting.settingEl, { display: "" });
         if (isText) {
           if (unitInput) {
             unitInput.value = DEFAULTS.TEXT_UNIT;
@@ -271,35 +282,35 @@ export class EditTrackerModal extends Modal {
           unitInput.disabled = false;
         }
         if (isScale) {
-          minValueSetting.settingEl.style.display = "";
-          maxValueSetting.settingEl.style.display = "";
-          stepSetting.settingEl.style.display = "";
-          plusminusStepSetting.settingEl.style.display = "none";
+          setCssProps(minValueSetting.settingEl, { display: "" });
+          setCssProps(maxValueSetting.settingEl, { display: "" });
+          setCssProps(stepSetting.settingEl, { display: "" });
+          setCssProps(plusminusStepSetting.settingEl, { display: "none" });
         } else {
-          minValueSetting.settingEl.style.display = "none";
-          maxValueSetting.settingEl.style.display = "none";
-          stepSetting.settingEl.style.display = "none";
-          plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
+          setCssProps(minValueSetting.settingEl, { display: "none" });
+          setCssProps(maxValueSetting.settingEl, { display: "none" });
+          setCssProps(stepSetting.settingEl, { display: "none" });
+          setCssProps(plusminusStepSetting.settingEl, { display: isPlusminus ? "" : "none" });
         }
       } else {
-        parametersHeader.style.display = "none";
-        unitSetting.settingEl.style.display = "none";
-        plusminusStepSetting.settingEl.style.display = "none";
-        minValueSetting.settingEl.style.display = "none";
-        maxValueSetting.settingEl.style.display = "none";
-        stepSetting.settingEl.style.display = "none";
+        setCssProps(parametersHeader, { display: "none" });
+        setCssProps(unitSetting.settingEl, { display: "none" });
+        setCssProps(plusminusStepSetting.settingEl, { display: "none" });
+        setCssProps(minValueSetting.settingEl, { display: "none" });
+        setCssProps(maxValueSetting.settingEl, { display: "none" });
+        setCssProps(stepSetting.settingEl, { display: "none" });
       }
 
       if (isMetric) {
-        limitsHeader.style.display = "";
-        limitsDescription.style.display = "";
-        minLimitSetting.settingEl.style.display = "";
-        maxLimitSetting.settingEl.style.display = "";
+        setCssProps(limitsHeader, { display: "" });
+        setCssProps(limitsDescription, { display: "" });
+        setCssProps(minLimitSetting.settingEl, { display: "" });
+        setCssProps(maxLimitSetting.settingEl, { display: "" });
       } else {
-        limitsHeader.style.display = "none";
-        limitsDescription.style.display = "none";
-        minLimitSetting.settingEl.style.display = "none";
-        maxLimitSetting.settingEl.style.display = "none";
+        setCssProps(limitsHeader, { display: "none" });
+        setCssProps(limitsDescription, { display: "none" });
+        setCssProps(minLimitSetting.settingEl, { display: "none" });
+        setCssProps(maxLimitSetting.settingEl, { display: "none" });
       }
     };
 
@@ -325,8 +336,8 @@ export class EditTrackerModal extends Modal {
         // Remove tracker from UI dynamically BEFORE file deletion
         await this.plugin.onTrackerDeleted(filePath);
         
-        // Delete file
-        await this.app.vault.delete(this.file);
+        // Delete file (respects user's file deletion preference)
+        await this.app.fileManager.trashFile(this.file);
         
         new Notice(`${SUCCESS_MESSAGES.TRACKER_DELETED}: ${fileName}`);
         

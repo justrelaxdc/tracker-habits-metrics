@@ -7,6 +7,7 @@ import { populateTrackerTypeSelector, isMetricType } from "../components/tracker
 import { TrackerType, MODAL_LABELS, PLACEHOLDERS, DEFAULTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants";
 import { sanitizeFileName } from "../../utils/validation";
 import { logError } from "../../utils/notifications";
+import { setCssProps } from "../../utils/theme";
 
 export class CreateTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
@@ -23,7 +24,7 @@ export class CreateTrackerModal extends Modal {
 
     const nameSetting = new Setting(contentEl).setName(MODAL_LABELS.NAME).addText((text) => {
       text.setPlaceholder(PLACEHOLDERS.TRACKER_NAME);
-      text.inputEl.style.width = "100%";
+      setCssProps(text.inputEl, { width: "100%" });
     });
 
     const folders = this.app.vault.getAllFolders();
@@ -34,7 +35,7 @@ export class CreateTrackerModal extends Modal {
         const defaultPath = this.plugin.settings.trackersFolder || DEFAULT_SETTINGS.trackersFolder;
         text.setPlaceholder(defaultPath);
         text.setValue("");
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
         new FolderSuggest(this.app, text.inputEl, folders);
       });
 
@@ -55,7 +56,7 @@ export class CreateTrackerModal extends Modal {
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         text.setValue(today);
         text.inputEl.type = "date";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const parametersHeader = contentEl.createEl("h3", { text: MODAL_LABELS.PARAMETERS });
@@ -64,7 +65,7 @@ export class CreateTrackerModal extends Modal {
       .setName(MODAL_LABELS.UNIT)
       .addText((text) => {
         text.setPlaceholder(PLACEHOLDERS.UNIT);
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
     const unitInput = unitSetting.controlEl.querySelector("input") as HTMLInputElement;
 
@@ -76,7 +77,7 @@ export class CreateTrackerModal extends Modal {
           .setValue(String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const minValueSetting = new Setting(contentEl)
@@ -86,7 +87,7 @@ export class CreateTrackerModal extends Modal {
           .setPlaceholder(String(DEFAULTS.MIN_VALUE))
           .setValue(String(DEFAULTS.MIN_VALUE))
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const maxValueSetting = new Setting(contentEl)
@@ -96,7 +97,7 @@ export class CreateTrackerModal extends Modal {
           .setPlaceholder(String(DEFAULTS.MAX_VALUE))
           .setValue(String(DEFAULTS.MAX_VALUE))
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const stepSetting = new Setting(contentEl)
@@ -107,25 +108,27 @@ export class CreateTrackerModal extends Modal {
           .setValue(String(DEFAULTS.STEP))
           .inputEl.type = "number";
         text.inputEl.step = "any";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
-    parametersHeader.style.display = "none";
-    unitSetting.settingEl.style.display = "none";
-    plusminusStepSetting.settingEl.style.display = "none";
-    minValueSetting.settingEl.style.display = "none";
-    maxValueSetting.settingEl.style.display = "none";
-    stepSetting.settingEl.style.display = "none";
+    setCssProps(parametersHeader, { display: "none" });
+    setCssProps(unitSetting.settingEl, { display: "none" });
+    setCssProps(plusminusStepSetting.settingEl, { display: "none" });
+    setCssProps(minValueSetting.settingEl, { display: "none" });
+    setCssProps(maxValueSetting.settingEl, { display: "none" });
+    setCssProps(stepSetting.settingEl, { display: "none" });
 
     const limitsHeader = contentEl.createEl("h3", { text: MODAL_LABELS.LIMITS });
     const limitsDescription = contentEl.createEl("p", {
       text: MODAL_LABELS.LIMITS_DESCRIPTION,
       cls: "tracker-notes__limits-description",
     });
-    limitsDescription.style.fontSize = "0.9em";
-    limitsDescription.style.color = "var(--text-muted, #999999)";
-    limitsDescription.style.marginTop = "0.5em";
-    limitsDescription.style.marginBottom = "1em";
+    setCssProps(limitsDescription, {
+      fontSize: "0.9em",
+      color: "var(--text-muted, #999999)",
+      marginTop: "0.5em",
+      marginBottom: "1em",
+    });
 
     const maxLimitSetting = new Setting(contentEl)
       .setName(MODAL_LABELS.UPPER_LIMIT)
@@ -134,7 +137,7 @@ export class CreateTrackerModal extends Modal {
           .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue("")
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
     const minLimitSetting = new Setting(contentEl)
@@ -144,13 +147,13 @@ export class CreateTrackerModal extends Modal {
           .setPlaceholder(PLACEHOLDERS.LIMIT_NONE)
           .setValue("")
           .inputEl.type = "number";
-        text.inputEl.style.width = "100%";
+        setCssProps(text.inputEl, { width: "100%" });
       });
 
-    limitsHeader.style.display = "none";
-    limitsDescription.style.display = "none";
-    minLimitSetting.settingEl.style.display = "none";
-    maxLimitSetting.settingEl.style.display = "none";
+    setCssProps(limitsHeader, { display: "none" });
+    setCssProps(limitsDescription, { display: "none" });
+    setCssProps(minLimitSetting.settingEl, { display: "none" });
+    setCssProps(maxLimitSetting.settingEl, { display: "none" });
 
     const typeDropdownSelect = typeSetting.controlEl.querySelector("select") as HTMLSelectElement;
     if (typeDropdownSelect) {
@@ -161,8 +164,8 @@ export class CreateTrackerModal extends Modal {
         const isText = typeDropdownSelect.value === TrackerType.TEXT;
 
         if (isMetric) {
-          parametersHeader.style.display = "";
-          unitSetting.settingEl.style.display = "";
+          setCssProps(parametersHeader, { display: "" });
+          setCssProps(unitSetting.settingEl, { display: "" });
           if (isText) {
             if (unitInput) {
               unitInput.value = DEFAULTS.TEXT_UNIT;
@@ -173,35 +176,35 @@ export class CreateTrackerModal extends Modal {
           }
 
           if (isScale) {
-            minValueSetting.settingEl.style.display = "";
-            maxValueSetting.settingEl.style.display = "";
-            stepSetting.settingEl.style.display = "";
-            plusminusStepSetting.settingEl.style.display = "none";
+            setCssProps(minValueSetting.settingEl, { display: "" });
+            setCssProps(maxValueSetting.settingEl, { display: "" });
+            setCssProps(stepSetting.settingEl, { display: "" });
+            setCssProps(plusminusStepSetting.settingEl, { display: "none" });
           } else {
-            minValueSetting.settingEl.style.display = "none";
-            maxValueSetting.settingEl.style.display = "none";
-            stepSetting.settingEl.style.display = "none";
-            plusminusStepSetting.settingEl.style.display = isPlusminus ? "" : "none";
+            setCssProps(minValueSetting.settingEl, { display: "none" });
+            setCssProps(maxValueSetting.settingEl, { display: "none" });
+            setCssProps(stepSetting.settingEl, { display: "none" });
+            setCssProps(plusminusStepSetting.settingEl, { display: isPlusminus ? "" : "none" });
           }
         } else {
-          parametersHeader.style.display = "none";
-          unitSetting.settingEl.style.display = "none";
-          plusminusStepSetting.settingEl.style.display = "none";
-          minValueSetting.settingEl.style.display = "none";
-          maxValueSetting.settingEl.style.display = "none";
-          stepSetting.settingEl.style.display = "none";
+          setCssProps(parametersHeader, { display: "none" });
+          setCssProps(unitSetting.settingEl, { display: "none" });
+          setCssProps(plusminusStepSetting.settingEl, { display: "none" });
+          setCssProps(minValueSetting.settingEl, { display: "none" });
+          setCssProps(maxValueSetting.settingEl, { display: "none" });
+          setCssProps(stepSetting.settingEl, { display: "none" });
         }
 
         if (isMetric) {
-          limitsHeader.style.display = "";
-          limitsDescription.style.display = "";
-          minLimitSetting.settingEl.style.display = "";
-          maxLimitSetting.settingEl.style.display = "";
+          setCssProps(limitsHeader, { display: "" });
+          setCssProps(limitsDescription, { display: "" });
+          setCssProps(minLimitSetting.settingEl, { display: "" });
+          setCssProps(maxLimitSetting.settingEl, { display: "" });
         } else {
-          limitsHeader.style.display = "none";
-          limitsDescription.style.display = "none";
-          minLimitSetting.settingEl.style.display = "none";
-          maxLimitSetting.settingEl.style.display = "none";
+          setCssProps(limitsHeader, { display: "none" });
+          setCssProps(limitsDescription, { display: "none" });
+          setCssProps(minLimitSetting.settingEl, { display: "none" });
+          setCssProps(maxLimitSetting.settingEl, { display: "none" });
         }
       };
     }

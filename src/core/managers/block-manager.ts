@@ -1,6 +1,7 @@
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
-import { SCROLL_RESTORE_DELAY_2_MS, IMMEDIATE_TIMEOUT_MS, UI_CONSTANTS } from "../../constants";
+import { SCROLL_RESTORE_DELAY_2_MS, UI_CONSTANTS } from "../../constants";
 import { logError } from "../../utils/notifications";
+import { setCssProps } from "../../utils/theme";
 
 /**
  * Manages active tracker blocks and their lifecycle
@@ -167,8 +168,10 @@ export class BlockManager {
         if (trackersToDelete.length === 0) continue;
         
         for (const tracker of trackersToDelete) {
-          tracker.style.transition = "opacity 0.2s ease";
-          tracker.style.opacity = "0";
+          setCssProps(tracker, {
+            transition: "opacity 0.2s ease",
+            opacity: "0",
+          });
           
           const timer = setTimeout(() => {
             if (tracker.isConnected) {

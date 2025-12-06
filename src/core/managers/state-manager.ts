@@ -1,4 +1,4 @@
-import type { TFile, TFolder, App } from "obsidian";
+import { TFile, TFolder, type App } from "obsidian";
 import type { TrackerFileOptions } from "../../domain/types";
 import type { TrackerFileService } from "../../services/tracker-file-service";
 import type { FolderTreeService } from "../../services/folder-tree-service";
@@ -91,10 +91,10 @@ export class StateManager {
 
   private clearCacheForFolder(folder: TFolder): void {
     for (const child of folder.children) {
-      if ('extension' in child && (child as TFile).extension === 'md') {
+      if (child instanceof TFile && child.extension === 'md') {
         this.clearTrackerState(child.path);
-      } else if ('children' in child) {
-        this.clearCacheForFolder(child as TFolder);
+      } else if (child instanceof TFolder) {
+        this.clearCacheForFolder(child);
       }
     }
   }
@@ -137,21 +137,22 @@ export class StateManager {
     
     for (const [oldFolderPath, newFolderPath] of folderPathsMap.entries()) {
       const oldFolder = this.app.vault.getAbstractFileByPath(oldFolderPath);
-      if (!oldFolder || !('children' in oldFolder)) continue;
+      if (!oldFolder || !(oldFolder instanceof TFolder)) continue;
       
       const getAllFiles = (folder: TFolder): TFile[] => {
         const files: TFile[] = [];
         for (const child of folder.children) {
-          if ('extension' in child && (child as TFile).extension === 'md') {
-            files.push(child as TFile);
-          } else if ('children' in child) {
-            files.push(...getAllFiles(child as TFolder));
+          if (child instanceof TFile && child.extension === 'md') {
+            files.push(child);
+          } else if (child instanceof TFolder) {
+            files.push(...getAllFiles(child));
           }
         }
         return files;
       };
       
-      const files = getAllFiles(oldFolder as TFolder);
+      if (!(oldFolder instanceof TFolder)) continue;
+      const files = getAllFiles(oldFolder);
       const normalizedOldPath = normalizePath(oldFolderPath);
       const normalizedNewPath = normalizePath(newFolderPath);
       

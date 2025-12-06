@@ -50,7 +50,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
       .setName("Default trackers folder")
       .setDesc("Can be overridden with `folder` parameter in habit block")
       .addText((t) => {
-        t.setPlaceholder("0. Files/Trackers")
+        t.setPlaceholder("Files/trackers")
           .setValue(this.plugin.settings.trackersFolder)
           .onChange((v) => {
             this.updateSettingImmediate(() => {

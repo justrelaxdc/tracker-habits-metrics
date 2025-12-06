@@ -1,4 +1,4 @@
-import type { TFile, TFolder } from "obsidian";
+import { TFile, TFolder } from "obsidian";
 import type { TrackerSettings } from "../../domain/types";
 
 /**
@@ -40,7 +40,7 @@ export class SortOrderManager {
     }
     
     return items
-      .map(item => 'basename' in item ? (item as TFile).basename : (item as TFolder).name)
+      .map(item => item instanceof TFile ? item.basename : item.name)
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   }
 
@@ -75,7 +75,7 @@ export class SortOrderManager {
     
     const itemMap = new Map<string, T>();
     for (const item of items) {
-      const itemName = 'basename' in item ? (item as TFile).basename : (item as TFolder).name;
+      const itemName = item instanceof TFile ? item.basename : item.name;
       itemMap.set(itemName, item);
     }
     
@@ -92,14 +92,14 @@ export class SortOrderManager {
     
     const remaining: T[] = [];
     for (const item of items) {
-      const itemName = 'basename' in item ? (item as TFile).basename : (item as TFolder).name;
+      const itemName = item instanceof TFile ? item.basename : item.name;
       if (!added.has(itemName)) {
         remaining.push(item);
       }
     }
     remaining.sort((a, b) => {
-      const aName = 'basename' in a ? (a as TFile).basename : (a as TFolder).name;
-      const bName = 'basename' in b ? (b as TFile).basename : (b as TFolder).name;
+      const aName = a instanceof TFile ? a.basename : a.name;
+      const bName = b instanceof TFile ? b.basename : b.name;
       return aName.localeCompare(bName, undefined, { sensitivity: "base" });
     });
     

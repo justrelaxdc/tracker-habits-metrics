@@ -4,6 +4,7 @@ import { CSS_CLASSES, ANIMATION_DURATION_MS, DEBOUNCE_DELAY_MS } from "../../con
 import type { NumberControlProps } from "../types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
+import { setCssProps } from "../../utils/theme";
 
 /**
  * Number input control with debounce
@@ -93,10 +94,10 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
 
     // Visual feedback
     if (inputRef.current) {
-      inputRef.current.style.transform = "scale(0.98)";
+      setCssProps(inputRef.current, { transform: "scale(0.98)" });
       setTimeout(() => {
         if (inputRef.current) {
-          inputRef.current.style.transform = "";
+          setCssProps(inputRef.current, { transform: null });
         }
       }, ANIMATION_DURATION_MS);
     }
