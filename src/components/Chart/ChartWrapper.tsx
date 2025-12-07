@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from "preact/hooks";
 import { useComputed } from "@preact/signals";
-import { Chart, registerables } from "chart.js";
+import { Chart, registerables, type ChartDataset } from "chart.js";
 import { CSS_CLASSES, TrackerType } from "../../constants";
 import { chartService } from "../../services/chart-service";
 import { DateService } from "../../services/date-service";
@@ -72,8 +72,7 @@ export function ChartWrapper({
     return () => {
       if (chartRef.current) {
         // Cleanup ResizeObserver if exists
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Custom property for ResizeObserver storage
-        const resizeObserver = (chartRef.current as any).__resizeObserver as ResizeObserver | undefined;
+        const resizeObserver = (chartRef.current as TrackerChartInstance & { __resizeObserver?: ResizeObserver }).__resizeObserver;
         if (resizeObserver) {
           resizeObserver.disconnect();
         }
@@ -140,8 +139,7 @@ export function ChartWrapper({
     if (canUpdate && chartRef.current) {
       // Only entries changed - update data directly
       // This is much faster than recreating the entire chart config
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js dataset type is complex
-      const dataset = chartRef.current.data.datasets[0] as any;
+      const dataset = chartRef.current.data.datasets[0] as ChartDataset<"line">;
       if (dataset) {
         dataset.data = chartData.values;
         dataset.pointBackgroundColor = chartData.pointBackgroundColors;
@@ -188,8 +186,7 @@ export function ChartWrapper({
       // Destroy existing chart if config changed (recreate needed)
       if (chartRef.current) {
         // Cleanup ResizeObserver if exists
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Custom property for ResizeObserver storage
-        const resizeObserver = (chartRef.current as any).__resizeObserver as ResizeObserver | undefined;
+        const resizeObserver = (chartRef.current as TrackerChartInstance & { __resizeObserver?: ResizeObserver }).__resizeObserver;
         if (resizeObserver) {
           resizeObserver.disconnect();
         }
@@ -219,8 +216,7 @@ export function ChartWrapper({
           resizeObserver.observe(chartContainer);
           
           // Store observer reference for cleanup
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Custom property for ResizeObserver storage
-          (chartRef.current as any).__resizeObserver = resizeObserver;
+          (chartRef.current as TrackerChartInstance & { __resizeObserver?: ResizeObserver }).__resizeObserver = resizeObserver;
         }
       }
 

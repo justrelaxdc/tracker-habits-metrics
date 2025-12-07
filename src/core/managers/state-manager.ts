@@ -72,7 +72,7 @@ export class StateManager {
    * Clears all backend state (trackerState, FolderTreeService cache)
    * Use sparingly - prefer selective cache invalidation
    */
-  async clearAllCaches(): Promise<void> {
+  clearAllCaches(): void {
     this.trackerState.clear();
     this.folderTreeService.invalidate();
   }

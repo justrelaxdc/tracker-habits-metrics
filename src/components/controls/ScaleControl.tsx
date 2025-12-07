@@ -4,6 +4,7 @@ import { CSS_CLASSES, DEFAULTS } from "../../constants";
 import type { ScaleControlProps } from "../types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
+import { setCssProps } from "../../utils/theme";
 
 /**
  * Scale/Progress bar control with drag support
@@ -145,6 +146,25 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const percentage = ((value - minValue) / (maxValue - minValue)) * 100;
+  const progressFillRef = useRef<HTMLDivElement>(null);
+
+  // Set cursor style for progress bar
+  useEffect(() => {
+    if (progressBarRef.current) {
+      setCssProps(progressBarRef.current, {
+        cursor: isDragging ? "col-resize" : null,
+      });
+    }
+  }, [isDragging]);
+
+  // Set width style for progress fill
+  useEffect(() => {
+    if (progressFillRef.current) {
+      setCssProps(progressFillRef.current, {
+        width: `${percentage}%`,
+      });
+    }
+  }, [percentage]);
 
   return (
     <div class={CSS_CLASSES.PROGRESS_BAR_WRAPPER} data-internal-value={value}>
@@ -161,16 +181,15 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
         onMouseDown={handleMouseDown}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
-        style={{ cursor: isDragging ? "col-resize" : undefined }}
       >
         <div
+          ref={progressFillRef}
           class={CSS_CLASSES.PROGRESS_BAR_PROGRESS}
           role="slider"
           tabIndex={0}
           aria-valuemin={minValue}
           aria-valuemax={maxValue}
           aria-valuenow={value}
-          style={{ width: `${percentage}%` }}
         />
         <span class={CSS_CLASSES.PROGRESS_BAR_VALUE}>{value}</span>
         <span class={CSS_CLASSES.PROGRESS_BAR_LABEL_LEFT}>{minValue}</span>

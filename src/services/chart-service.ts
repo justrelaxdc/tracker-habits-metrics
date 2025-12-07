@@ -5,8 +5,11 @@ import type {
   ChartConfigOptions, 
   ThemeColors,
   TrackerChartInstance,
-  ChartJsConfig
+  ChartJsConfig,
+  ChartPointContext,
+  ChartTooltipContext
 } from "../domain/chart-types";
+import type { ChartEvent, ActiveElement } from "chart.js";
 import { CHART_CONFIG, DATE_FORMAT, TrackerType } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { parseTrackerValueToNumber } from "../utils/misc";
@@ -69,8 +72,7 @@ export class ChartService {
       
       // Format label for chart axis
       let label = '';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- moment.js global from Obsidian
-      const m = (window as any).moment;
+      const m = (window as Window & { moment?: (input?: string | Date, format?: string) => { format: (format: string) => string } }).moment;
       if (m) {
         label = m(date.toDate()).format(DATE_FORMAT.DISPLAY_SHORT);
       } else {
@@ -192,18 +194,15 @@ export class ChartService {
           pointBorderWidth: data.pointBorderWidths,
           pointHoverRadius: CHART_CONFIG.POINT_HOVER_RADIUS,
           pointHitRadius: CHART_CONFIG.POINT_HIT_RADIUS,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
-          pointHoverBackgroundColor: (ctx: any) => {
+          pointHoverBackgroundColor: (ctx: ChartPointContext) => {
             const index = ctx.dataIndex;
             return data.pointBackgroundColors[index] || colors.accentColor;
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
-          pointHoverBorderColor: (ctx: any) => {
+          pointHoverBorderColor: (ctx: ChartPointContext) => {
             const index = ctx.dataIndex;
             return data.pointBorderColors[index] || colors.accentColor;
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js context type
-          pointHoverBorderWidth: (ctx: any) => {
+          pointHoverBorderWidth: (ctx: ChartPointContext) => {
             const index = ctx.dataIndex;
             return data.pointBorderWidths[index] || CHART_CONFIG.POINT_BORDER_WIDTH;
           },
@@ -226,8 +225,7 @@ export class ChartService {
             padding: 8,
             displayColors: false,
             callbacks: {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js tooltip context
-              label: (context: any) => {
+              label: (context: ChartTooltipContext) => {
                 const value = context.parsed.y;
                 if (unit) {
                   const capitalizedUnit = unit.charAt(0).toUpperCase() + unit.slice(1);
@@ -292,8 +290,7 @@ export class ChartService {
             hoverBorderWidth: undefined
           }
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js event handler types
-        onClick: (event: any, elements: any[], chart: any) => {
+        onClick: (event: ChartEvent, elements: ActiveElement[], chart: Chart) => {
           if (elements && elements.length > 0) {
             const element = elements[0];
             const pointIndex = element.index;
@@ -305,8 +302,7 @@ export class ChartService {
             }
           }
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js resize handler
-        onResize: (chart: any) => {
+        onResize: (chart: Chart) => {
           const trackerChart = chart as TrackerChartInstance;
           const currentColors = getThemeColors();
           this.drawChartAnnotations(
@@ -323,8 +319,7 @@ export class ChartService {
       },
       plugins: [{
         id: 'startLinePlugin',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Chart.js plugin hook
-        beforeDraw: (chart: any) => {
+        beforeDraw: (chart: Chart) => {
           // Read data from chart instance, not from closure
           const trackerChart = chart as TrackerChartInstance;
           const currentColors = getThemeColors();

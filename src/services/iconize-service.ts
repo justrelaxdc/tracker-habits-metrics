@@ -32,7 +32,7 @@ export class IconizeService {
    * Loads icon data from Iconize plugin data property
    * Updates the global store for reactive updates
    */
-  async loadIconizeData(): Promise<void> {
+  loadIconizeData(): void {
     try {
       const iconizePlugin = this.getIconizePlugin();
       
@@ -69,7 +69,7 @@ export class IconizeService {
     this.loadIconizeData();
     
     // Check for data changes every interval (only when active blocks exist)
-    this.watchInterval = setInterval(async () => {
+    this.watchInterval = setInterval(() => {
       // Skip if no active tracker blocks are displayed
       if (this.hasActiveBlocks && !this.hasActiveBlocks()) {
         return;
@@ -88,7 +88,7 @@ export class IconizeService {
         // If data changed, reload
         if (currentDataHash !== this.lastDataHash) {
           this.lastDataHash = currentDataHash;
-          await this.loadIconizeData();
+          this.loadIconizeData();
         }
       } catch {
         // Silently ignore errors
@@ -110,31 +110,31 @@ export class IconizeService {
    * Called when a file or folder is renamed
    * Iconize plugin automatically updates its data with the new path,
    * so we reload data after a short delay to allow the plugin to update
+   * @param _oldPath - Old file/folder path (unused, kept for interface compatibility)
+   * @param _newPath - New file/folder path (unused, kept for interface compatibility)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Parameters kept for interface compatibility
   updateIconPath(_oldPath: string, _newPath: string): void {
     // Iconize plugin updates its data asynchronously after rename
     // Small delay ensures we pick up the updated data
-    setTimeout(async () => {
-      await this.loadIconizeData();
+    setTimeout(() => {
+      this.loadIconizeData();
     }, 300);
   }
 
   /**
    * Creates a hash string from data object for comparison
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin data structure is unknown
-  private hashData(data: any): string {
+  private hashData(data: Record<string, unknown>): string {
     return JSON.stringify(data);
   }
 
   /**
    * Gets the Iconize plugin instance
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Iconize plugin API not typed
-  private getIconizePlugin(): any {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian plugins API not fully typed
-    const pluginsManager = (this.app as any).plugins;
-    return pluginsManager?.plugins?.['obsidian-icon-folder'] || pluginsManager?.getPlugin?.('obsidian-icon-folder');
+  private getIconizePlugin(): { data?: IconizeData } | null {
+    const pluginsManager = this.app.plugins;
+    const plugin = pluginsManager?.plugins?.['obsidian-icon-folder'] || pluginsManager?.getPlugin?.('obsidian-icon-folder');
+    return (plugin as { data?: IconizeData } | null) || null;
   }
 }

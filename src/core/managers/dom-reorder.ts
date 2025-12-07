@@ -1,4 +1,4 @@
-import type { TFile, TFolder } from "obsidian";
+import type { TFile, TFolder, TAbstractFile } from "obsidian";
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
 import { CSS_CLASSES } from "../../constants";
 import { logWarning } from "../../utils/notifications";
@@ -16,10 +16,10 @@ export class DomReorderManager {
   /**
    * Reorders tracker DOM elements in place without full re-rendering
    */
-  async swapTrackerElementsInDOM(
+  swapTrackerElementsInDOM(
     folderPath: string,
     trackersInNewOrder: TFile[]
-  ): Promise<void> {
+  ): void {
     const normalizedFolderPath = this.normalizePath(folderPath);
     const activeBlocks = this.getActiveBlocks();
 
@@ -72,10 +72,10 @@ export class DomReorderManager {
   /**
    * Reorders folder DOM elements in place without full re-rendering
    */
-  async reorderFolderElementsInDOM(
+  reorderFolderElementsInDOM(
     parentFolderPath: string,
     foldersInNewOrder: TFolder[]
-  ): Promise<void> {
+  ): void {
     const normalizedParentPath = this.normalizePath(parentFolderPath);
     const activeBlocks = this.getActiveBlocks();
 
@@ -198,8 +198,7 @@ export class DomReorderManager {
    */
   async updateAllFolderButtonHandlersAfterRename(
     newPathsMap: Map<string, string>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian TAbstractFile union type
-    getAbstractFileByPath: (path: string) => any,
+    getAbstractFileByPath: (path: string) => TAbstractFile | null,
     moveFolderUp: (path: string) => Promise<void>,
     moveFolderDown: (path: string) => Promise<void>
   ): Promise<void> {

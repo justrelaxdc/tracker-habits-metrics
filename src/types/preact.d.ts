@@ -1,8 +1,8 @@
 // Preact JSX type declarations
+// Using Record<string, unknown> instead of any for dynamic element props
 declare namespace JSX {
   interface IntrinsicElements {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSX IntrinsicElements requires any for dynamic element props
-    [elemName: string]: any;
+    [elemName: string]: Record<string, unknown>;
   }
 }
 

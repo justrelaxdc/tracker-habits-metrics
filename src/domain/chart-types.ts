@@ -86,6 +86,26 @@ export interface ChartPluginContext {
 }
 
 /**
+ * Chart.js point context for hover callbacks
+ */
+export interface ChartPointContext {
+  dataIndex: number;
+  datasetIndex: number;
+}
+
+/**
+ * Chart.js tooltip context
+ */
+export interface ChartTooltipContext {
+  parsed: {
+    y: number;
+    x?: number;
+  };
+  dataIndex: number;
+  datasetIndex: number;
+}
+
+/**
  * Custom Chart.js plugin for tracker visualizations
  */
 export type TrackerChartPlugin = Plugin<"line">;

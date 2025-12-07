@@ -1,7 +1,8 @@
 import { useComputed } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { setIcon } from "obsidian";
+import { setIcon, type IconName } from "obsidian";
 import { trackerStore } from "../../store";
+import { setCssProps } from "../../utils/theme";
 
 export interface IconProps {
   /** Path to file or folder for icon lookup */
@@ -89,8 +90,8 @@ export function Icon({ path, className = "" }: IconProps) {
       const pascalCase = iconValue.substring(2);
       const kebabCase = pascalCase.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
       // Use Obsidian's setIcon to render Lucide icon
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian setIcon accepts string but typed as IconName
-      setIcon(iconRef.current, kebabCase as any);
+      // IconName is string type, so we can safely cast
+      setIcon(iconRef.current, kebabCase as IconName);
     } else {
       // Handle emoji - set as text content
       iconRef.current.textContent = iconValue;
@@ -98,6 +99,16 @@ export function Icon({ path, className = "" }: IconProps) {
 
     previousIconTypeRef.current = currentIconType;
   }, [icon.value]);
+
+  // Set CSS properties using setCssProps
+  useEffect(() => {
+    if (iconRef.current) {
+      setCssProps(iconRef.current, {
+        marginRight: "0.3em",
+        display: "inline-block",
+      });
+    }
+  }, []);
 
   if (!icon.value) {
     return null;
@@ -112,7 +123,6 @@ export function Icon({ path, className = "" }: IconProps) {
       ref={iconRef}
       class={`iconize-icon ${isLucide ? "lucide-icon" : ""} ${className}`.trim()}
       aria-label={iconValue}
-      style={{ marginRight: "0.3em", display: "inline-block" }}
     />
   );
 }

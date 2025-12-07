@@ -136,7 +136,7 @@ export default class TrackerPlugin extends Plugin {
     // Sort order cleanup is now handled lazily in FolderTreeService.
   }
 
-  async onunload() {
+  onunload() {
     this.blockManager.clearAllBlocks();
     this.iconizeService.stopWatching();
     this.writeQueueManager.clear();
@@ -168,7 +168,7 @@ export default class TrackerPlugin extends Plugin {
     const block = new TrackerBlockRenderChild(this, source, el, ctx);
     ctx.addChild(block);
     this.blockManager.addBlock(block);
-    await block.render();
+        block.render();
   }
 
   removeActiveBlock(block: TrackerBlockRenderChild) {
@@ -262,7 +262,7 @@ export default class TrackerPlugin extends Plugin {
 
   // ---- Tracker CRUD ----------------------------------------------------------
 
-  async createNewTracker() {
+  createNewTracker() {
     new CreateTrackerModal(this.app, this).open();
   }
 
@@ -286,7 +286,7 @@ export default class TrackerPlugin extends Plugin {
       const blockFolderPath = block.getFolderPath();
       const normalizedBlockPath = normalizePath(blockFolderPath);
       if (!this.blockManager.isFolderRelevant(normalizedFolderPath, normalizedBlockPath)) continue;
-      await block.render();
+        block.render();
     }
   }
 
@@ -407,8 +407,8 @@ export default class TrackerPlugin extends Plugin {
     if (this.refreshBlocksDebounceTimer) {
       clearTimeout(this.refreshBlocksDebounceTimer);
     }
-    this.refreshBlocksDebounceTimer = setTimeout(async () => {
-      await this.refreshAllBlocks();
+    this.refreshBlocksDebounceTimer = setTimeout(() => {
+      void this.refreshAllBlocks();
       this.refreshBlocksDebounceTimer = null;
     }, DEBOUNCE_DELAY_MS);
   }
@@ -449,7 +449,7 @@ export default class TrackerPlugin extends Plugin {
       folderPath, newOrder, normalizePath
     );
 
-    await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
+    this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
 
@@ -477,7 +477,7 @@ export default class TrackerPlugin extends Plugin {
       folderPath, newOrder, normalizePath
     );
 
-    await this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
+    this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
   }
 
@@ -515,7 +515,7 @@ export default class TrackerPlugin extends Plugin {
       parentFolderPath || '', newOrder, normalizePath
     );
 
-    await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
+    this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || '');
   }
 
@@ -553,7 +553,7 @@ export default class TrackerPlugin extends Plugin {
       parentFolderPath || '', newOrder, normalizePath
     );
 
-    await this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
+    this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || '');
   }
 }

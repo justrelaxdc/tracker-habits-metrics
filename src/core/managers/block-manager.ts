@@ -1,4 +1,5 @@
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
+import type { Workspace, MarkdownView } from "obsidian";
 import { SCROLL_RESTORE_DELAY_2_MS, UI_CONSTANTS } from "../../constants";
 import { logError } from "../../utils/notifications";
 import { setCssProps } from "../../utils/theme";
@@ -11,8 +12,7 @@ export class BlockManager {
   private deletionTimers: Set<ReturnType<typeof setTimeout>> = new Set();
 
   constructor(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian Workspace API not fully typed
-    private readonly getWorkspace: () => any
+    private readonly getWorkspace: () => Workspace
   ) {}
 
   /**
@@ -65,7 +65,7 @@ export class BlockManager {
 
     for (const block of blocksToRefresh) {
       try {
-        await block.render();
+        block.render();
       } catch (error) {
         logError("Tracker: error updating block", error);
       }
@@ -97,9 +97,8 @@ export class BlockManager {
     
     const workspace = this.getWorkspace();
     for (const leaf of workspace.getLeavesOfType('markdown')) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian MarkdownView type not fully typed
-      const view = leaf.view as any;
-      if (view && view.containerEl) {
+      const view = leaf.view;
+      if (view instanceof MarkdownView && view.containerEl) {
         // Check container itself
         saveScrollIfScrollable(view.containerEl);
         
@@ -123,7 +122,7 @@ export class BlockManager {
     
     for (const block of Array.from(this.activeBlocks)) {
       try {
-        await block.render();
+        block.render();
       } catch (error) {
         logError("Tracker: error updating block", error);
       }

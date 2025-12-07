@@ -36,7 +36,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     this.ctx = ctx;
   }
 
-  async render() {
+  render() {
     // Update folderPath if it's not explicitly set in opts (to reflect settings changes)
     if (!this.opts.folder) {
       this.folderPath = this.plugin.settings.trackersFolder;

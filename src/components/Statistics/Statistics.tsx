@@ -1,4 +1,4 @@
-import { useMemo } from "preact/hooks";
+import { useMemo, useRef, useEffect } from "preact/hooks";
 import { useComputed } from "@preact/signals";
 import { CSS_CLASSES, TrackerType, STATS_LABELS } from "../../constants";
 import { statisticsService } from "../../services/statistics-service";
@@ -7,6 +7,7 @@ import type { StatisticsProps } from "../types";
 import type { StatisticsResult } from "../../domain/statistics-types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
+import { setCssProps } from "../../utils/theme";
 
 /**
  * Helper to get completion rate color class
@@ -88,6 +89,15 @@ interface CompletionRateProps {
 function CompletionRate({ rate, activeDays, totalDays, label }: CompletionRateProps) {
   const rateValue = Math.round(rate);
   const colorClass = getCompletionColorClass(rateValue);
+  const progressFillRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (progressFillRef.current) {
+      setCssProps(progressFillRef.current, {
+        width: `${rate}%`,
+      });
+    }
+  }, [rate]);
 
   return (
     <div class="tracker-notes__stats-metric tracker-notes__stats-metric--completion">
@@ -99,8 +109,8 @@ function CompletionRate({ rate, activeDays, totalDays, label }: CompletionRatePr
       </div>
       <div class="tracker-notes__stats-progress-bar">
         <div 
+          ref={progressFillRef}
           class={`tracker-notes__stats-progress-fill ${colorClass}`}
-          style={{ width: `${rate}%` }}
         />
       </div>
     </div>

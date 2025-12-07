@@ -72,7 +72,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
     if (immediate) {
       await doWrite();
     } else {
-      debounceRef.current = setTimeout(doWrite, DEBOUNCE_DELAY_MS);
+      debounceRef.current = setTimeout(() => void doWrite(), DEBOUNCE_DELAY_MS);
     }
   }, [plugin, file, dateIso]);
 

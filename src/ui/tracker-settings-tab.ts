@@ -61,8 +61,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
             if (this.folderDebounceTimer) {
               clearTimeout(this.folderDebounceTimer);
             }
-            this.folderDebounceTimer = setTimeout(async () => {
-              await this.plugin.saveSettings();
+            this.folderDebounceTimer = setTimeout(() => {
+              void this.plugin.saveSettings();
               this.folderDebounceTimer = null;
             }, DEBOUNCE_DELAY_MS);
           });
@@ -87,8 +87,8 @@ export class TrackerSettingsTab extends PluginSettingTab {
               if (this.daysDebounceTimer) {
                 clearTimeout(this.daysDebounceTimer);
               }
-              this.daysDebounceTimer = setTimeout(async () => {
-                await this.plugin.saveSettings();
+              this.daysDebounceTimer = setTimeout(() => {
+                void this.plugin.saveSettings();
                 this.daysDebounceTimer = null;
               }, DEBOUNCE_DELAY_MS);
             }

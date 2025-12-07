@@ -17,7 +17,6 @@ export const FILE_UPDATE_DELAY_MS = 300; // Delay for file update after create/r
 export const ANIMATION_DURATION_MS = 300; // Animation duration for UI updates
 export const ANIMATION_DURATION_SHORT_MS = 200; // Short animation duration for UI updates
 export const SCROLL_RESTORE_DELAY_2_MS = 100; // Second delay for scroll restoration
-export const IMMEDIATE_TIMEOUT_MS = 0; // Immediate timeout
 export const NOTICE_TIMEOUT_MS = 2000; // Timeout for notice messages
 
 // Default fallback values
