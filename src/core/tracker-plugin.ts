@@ -115,12 +115,9 @@ export default class TrackerPlugin extends Plugin {
     // Polling only happens when there are tracker blocks displayed
     this.iconizeService.setActiveBlocksChecker(() => this.blockManager.activeBlocks.size > 0);
     
-    // Load Iconize data asynchronously
-    this.iconizeService.loadIconizeData().then(() => {
-      this.iconizeService.startWatching();
-    }).catch(() => {
-      // Silently fail if Iconize is not installed
-    });
+    // Load Iconize data and start watching
+    this.iconizeService.loadIconizeData();
+    this.iconizeService.startWatching();
     
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
     this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));

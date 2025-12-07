@@ -196,7 +196,7 @@ export class DomReorderManager {
   /**
    * Updates button handlers for all folders and trackers in DOM after folder renaming
    */
-  async updateAllFolderButtonHandlersAfterRename(
+  updateAllFolderButtonHandlersAfterRename(
     newPathsMap: Map<string, string>,
     getAbstractFileByPath: (path: string) => TAbstractFile | null,
     moveFolderUp: (path: string) => Promise<void>,
@@ -284,6 +284,7 @@ export class DomReorderManager {
         }
       }
     }
+    return Promise.resolve();
   }
 
   /**

@@ -52,7 +52,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
       if (immediate) {
         await doDelete();
       } else {
-        debounceRef.current = setTimeout(doDelete, DEBOUNCE_DELAY_MS);
+        debounceRef.current = setTimeout(() => void doDelete(), DEBOUNCE_DELAY_MS);
       }
       return;
     }

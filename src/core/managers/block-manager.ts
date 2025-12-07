@@ -1,5 +1,6 @@
 import type { TrackerBlockRenderChild } from "../../ui/tracker-block-render-child";
-import type { Workspace, MarkdownView } from "obsidian";
+import type { Workspace } from "obsidian";
+import { MarkdownView } from "obsidian";
 import { SCROLL_RESTORE_DELAY_2_MS, UI_CONSTANTS } from "../../constants";
 import { logError } from "../../utils/notifications";
 import { setCssProps } from "../../utils/theme";
@@ -152,7 +153,7 @@ export class BlockManager {
   /**
    * Handle tracker deletion animation
    */
-  async onTrackerDeleted(filePath: string): Promise<void> {
+  onTrackerDeleted(filePath: string): Promise<void> {
     for (const block of Array.from(this.activeBlocks)) {
       const trackersContainers = Array.from(
         block.containerEl.querySelectorAll<HTMLElement>(".tracker-notes__trackers")
@@ -183,6 +184,7 @@ export class BlockManager {
         }
       }
     }
+    return Promise.resolve();
   }
 }
 
