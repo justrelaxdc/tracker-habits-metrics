@@ -229,4 +229,8 @@ MIT License © 2025 Vladislav (Vlad Ross)
 
 ---
 
-**Turn your Obsidian vault into a powerful tracking system — start tracking what matters.**
+<div align="center">
+  
+  **Turn your Obsidian vault into a powerful tracking system — start tracking what matters**
+  
+</div>
