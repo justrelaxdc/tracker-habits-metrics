@@ -53,11 +53,11 @@ export function PlusMinusControl({ file, dateIso, plugin, fileOptions }: PlusMin
   }, [plugin, file, dateIso]);
 
   // Handle minus click
-  const handleMinus = useCallback(async () => {
+  const handleMinus = useCallback(() => {
     const newValue = (Number.isFinite(value) ? value : 0) - step;
     setValue(newValue);
     setIsUpdated(true);
-    await writeValue(newValue);
+    void writeValue(newValue);
     // Clear previous timer if exists
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current);
@@ -66,11 +66,11 @@ export function PlusMinusControl({ file, dateIso, plugin, fileOptions }: PlusMin
   }, [value, step, writeValue]);
 
   // Handle plus click
-  const handlePlus = useCallback(async () => {
+  const handlePlus = useCallback(() => {
     const newValue = (Number.isFinite(value) ? value : 0) + step;
     setValue(newValue);
     setIsUpdated(true);
-    await writeValue(newValue);
+    void writeValue(newValue);
     // Clear previous timer if exists
     if (animationTimerRef.current) {
       clearTimeout(animationTimerRef.current);

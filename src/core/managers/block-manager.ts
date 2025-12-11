@@ -54,10 +54,10 @@ export class BlockManager {
   /**
    * Refresh blocks for a specific folder
    */
-  async refreshBlocksForFolder(
+  refreshBlocksForFolder(
     folderPath: string,
     normalizePath: (path: string) => string
-  ): Promise<void> {
+  ): void {
     const normalizedPath = normalizePath(folderPath);
     const blocksToRefresh = Array.from(this.activeBlocks).filter((block) => {
       const blockPath = normalizePath(block.getFolderPath());
@@ -79,7 +79,7 @@ export class BlockManager {
    * Refresh all active blocks with scroll position preservation
    * Uses targeted queries instead of querySelectorAll('*') for better performance
    */
-  async refreshAllBlocks(): Promise<void> {
+  refreshAllBlocks(): void {
     const scrollPositions = new Map<HTMLElement, { top: number; left: number }>();
     
     // Save scroll position for a container if it's scrollable
@@ -161,9 +161,11 @@ export class BlockManager {
       if (trackersContainers.length === 0) continue;
       
       for (const trackersContainer of trackersContainers) {
-        const trackersToDelete = Array.from(trackersContainer.querySelectorAll(
-          `.tracker-notes__tracker[data-file-path="${filePath}"]`
-        )) as HTMLElement[];
+        const trackersToDelete = Array.from(
+          trackersContainer.querySelectorAll<HTMLElement>(
+            `.tracker-notes__tracker[data-file-path="${filePath}"]`
+          )
+        );
         
         if (trackersToDelete.length === 0) continue;
         

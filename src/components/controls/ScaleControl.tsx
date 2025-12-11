@@ -79,17 +79,17 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
   }, [isDragging, calculateValue]);
 
   // Handle mouse up
-  const handleMouseUp = useCallback(async () => {
+  const handleMouseUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
       if (hasMoved.current) {
-        await writeValue(value);
+        void writeValue(value);
       }
     }
   }, [isDragging, value, writeValue]);
 
   // Handle click (save immediately if no drag)
-  const handleClick = useCallback(async (e: MouseEvent) => {
+  const handleClick = useCallback((e: MouseEvent) => {
     if (hasMoved.current) {
       hasMoved.current = false;
       return;
@@ -103,7 +103,7 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
     }
     const newValue = calculateValue(e.clientX);
     setValue(newValue);
-    await writeValue(newValue);
+    void writeValue(newValue);
   }, [calculateValue, writeValue]);
 
   // Handle keyboard navigation
@@ -127,9 +127,9 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
     setValue(newValue);
   }, [value, minValue, maxValue, step]);
 
-  const handleKeyUp = useCallback(async (e: KeyboardEvent) => {
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(e.key)) {
-      await writeValue(value);
+      void writeValue(value);
     }
   }, [value, writeValue]);
 

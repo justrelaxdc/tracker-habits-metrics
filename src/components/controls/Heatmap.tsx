@@ -111,7 +111,7 @@ export function Heatmap({
   }, [dateIso, daysToShow, entriesHash, plugin.settings.dateFormat, startTrackingDate]);
 
   // Handle day click using event delegation for better performance
-  const handleContainerClick = useCallback(async (e: MouseEvent) => {
+  const handleContainerClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
     if (!target.classList.contains(CSS_CLASSES.HEATMAP_DAY)) return;
     
@@ -130,11 +130,13 @@ export function Heatmap({
     const isChecked = day.hasValue;
     const newValue = isChecked ? 0 : 1;
     
-    try {
-      await plugin.writeLogLine(file, day.dateStr, String(newValue));
-    } catch (err) {
-      logError("Heatmap: write error", err);
-    }
+    void (async () => {
+      try {
+        await plugin.writeLogLine(file, day.dateStr, String(newValue));
+      } catch (err) {
+        logError("Heatmap: write error", err);
+      }
+    })();
   }, [plugin, file, days]);
 
   // Touch event handlers to prevent sidebar opening on horizontal scroll

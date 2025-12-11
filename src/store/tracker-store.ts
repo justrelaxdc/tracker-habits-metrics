@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS } from "../domain/types";
  */
 export interface IconizeData {
   settings?: Record<string, unknown>;
-  [path: string]: string | unknown;
+  [path: string]: string | Record<string, unknown> | undefined;
 }
 
 /**
@@ -204,24 +204,28 @@ class TrackerStore {
     const normalizedPath = this.normalizePath(path);
 
     // Try exact match first
-    if (data[normalizedPath]) {
-      return data[normalizedPath];
+    const icon = data[normalizedPath];
+    if (icon && typeof icon === "string") {
+      return icon;
     }
 
     // Try with leading slash
     const pathWithSlash = `/${normalizedPath}`;
-    if (data[pathWithSlash]) {
-      return data[pathWithSlash];
+    const iconWithSlash = data[pathWithSlash];
+    if (iconWithSlash && typeof iconWithSlash === "string") {
+      return iconWithSlash;
     }
 
     // For files, try without extension
     if (normalizedPath.endsWith(".md")) {
       const pathWithoutExt = normalizedPath.slice(0, -3);
-      if (data[pathWithoutExt]) {
-        return data[pathWithoutExt];
+      const iconWithoutExt = data[pathWithoutExt];
+      if (iconWithoutExt && typeof iconWithoutExt === "string") {
+        return iconWithoutExt;
       }
-      if (data[`/${pathWithoutExt}`]) {
-        return data[`/${pathWithoutExt}`];
+      const iconWithSlashNoExt = data[`/${pathWithoutExt}`];
+      if (iconWithSlashNoExt && typeof iconWithSlashNoExt === "string") {
+        return iconWithSlashNoExt;
       }
     }
 

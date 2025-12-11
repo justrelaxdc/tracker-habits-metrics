@@ -21,12 +21,12 @@ export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNode
 
   const shouldShowHeader = node.files.length > 0 || (node.level > 0 && node.children.length > 0);
 
-  const handleMoveUp = useCallback(async () => {
-    await plugin.moveFolderUp(normalizedPath);
+  const handleMoveUp = useCallback(() => {
+    void plugin.moveFolderUp(normalizedPath);
   }, [plugin, normalizedPath]);
 
-  const handleMoveDown = useCallback(async () => {
-    await plugin.moveFolderDown(normalizedPath);
+  const handleMoveDown = useCallback(() => {
+    void plugin.moveFolderDown(normalizedPath);
   }, [plugin, normalizedPath]);
 
   // Add context menu handler for folder name using Obsidian API

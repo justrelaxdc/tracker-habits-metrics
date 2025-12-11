@@ -113,7 +113,6 @@ export class IconizeService {
    * @param _oldPath - Old file/folder path (unused, kept for interface compatibility)
    * @param _newPath - New file/folder path (unused, kept for interface compatibility)
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Parameters kept for interface compatibility
   updateIconPath(_oldPath: string, _newPath: string): void {
     // Iconize plugin updates its data asynchronously after rename
     // Small delay ensures we pick up the updated data

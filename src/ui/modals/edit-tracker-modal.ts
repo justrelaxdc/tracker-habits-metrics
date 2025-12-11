@@ -118,7 +118,8 @@ export class EditTrackerModal extends Modal {
     // Date change handler for data validation
     const startDateInput = startDateSetting.controlEl.querySelector("input") as HTMLInputElement;
     if (startDateInput) {
-      startDateInput.addEventListener("input", async () => {
+      startDateInput.addEventListener("input", () => {
+        void (async () => {
         const newStartDate = startDateInput.value;
         if (!newStartDate || newStartDate === currentStartDate) {
           setCssProps(warningEl, { display: "none" });
@@ -172,6 +173,7 @@ export class EditTrackerModal extends Modal {
           logError("Tracker: error checking data", error);
           setCssProps(warningEl, { display: "none" });
         }
+        })();
       });
     }
 
@@ -327,7 +329,8 @@ export class EditTrackerModal extends Modal {
       text: MODAL_LABELS.DELETE,
       cls: "mod-warning"
     });
-    deleteBtn.addEventListener("click", async () => {
+    deleteBtn.addEventListener("click", () => {
+      void (async () => {
       try {
         // Save file path before deletion
         const filePath = this.file.path;
@@ -347,6 +350,7 @@ export class EditTrackerModal extends Modal {
         new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
         logError("Tracker: error deleting tracker", error);
       }
+      })();
     });
     
     // Save button (right)
@@ -354,7 +358,8 @@ export class EditTrackerModal extends Modal {
       text: MODAL_LABELS.SAVE,
       cls: "mod-cta"
     });
-    saveBtn.addEventListener("click", async () => {
+    saveBtn.addEventListener("click", () => {
+      void (async () => {
         const nameInput = nameSetting.controlEl.querySelector("input") as HTMLInputElement;
         const name = nameInput.value.trim();
         if (!name) {
@@ -532,6 +537,7 @@ export class EditTrackerModal extends Modal {
           new Notice(`${ERROR_MESSAGES.UPDATE_ERROR}: ${errorMsg}`);
           logError("Tracker: error updating tracker", error);
         }
+      })();
     });
   }
 

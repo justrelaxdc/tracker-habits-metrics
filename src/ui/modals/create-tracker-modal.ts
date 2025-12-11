@@ -210,7 +210,8 @@ export class CreateTrackerModal extends Modal {
     }
 
     new Setting(contentEl).addButton((button) => {
-      button.setButtonText(MODAL_LABELS.CREATE).setCta().onClick(async () => {
+      button.setButtonText(MODAL_LABELS.CREATE).setCta().onClick(() => {
+        void (async () => {
         const nameInput = nameSetting.controlEl.querySelector("input") as HTMLInputElement;
         const name = nameInput.value.trim();
         if (!name) {
@@ -310,6 +311,7 @@ export class CreateTrackerModal extends Modal {
           new Notice(`${ERROR_MESSAGES.CREATE_ERROR}: ${errorMsg}`);
           logError("Tracker: error creating tracker", error);
         }
+        })();
       });
     });
   }

@@ -40,7 +40,7 @@ export function TrackerHeader({
     e.preventDefault();
     e.stopPropagation();
     // Open file using Obsidian API
-    plugin.app.workspace.openLinkText(file.path, "", false);
+    void plugin.app.workspace.openLinkText(file.path, "", false);
   }, [plugin, file.path]);
 
   return (

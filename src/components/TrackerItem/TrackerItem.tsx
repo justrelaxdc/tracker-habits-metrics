@@ -68,7 +68,7 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
       }
     };
 
-    loadData();
+    void loadData();
 
     // Cleanup: clear state when component unmounts
     return () => {
@@ -130,12 +130,12 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
     plugin.openEditTrackerModal(file);
   }, [plugin, file]);
 
-  const handleMoveUp = useCallback(async () => {
-    await plugin.moveTrackerUp(file);
+  const handleMoveUp = useCallback(() => {
+    void plugin.moveTrackerUp(file);
   }, [plugin, file]);
 
-  const handleMoveDown = useCallback(async () => {
-    await plugin.moveTrackerDown(file);
+  const handleMoveDown = useCallback(() => {
+    void plugin.moveTrackerDown(file);
   }, [plugin, file]);
 
   // Get start tracking date

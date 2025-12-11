@@ -53,7 +53,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
       if (immediate) {
         await doDelete();
       } else {
-        debounceRef.current = setTimeout(doDelete, TEXT_DEBOUNCE_DELAY_MS);
+        debounceRef.current = setTimeout(() => void doDelete(), TEXT_DEBOUNCE_DELAY_MS);
       }
       return;
     }
@@ -70,7 +70,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
     if (immediate) {
       await doWrite();
     } else {
-      debounceRef.current = setTimeout(doWrite, TEXT_DEBOUNCE_DELAY_MS);
+      debounceRef.current = setTimeout(() => void doWrite(), TEXT_DEBOUNCE_DELAY_MS);
     }
   }, [plugin, file, dateIso]);
 
@@ -88,12 +88,12 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
   const handleChange = useCallback((e: Event) => {
     const target = e.target as HTMLTextAreaElement;
     setInputValue(target.value);
-    writeValue(target.value, false);
+    void writeValue(target.value, false);
   }, [writeValue]);
 
   // Handle blur - immediate write
   const handleBlur = useCallback(() => {
-    writeValue(inputValue, true);
+    void writeValue(inputValue, true);
   }, [inputValue, writeValue]);
 
   return (

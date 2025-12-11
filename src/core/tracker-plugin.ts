@@ -161,7 +161,7 @@ export default class TrackerPlugin extends Plugin {
 
   // ---- Code blocks -----------------------------------------------------------
 
-  async processTrackerBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
+  processTrackerBlock(source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
     const block = new TrackerBlockRenderChild(this, source, el, ctx);
     ctx.addChild(block);
     this.blockManager.addBlock(block);
@@ -172,8 +172,8 @@ export default class TrackerPlugin extends Plugin {
     this.blockManager.removeBlock(block);
   }
 
-  async refreshBlocksForFolder(folderPath: string) {
-    await this.blockManager.refreshBlocksForFolder(folderPath, normalizePath);
+  refreshBlocksForFolder(folderPath: string) {
+    this.blockManager.refreshBlocksForFolder(folderPath, normalizePath);
   }
 
   /**
@@ -195,8 +195,8 @@ export default class TrackerPlugin extends Plugin {
     });
   }
 
-  async refreshAllBlocks() {
-    await this.blockManager.refreshAllBlocks();
+  refreshAllBlocks() {
+    this.blockManager.refreshAllBlocks();
   }
 
   // ---- Data Access -----------------------------------------------------------
@@ -363,9 +363,9 @@ export default class TrackerPlugin extends Plugin {
           await this.trackerFileService.deleteEntryFromState(file, state);
         } catch (error) {
           // Revert optimistic update on error
-          if (hadValue) {
-            state.entries.set(dateIso, originalValue!);
-            trackerStore.updateSingleEntry(file.path, dateIso, originalValue!);
+          if (hadValue && originalValue !== undefined) {
+            state.entries.set(dateIso, originalValue);
+            trackerStore.updateSingleEntry(file.path, dateIso, originalValue);
           }
           const errorMsg = error instanceof Error ? error.message : String(error);
           new Notice(`${ERROR_MESSAGES.WRITE_ERROR}: ${errorMsg}`);

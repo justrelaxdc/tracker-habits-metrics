@@ -90,7 +90,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   const handleChange = useCallback((e: Event) => {
     const target = e.target as HTMLInputElement;
     setInputValue(target.value);
-    writeValue(target.value, false);
+    void writeValue(target.value, false);
 
     // Visual feedback
     if (inputRef.current) {
@@ -106,13 +106,13 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   // Handle enter key - immediate write
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      writeValue(inputValue, true);
+      void writeValue(inputValue, true);
     }
   }, [inputValue, writeValue]);
 
   // Handle blur - immediate write
   const handleBlur = useCallback(() => {
-    writeValue(inputValue, true);
+    void writeValue(inputValue, true);
   }, [inputValue, writeValue]);
 
   return (
