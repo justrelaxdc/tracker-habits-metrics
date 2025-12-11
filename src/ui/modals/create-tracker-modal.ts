@@ -11,10 +11,12 @@ import { setCssProps } from "../../utils/theme";
 
 export class CreateTrackerModal extends Modal {
   private readonly plugin: TrackerPlugin;
+  private readonly initialPath?: string;
 
-  constructor(app: App, plugin: TrackerPlugin) {
+  constructor(app: App, plugin: TrackerPlugin, initialPath?: string) {
     super(app);
     this.plugin = plugin;
+    this.initialPath = initialPath;
   }
 
   onOpen() {
@@ -34,7 +36,7 @@ export class CreateTrackerModal extends Modal {
       .addText((text) => {
         const defaultPath = this.plugin.settings.trackersFolder || DEFAULT_SETTINGS.trackersFolder;
         text.setPlaceholder(defaultPath);
-        text.setValue("");
+        text.setValue(this.initialPath || "");
         setCssProps(text.inputEl, { width: "100%" });
         new FolderSuggest(this.app, text.inputEl, folders);
       });

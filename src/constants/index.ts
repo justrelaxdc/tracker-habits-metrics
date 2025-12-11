@@ -283,6 +283,7 @@ export const MODAL_LABELS = {
   WARNING_RECORDS_BEFORE_DATE: 'Warning: found {count} {records} BEFORE date {date}, which will be deleted when saving.',
   RECORD_SINGULAR: 'record',
   RECORDS_PLURAL: 'records',
+  CREATE_TRACKER_IN_FOLDER: 'Add new tracker in folder',
 } as const;
 
 // Default values

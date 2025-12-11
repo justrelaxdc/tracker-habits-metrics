@@ -129,6 +129,21 @@ export default class TrackerPlugin extends Plugin {
       callback: () => this.createNewTracker()
     });
     
+    // Register global file-menu event handler to add tracker creation option in file explorer
+    this.registerEvent(
+      this.app.workspace.on('file-menu', (menu, file, source) => {
+        if (file instanceof TFolder) {
+          menu.addItem((item) => {
+            item.setTitle(MODAL_LABELS.CREATE_TRACKER_IN_FOLDER);
+            item.setIcon("plus");
+            item.onClick(() => {
+              this.createNewTracker(normalizePath(file.path));
+            });
+          });
+        }
+      })
+    );
+    
     // Note: Vault event subscriptions for rename/delete removed.
     // Sort order cleanup is now handled lazily in FolderTreeService.
   }
@@ -259,8 +274,8 @@ export default class TrackerPlugin extends Plugin {
 
   // ---- Tracker CRUD ----------------------------------------------------------
 
-  createNewTracker() {
-    new CreateTrackerModal(this.app, this).open();
+  createNewTracker(folderPath?: string) {
+    new CreateTrackerModal(this.app, this, folderPath).open();
   }
 
   async onTrackerCreated(folderPath: string, file: TFile) {

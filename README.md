@@ -60,13 +60,21 @@
 > **Create your first tracker in under a minute.**
 
 ### 1. Create a tracker
+
+**Method 1: Command Palette**
 1. Press `Ctrl+P` (or `Cmd+P` on Mac).  
-2. Run **“Create new tracker”**.  
-3. Enter a name (e.g., “Morning Workout”).  
+2. Run **"Create new tracker"**.
+3. Enter a name (e.g., "Morning Workout").  
 4. Choose (or auto create) a folder.  
 5. Select the tracker type.  
 6. Configure limits, units, start date, etc.  
 7. Click **Create**.
+
+**Method 2: Context Menu (Right-click)**
+1. Right-click on any folder in the file explorer or in a tracker block.  
+2. Select **"Add new tracker in folder"**.  
+3. The creation modal will open with the folder path already filled in.  
+4. Enter a name, select the tracker type, configure settings, and click **Create**.
 
 > You can structure trackers inside folders (up to 3 levels). The plugin will automatically interpret these folders as categories/subcategories. Folders containing the word `archive` are ignored, so old trackers can be saved there.
 
@@ -194,11 +202,13 @@ Optional, but powerful.
 
 ---
 
-## 🛠 Commands
+## 🛠 Commands & Context Menu
 
-Available in **Ctrl+P / Cmd+P**:
+**Command Palette** (`Ctrl+P` / `Cmd+P`):
+- **Create new tracker** — guided creation flow
 
-- **Create new tracker** — guided creation flow  
+**Context Menu** (Right-click on folders):
+- **Add new tracker in folder** — quick creation with pre-filled folder path (available in file explorer and tracker blocks)  
 
 ---
 
