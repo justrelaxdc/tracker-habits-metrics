@@ -44,17 +44,9 @@ export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNode
         // Create context menu using Menu API
         const menu = new Menu();
         
-        // Add custom menu item for creating tracker in this folder
-        menu.addItem((item) => {
-          item.setTitle(MODAL_LABELS.CREATE_TRACKER_IN_FOLDER);
-          item.setIcon("plus");
-          item.onClick(() => {
-            plugin.createNewTracker(normalizedPath);
-          });
-        });
-        
         // Trigger 'file-menu' event so other plugins (like Iconize) can add their items
         // This allows the standard Obsidian context menu to be built
+        // The global 'file-menu' handler in TrackerPlugin will add the tracker creation option
         plugin.app.workspace.trigger('file-menu', menu, folder, 'file-explorer');
         
         // Show menu at mouse position
