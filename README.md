@@ -230,9 +230,9 @@ Feedback, ideas, and bug reports are very welcome:
 
 - Issues & feature requests:  
   https://github.com/justrelaxdc/tracker-habits-metrics/issues  
-- Telegram: https://t.me/vladrosss  
+- Telegram: https://t.me/vladrosss
+- Support me directly to my [Ukrainian card (choose GPay/Apple Pay)](https://send.monobank.ua/jar/6Emtfr3wpy) or [![Ko-fi](https://img.shields.io/badge/Support%20Me%20on%20Ko--fi-F16061?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/vladross)
 
-[![Ko-fi](https://img.shields.io/badge/Support%20Me%20on%20Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/vladross)
 
 ---
 
