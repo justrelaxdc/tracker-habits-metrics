@@ -2,7 +2,7 @@
 
 <img width="180" height="180" alt="image" src="assets/logo.png" />
 
-# Tracker: Habits and Metrics 
+# Habit & Metric Tracker
 
 **Note‑based habit & metrics tracker for Obsidian with heatmaps, charts, smart statistics, and local data storage.**
 
