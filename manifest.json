@@ -1,8 +1,8 @@
 {
   "id": "tracker-habits-metrics",
   "name": "Habitify",
-  "version": "1.1.4",
-  "minAppVersion": "1.6.0",
+  "version": "1.1.5",
+  "minAppVersion": "1.6.6",
   "description": "A tracker for habits and metrics. Features heatmaps, charts, and streaks while keeping your data in pure Markdown files. No hidden databases.",
   "author": "Vlad Ross",
   "authorUrl": "https://t.me/vladrosss",
@@ -11,7 +11,5 @@
     "Ko-fi": "https://ko-fi.com/vladross",
     "My bank (GPay/Apple Pay)": "https://send.monobank.ua/jar/6Emtfr3wpy"
   },
-  "donation": "https://send.monobank.ua/jar/6Emtfr3wpy",
-  "donationUrl": "https://send.monobank.ua/jar/6Emtfr3wpy",
   "isDesktopOnly": false
 }
