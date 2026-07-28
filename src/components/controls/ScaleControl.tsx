@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "preact/hooks"
 import { useComputed } from "@preact/signals";
 import { CSS_CLASSES, DEFAULTS } from "../../constants";
 import type { ScaleControlProps } from "../types";
+import type { TrackerEntries } from "../../domain/types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
 import { setCssProps } from "../../utils/theme";
@@ -16,7 +17,7 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
   const step = parseFloat(fileOptions.step || String(DEFAULTS.STEP)) || DEFAULTS.STEP;
 
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });

@@ -17,46 +17,44 @@ export function populateTrackerTypeSelector(
   }
   
   // Create Habits group
-  const habitsGroup = document.createElement("optgroup");
-  habitsGroup.label = MODAL_LABELS.HABITS_GROUP;
+  const habitsGroup = selectElement.createEl("optgroup", {
+    attr: { label: MODAL_LABELS.HABITS_GROUP },
+  });
   
-  const goodHabitOption = document.createElement("option");
-  goodHabitOption.value = TrackerType.GOOD_HABIT;
-  goodHabitOption.textContent = TRACKER_TYPE_LABELS[TrackerType.GOOD_HABIT];
-  habitsGroup.appendChild(goodHabitOption);
+  habitsGroup.createEl("option", {
+    value: TrackerType.GOOD_HABIT,
+    text: TRACKER_TYPE_LABELS[TrackerType.GOOD_HABIT],
+  });
   
-  const badHabitOption = document.createElement("option");
-  badHabitOption.value = TrackerType.BAD_HABIT;
-  badHabitOption.textContent = TRACKER_TYPE_LABELS[TrackerType.BAD_HABIT];
-  habitsGroup.appendChild(badHabitOption);
-  
-  selectElement.appendChild(habitsGroup);
+  habitsGroup.createEl("option", {
+    value: TrackerType.BAD_HABIT,
+    text: TRACKER_TYPE_LABELS[TrackerType.BAD_HABIT],
+  });
   
   // Create Metrics group
-  const metricsGroup = document.createElement("optgroup");
-  metricsGroup.label = MODAL_LABELS.METRICS_GROUP;
+  const metricsGroup = selectElement.createEl("optgroup", {
+    attr: { label: MODAL_LABELS.METRICS_GROUP },
+  });
   
-  const numberOption = document.createElement("option");
-  numberOption.value = TrackerType.NUMBER;
-  numberOption.textContent = TRACKER_TYPE_LABELS[TrackerType.NUMBER];
-  metricsGroup.appendChild(numberOption);
+  metricsGroup.createEl("option", {
+    value: TrackerType.NUMBER,
+    text: TRACKER_TYPE_LABELS[TrackerType.NUMBER],
+  });
   
-  const scaleOption = document.createElement("option");
-  scaleOption.value = TrackerType.SCALE;
-  scaleOption.textContent = TRACKER_TYPE_LABELS[TrackerType.SCALE];
-  metricsGroup.appendChild(scaleOption);
+  metricsGroup.createEl("option", {
+    value: TrackerType.SCALE,
+    text: TRACKER_TYPE_LABELS[TrackerType.SCALE],
+  });
   
-  const plusminusOption = document.createElement("option");
-  plusminusOption.value = TrackerType.PLUSMINUS;
-  plusminusOption.textContent = TRACKER_TYPE_LABELS[TrackerType.PLUSMINUS];
-  metricsGroup.appendChild(plusminusOption);
+  metricsGroup.createEl("option", {
+    value: TrackerType.PLUSMINUS,
+    text: TRACKER_TYPE_LABELS[TrackerType.PLUSMINUS],
+  });
   
-  const textOption = document.createElement("option");
-  textOption.value = TrackerType.TEXT;
-  textOption.textContent = TRACKER_TYPE_LABELS[TrackerType.TEXT];
-  metricsGroup.appendChild(textOption);
-  
-  selectElement.appendChild(metricsGroup);
+  metricsGroup.createEl("option", {
+    value: TrackerType.TEXT,
+    text: TRACKER_TYPE_LABELS[TrackerType.TEXT],
+  });
   
   // Set default value
   selectElement.value = defaultValue;

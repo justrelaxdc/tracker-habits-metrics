@@ -22,8 +22,9 @@ export function Icon({ path, className = "" }: IconProps) {
   const previousIconTypeRef = useRef<'lucide' | 'emoji' | null>(null);
   
   // Get icon reactively from store
+  // Get icon reactively from store
   // Access iconizeData.value directly to ensure reactivity
-  const icon = useComputed(() => {
+  const icon = useComputed<string | null>(() => {
     const data = trackerStore.iconizeData.value;
     if (!data) return null;
     
@@ -34,26 +35,27 @@ export function Icon({ path, className = "" }: IconProps) {
       .replace(/^\/+/, "")
       .replace(/\/$/, "");
 
+    const getIconStr = (key: string): string | null => {
+      const val = data[key];
+      return typeof val === "string" ? val : null;
+    };
+
     // Try exact match first
-    if (data[normalizedPath]) {
-      return data[normalizedPath];
-    }
+    const exact = getIconStr(normalizedPath);
+    if (exact) return exact;
 
     // Try with leading slash
     const pathWithSlash = `/${normalizedPath}`;
-    if (data[pathWithSlash]) {
-      return data[pathWithSlash];
-    }
+    const withSlash = getIconStr(pathWithSlash);
+    if (withSlash) return withSlash;
 
     // For files, try without extension
     if (normalizedPath.endsWith(".md")) {
       const pathWithoutExt = normalizedPath.slice(0, -3);
-      if (data[pathWithoutExt]) {
-        return data[pathWithoutExt];
-      }
-      if (data[`/${pathWithoutExt}`]) {
-        return data[`/${pathWithoutExt}`];
-      }
+      const withoutExt = getIconStr(pathWithoutExt);
+      if (withoutExt) return withoutExt;
+      const withoutExtSlash = getIconStr(`/${pathWithoutExt}`);
+      if (withoutExtSlash) return withoutExtSlash;
     }
 
     return null;
@@ -61,7 +63,7 @@ export function Icon({ path, className = "" }: IconProps) {
 
   // Render icon using Obsidian API for Lucide, text for emoji
   useEffect(() => {
-    if (!iconRef.current || !icon.value) {
+    if (!iconRef.current || !icon.value || typeof icon.value !== "string") {
       // Clear if icon is removed
       if (iconRef.current) {
         while (iconRef.current.firstChild) {
@@ -72,7 +74,7 @@ export function Icon({ path, className = "" }: IconProps) {
       return;
     }
 
-    const iconValue = icon.value;
+    const iconValue: string = icon.value;
     const isLucide = iconValue.startsWith("Li");
     const currentIconType = isLucide ? 'lucide' : 'emoji';
 
@@ -110,11 +112,11 @@ export function Icon({ path, className = "" }: IconProps) {
     }
   }, []);
 
-  if (!icon.value) {
+  if (!icon.value || typeof icon.value !== "string") {
     return null;
   }
 
-  const iconValue = icon.value;
+  const iconValue: string = icon.value;
   const isLucide = iconValue.startsWith("Li");
 
   // Use single element for both icon types

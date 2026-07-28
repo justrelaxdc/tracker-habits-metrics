@@ -23,7 +23,7 @@ export function validateTrackerOptions(options: Record<string, string>): Tracker
   if (options.view) {
     const view = options.view.toLowerCase();
     if (view === ViewMode.CONTROL || view === ViewMode.DISPLAY) {
-      validated.view = view as ViewModeValue;
+      validated.view = view;
     }
   }
   

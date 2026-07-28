@@ -75,7 +75,7 @@ export default class TrackerPlugin extends Plugin {
   }
 
   async onload() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<TrackerSettings> | null);
     
     // Initialize services
     this.folderTreeService = new FolderTreeService(this.app);
@@ -154,7 +154,7 @@ export default class TrackerPlugin extends Plugin {
     this.writeQueueManager.clear();
     this.folderTreeService.cleanup();
     if (this.refreshBlocksDebounceTimer) {
-      clearTimeout(this.refreshBlocksDebounceTimer);
+      window.clearTimeout(this.refreshBlocksDebounceTimer);
       this.refreshBlocksDebounceTimer = null;
     }
     trackerStore.clear();
@@ -417,9 +417,9 @@ export default class TrackerPlugin extends Plugin {
     this.sortOrderManager.updateSettings(this.settings);
     
     if (this.refreshBlocksDebounceTimer) {
-      clearTimeout(this.refreshBlocksDebounceTimer);
+      window.clearTimeout(this.refreshBlocksDebounceTimer);
     }
-    this.refreshBlocksDebounceTimer = setTimeout(() => {
+    this.refreshBlocksDebounceTimer = window.setTimeout(() => {
       void this.refreshAllBlocks();
       this.refreshBlocksDebounceTimer = null;
     }, DEBOUNCE_DELAY_MS);

@@ -38,7 +38,8 @@ import { ERROR_MESSAGES } from "../constants";
  */
 const isDev = (): boolean => {
   // Check for Node.js development environment
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+  const proc = (typeof process !== "undefined" ? process : undefined) as { env?: { NODE_ENV?: string } } | undefined;
+  if (proc?.env?.NODE_ENV === 'development') {
     return true;
   }
   // Check for other development indicators (e.g., hot reload, dev server)

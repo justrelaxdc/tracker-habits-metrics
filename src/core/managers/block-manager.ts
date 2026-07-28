@@ -35,7 +35,7 @@ export class BlockManager {
    */
   clearAllBlocks(): void {
     // Clear all deletion timers
-    this.deletionTimers.forEach(timer => clearTimeout(timer));
+    this.deletionTimers.forEach(timer => window.clearTimeout(timer));
     this.deletionTimers.clear();
     
     this.activeBlocks.forEach(block => block.unload());
@@ -144,9 +144,9 @@ export class BlockManager {
       }
     };
     
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       restoreScroll();
-      setTimeout(restoreScroll, SCROLL_RESTORE_DELAY_2_MS);
+      window.setTimeout(restoreScroll, SCROLL_RESTORE_DELAY_2_MS);
     });
   }
 
@@ -175,7 +175,7 @@ export class BlockManager {
             opacity: "0",
           });
           
-          const timer = setTimeout(() => {
+          const timer = window.setTimeout(() => {
             if (tracker.isConnected) {
               tracker.remove();
             }

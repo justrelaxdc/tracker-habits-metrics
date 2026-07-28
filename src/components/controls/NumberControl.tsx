@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "preact/hooks"
 import { useComputed } from "@preact/signals";
 import { CSS_CLASSES, ANIMATION_DURATION_MS, DEBOUNCE_DELAY_MS } from "../../constants";
 import type { NumberControlProps } from "../types";
+import type { TrackerEntries } from "../../domain/types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
 import { setCssProps } from "../../utils/theme";
@@ -12,7 +13,7 @@ import { setCssProps } from "../../utils/theme";
  */
 export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });
@@ -35,7 +36,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   // Write value to file
   const writeValue = useCallback(async (value: string, immediate = false) => {
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      window.clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
 
@@ -52,7 +53,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
       if (immediate) {
         await doDelete();
       } else {
-        debounceRef.current = setTimeout(() => void doDelete(), DEBOUNCE_DELAY_MS);
+        debounceRef.current = window.setTimeout(() => void doDelete(), DEBOUNCE_DELAY_MS);
       }
       return;
     }
@@ -72,7 +73,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
     if (immediate) {
       await doWrite();
     } else {
-      debounceRef.current = setTimeout(() => void doWrite(), DEBOUNCE_DELAY_MS);
+      debounceRef.current = window.setTimeout(() => void doWrite(), DEBOUNCE_DELAY_MS);
     }
   }, [plugin, file, dateIso]);
 
@@ -80,7 +81,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+        window.clearTimeout(debounceRef.current);
         debounceRef.current = null;
       }
     };
@@ -95,7 +96,7 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
     // Visual feedback
     if (inputRef.current) {
       setCssProps(inputRef.current, { transform: "scale(0.98)" });
-      setTimeout(() => {
+      window.setTimeout(() => {
         if (inputRef.current) {
           setCssProps(inputRef.current, { transform: null });
         }

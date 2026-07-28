@@ -167,7 +167,7 @@ export class TrackerFileService {
     }
     
     try {
-      const parsed = JSON.parse(jsonString);
+      const parsed: unknown = JSON.parse(jsonString);
       // Validate that parsed result is an object (not array or null)
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         logError("Tracker: parsed JSON is not an object", new Error("Invalid JSON structure"));
@@ -175,7 +175,7 @@ export class TrackerFileService {
       }
       // Convert all values through parseMaybeNumber to maintain type consistency
       const result: Record<string, string | number> = {};
-      for (const [key, value] of Object.entries(parsed)) {
+      for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
         result[key] = parseMaybeNumber(String(value));
       }
       return result;

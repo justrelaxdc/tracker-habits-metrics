@@ -69,7 +69,7 @@ export class IconizeService {
     this.loadIconizeData();
     
     // Check for data changes every interval (only when active blocks exist)
-    this.watchInterval = setInterval(() => {
+    this.watchInterval = window.setInterval(() => {
       // Skip if no active tracker blocks are displayed
       if (this.hasActiveBlocks && !this.hasActiveBlocks()) {
         return;
@@ -101,7 +101,7 @@ export class IconizeService {
    */
   stopWatching(): void {
     if (this.watchInterval) {
-      clearInterval(this.watchInterval);
+      window.clearInterval(this.watchInterval);
       this.watchInterval = null;
     }
   }
@@ -116,7 +116,7 @@ export class IconizeService {
   updateIconPath(_oldPath: string, _newPath: string): void {
     // Iconize plugin updates its data asynchronously after rename
     // Small delay ensures we pick up the updated data
-    setTimeout(() => {
+    window.setTimeout(() => {
       this.loadIconizeData();
     }, 300);
   }
@@ -132,8 +132,14 @@ export class IconizeService {
    * Gets the Iconize plugin instance
    */
   private getIconizePlugin(): { data?: IconizeData } | null {
-    const pluginsManager = this.app.plugins;
-    const plugin = pluginsManager?.plugins?.['obsidian-icon-folder'] || pluginsManager?.getPlugin?.('obsidian-icon-folder');
-    return (plugin as { data?: IconizeData } | null) || null;
+    const appWithPlugins = this.app as unknown as {
+      plugins?: {
+        plugins?: Record<string, { data?: IconizeData }>;
+        getPlugin?: (id: string) => { data?: IconizeData } | undefined;
+      };
+    };
+    const pluginsManager = appWithPlugins.plugins;
+    const plugin = pluginsManager?.plugins?.['obsidian-icon-folder'] ?? pluginsManager?.getPlugin?.('obsidian-icon-folder');
+    return plugin || null;
   }
 }

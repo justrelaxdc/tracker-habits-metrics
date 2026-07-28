@@ -40,9 +40,9 @@ export class FolderTreeService {
     
     // Debounce the actual cleanup/save operation
     if (this.cleanupDebounceTimer) {
-      clearTimeout(this.cleanupDebounceTimer);
+      window.clearTimeout(this.cleanupDebounceTimer);
     }
-    this.cleanupDebounceTimer = setTimeout(() => {
+    this.cleanupDebounceTimer = window.setTimeout(() => {
       this.performLazyCleanup();
     }, SORT_ORDER_CLEANUP_DELAY_MS);
   }
@@ -264,7 +264,7 @@ export class FolderTreeService {
    */
   cleanup(): void {
     if (this.cleanupDebounceTimer) {
-      clearTimeout(this.cleanupDebounceTimer);
+      window.clearTimeout(this.cleanupDebounceTimer);
       this.cleanupDebounceTimer = null;
     }
     this.pendingCleanup.clear();

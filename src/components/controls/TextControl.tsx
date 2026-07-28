@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "preact/hooks"
 import { useComputed } from "@preact/signals";
 import { CSS_CLASSES, PLACEHOLDERS } from "../../constants";
 import type { TextControlProps } from "../types";
+import type { TrackerEntries } from "../../domain/types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
 
@@ -14,7 +15,7 @@ const TEXT_DEBOUNCE_DELAY_MS = 600;
  */
 export function TextControl({ file, dateIso, plugin }: TextControlProps) {
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });
@@ -36,7 +37,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
   // Write value to file
   const writeValue = useCallback(async (value: string, immediate = false) => {
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+      window.clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
 
@@ -53,7 +54,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
       if (immediate) {
         await doDelete();
       } else {
-        debounceRef.current = setTimeout(() => void doDelete(), TEXT_DEBOUNCE_DELAY_MS);
+        debounceRef.current = window.setTimeout(() => void doDelete(), TEXT_DEBOUNCE_DELAY_MS);
       }
       return;
     }
@@ -70,7 +71,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
     if (immediate) {
       await doWrite();
     } else {
-      debounceRef.current = setTimeout(() => void doWrite(), TEXT_DEBOUNCE_DELAY_MS);
+      debounceRef.current = window.setTimeout(() => void doWrite(), TEXT_DEBOUNCE_DELAY_MS);
     }
   }, [plugin, file, dateIso]);
 
@@ -78,7 +79,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
+        window.clearTimeout(debounceRef.current);
         debounceRef.current = null;
       }
     };

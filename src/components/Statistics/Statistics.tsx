@@ -5,6 +5,7 @@ import { statisticsService } from "../../services/statistics-service";
 import { DateService } from "../../services/date-service";
 import type { StatisticsProps } from "../types";
 import type { StatisticsResult } from "../../domain/statistics-types";
+import type { TrackerEntries } from "../../domain/types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
 import { setCssProps } from "../../utils/theme";
@@ -242,7 +243,7 @@ export function Statistics({
   fileOptions 
 }: StatisticsProps) {
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });

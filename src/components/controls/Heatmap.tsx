@@ -4,6 +4,7 @@ import { CSS_CLASSES } from "../../constants";
 import { DateService } from "../../services/date-service";
 import { isTrackerValueTrue } from "../../utils/validation";
 import type { HeatmapProps } from "../types";
+import type { TrackerEntries } from "../../domain/types";
 import { logError } from "../../utils/notifications";
 import { trackerStore } from "../../store";
 
@@ -32,7 +33,7 @@ export function Heatmap({
   const touchStartRef = useRef({ x: 0, y: 0, isScrolling: false });
 
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });

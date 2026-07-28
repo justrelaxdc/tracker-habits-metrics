@@ -75,7 +75,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       this.containerEl.empty();
-      this.containerEl.createEl("div", {
+      this.containerEl.createDiv({
         text: `tracker: ${ERROR_MESSAGES.RENDER_ERROR}: ${errorMsg}`,
         cls: "tracker-notes__error",
       });

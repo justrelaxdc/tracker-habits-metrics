@@ -21,11 +21,11 @@ export class TrackerSettingsTab extends PluginSettingTab {
    */
   hide(): void {
     if (this.folderDebounceTimer) {
-      clearTimeout(this.folderDebounceTimer);
+      window.clearTimeout(this.folderDebounceTimer);
       this.folderDebounceTimer = null;
     }
     if (this.daysDebounceTimer) {
-      clearTimeout(this.daysDebounceTimer);
+      window.clearTimeout(this.daysDebounceTimer);
       this.daysDebounceTimer = null;
     }
   }
@@ -59,9 +59,9 @@ export class TrackerSettingsTab extends PluginSettingTab {
             
             // Debounce saveSettings call for text inputs
             if (this.folderDebounceTimer) {
-              clearTimeout(this.folderDebounceTimer);
+              window.clearTimeout(this.folderDebounceTimer);
             }
-            this.folderDebounceTimer = setTimeout(() => {
+            this.folderDebounceTimer = window.setTimeout(() => {
               void this.plugin.saveSettings();
               this.folderDebounceTimer = null;
             }, DEBOUNCE_DELAY_MS);
@@ -85,9 +85,9 @@ export class TrackerSettingsTab extends PluginSettingTab {
               
               // Debounce saveSettings call for text inputs
               if (this.daysDebounceTimer) {
-                clearTimeout(this.daysDebounceTimer);
+                window.clearTimeout(this.daysDebounceTimer);
               }
-              this.daysDebounceTimer = setTimeout(() => {
+              this.daysDebounceTimer = window.setTimeout(() => {
                 void this.plugin.saveSettings();
                 this.daysDebounceTimer = null;
               }, DEBOUNCE_DELAY_MS);
@@ -165,6 +165,51 @@ export class TrackerSettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+  }
+
+  /**
+   * Declarative setting definitions for Obsidian 1.13.0+ settings search
+   */
+  getSettingDefinitions() {
+    return [
+      {
+        id: "trackersFolder",
+        name: "Default trackers folder",
+        description: "Can be overridden with `folder` parameter in habit block",
+      },
+      {
+        id: "daysToShow",
+        name: "Number of days",
+        description: "Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block",
+      },
+      {
+        id: "showChartByDefault",
+        name: "Show chart by default",
+        description: "Can be overridden with showChart: `true/false` parameter",
+      },
+      {
+        id: "showStatsByDefault",
+        name: "Show statistics by default",
+        description: "Can be overridden with showStats: `true/false` parameter",
+      },
+      {
+        id: "hideChartOnMobile",
+        name: "Hide chart on mobile",
+      },
+      {
+        id: "hideStatsOnMobile",
+        name: "Hide statistics on mobile",
+      },
+      {
+        id: "hideTrackerTitle",
+        name: "Hide tracker title",
+      },
+      {
+        id: "disableLimitReaction",
+        name: "Disable color reaction to range compliance",
+        description: "Disables color feedback when metric values are within or outside the defined limit range",
+      },
+    ];
   }
 }
 

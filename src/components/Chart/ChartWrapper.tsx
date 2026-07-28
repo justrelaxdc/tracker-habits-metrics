@@ -7,6 +7,7 @@ import { DateService } from "../../services/date-service";
 import { getThemeColors } from "../../utils/theme";
 import type { ChartWrapperProps } from "../types";
 import type { TrackerChartInstance } from "../../domain/chart-types";
+import type { TrackerEntries } from "../../domain/types";
 import { trackerStore } from "../../store";
 
 // Register Chart.js components
@@ -28,7 +29,7 @@ export function ChartWrapper({
   const chartRef = useRef<TrackerChartInstance | null>(null);
 
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed(() => {
+  const entries = useComputed<TrackerEntries>(() => {
     const state = trackerStore.getTrackerState(file.path);
     return state?.entries ?? new Map();
   });
@@ -197,7 +198,7 @@ export function ChartWrapper({
       // Create new chart
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
-        chartRef.current = new Chart(ctx, config) as TrackerChartInstance;
+        chartRef.current = new Chart(ctx, config);
         // Store date strings and annotation indices for click handling and annotations
         chartRef.current.dateStrings = chartData.dateStrings;
         chartRef.current.startTrackingIndex = chartData.startTrackingIndex;

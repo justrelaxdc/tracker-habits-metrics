@@ -57,37 +57,37 @@ export class EditTrackerModal extends Modal {
         typeDropdown.removeChild(typeDropdown.firstChild);
       }
 
-      const habitsGroup = document.createElement("optgroup");
-      habitsGroup.label = MODAL_LABELS.HABITS_GROUP;
-      const goodHabitOption = document.createElement("option");
-      goodHabitOption.value = "good-habit";
-      goodHabitOption.textContent = TRACKER_TYPE_LABELS["good-habit"];
-      habitsGroup.appendChild(goodHabitOption);
-      const badHabitOption = document.createElement("option");
-      badHabitOption.value = "bad-habit";
-      badHabitOption.textContent = TRACKER_TYPE_LABELS["bad-habit"];
-      habitsGroup.appendChild(badHabitOption);
-      typeDropdown.appendChild(habitsGroup);
+      const habitsGroup = typeDropdown.createEl("optgroup", {
+        attr: { label: MODAL_LABELS.HABITS_GROUP },
+      });
+      habitsGroup.createEl("option", {
+        value: "good-habit",
+        text: TRACKER_TYPE_LABELS["good-habit"],
+      });
+      habitsGroup.createEl("option", {
+        value: "bad-habit",
+        text: TRACKER_TYPE_LABELS["bad-habit"],
+      });
 
-      const metricsGroup = document.createElement("optgroup");
-      metricsGroup.label = MODAL_LABELS.METRICS_GROUP;
-      const numberOption = document.createElement("option");
-      numberOption.value = "number";
-      numberOption.textContent = TRACKER_TYPE_LABELS["number"];
-      metricsGroup.appendChild(numberOption);
-      const scaleOption = document.createElement("option");
-      scaleOption.value = "scale";
-      scaleOption.textContent = TRACKER_TYPE_LABELS["scale"];
-      metricsGroup.appendChild(scaleOption);
-      const plusminusOption = document.createElement("option");
-      plusminusOption.value = "plusminus";
-      plusminusOption.textContent = TRACKER_TYPE_LABELS["plusminus"];
-      metricsGroup.appendChild(plusminusOption);
-      const textOption = document.createElement("option");
-      textOption.value = "text";
-      textOption.textContent = TRACKER_TYPE_LABELS["text"];
-      metricsGroup.appendChild(textOption);
-      typeDropdown.appendChild(metricsGroup);
+      const metricsGroup = typeDropdown.createEl("optgroup", {
+        attr: { label: MODAL_LABELS.METRICS_GROUP },
+      });
+      metricsGroup.createEl("option", {
+        value: "number",
+        text: TRACKER_TYPE_LABELS["number"],
+      });
+      metricsGroup.createEl("option", {
+        value: "scale",
+        text: TRACKER_TYPE_LABELS["scale"],
+      });
+      metricsGroup.createEl("option", {
+        value: "plusminus",
+        text: TRACKER_TYPE_LABELS["plusminus"],
+      });
+      metricsGroup.createEl("option", {
+        value: "text",
+        text: TRACKER_TYPE_LABELS["text"],
+      });
 
       typeDropdown.value = currentType;
       typeDropdown.disabled = true;
