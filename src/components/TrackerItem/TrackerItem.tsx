@@ -34,8 +34,8 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
   });
 
   // Use computed signals for reactive values - properly tracks signal changes
-  const entries = useComputed<TrackerEntries>(() => {
-    return trackerState.value?.entries ?? new Map();
+  const entries = useComputed<TrackerEntries>((): TrackerEntries => {
+    return (trackerState.value?.entries ?? new Map()) as TrackerEntries;
   });
 
   const fileOptions = useComputed(() => {

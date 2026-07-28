@@ -29,9 +29,9 @@ export function ChartWrapper({
   const chartRef = useRef<TrackerChartInstance | null>(null);
 
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed<TrackerEntries>(() => {
+  const entries = useComputed<TrackerEntries>((): TrackerEntries => {
     const state = trackerStore.getTrackerState(file.path);
-    return state?.entries ?? new Map();
+    return (state?.entries ?? new Map()) as TrackerEntries;
   });
 
   // Get tracker type and options

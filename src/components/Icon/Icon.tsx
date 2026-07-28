@@ -92,8 +92,7 @@ export function Icon({ path, className = "" }: IconProps) {
       const pascalCase = iconValue.substring(2);
       const kebabCase = pascalCase.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
       // Use Obsidian's setIcon to render Lucide icon
-      // IconName is string type, so we can safely cast
-      setIcon(iconRef.current, kebabCase as IconName);
+      setIcon(iconRef.current, kebabCase);
     } else {
       // Handle emoji - set as text content
       iconRef.current.textContent = iconValue;

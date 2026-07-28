@@ -13,9 +13,9 @@ import { setCssProps } from "../../utils/theme";
  */
 export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed<TrackerEntries>(() => {
+  const entries = useComputed<TrackerEntries>((): TrackerEntries => {
     const state = trackerStore.getTrackerState(file.path);
-    return state?.entries ?? new Map();
+    return (state?.entries ?? new Map()) as TrackerEntries;
   });
 
   // Get current value - use useMemo to track dateIso prop changes

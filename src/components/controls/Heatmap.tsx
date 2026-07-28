@@ -33,9 +33,9 @@ export function Heatmap({
   const touchStartRef = useRef({ x: 0, y: 0, isScrolling: false });
 
   // Access entries via computed signal - only re-renders when this tracker's entries change
-  const entries = useComputed<TrackerEntries>(() => {
+  const entries = useComputed<TrackerEntries>((): TrackerEntries => {
     const state = trackerStore.getTrackerState(file.path);
-    return state?.entries ?? new Map();
+    return (state?.entries ?? new Map()) as TrackerEntries;
   });
 
   // Generate heatmap days - optimized to only recalculate when relevant entries change

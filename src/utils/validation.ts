@@ -1,5 +1,5 @@
 import { ViewMode, TrackerType } from "../constants";
-import type { ViewModeValue, TrackerTypeValue } from "../constants";
+import type { TrackerTypeValue } from "../constants";
 import type { TrackerBlockOptions } from "../domain/options-types";
 
 /**
