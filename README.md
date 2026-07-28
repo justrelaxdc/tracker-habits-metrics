@@ -118,7 +118,7 @@ showStats: true
 
 ## ⚙️ Settings
 
-Access via **Settings → Tracker: Habits and Metrics**
+Access via **Settings → Habitify**
 
 Most users can start without changing anything. These options let you fine‑tune defaults.
 
