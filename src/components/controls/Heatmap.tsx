@@ -21,10 +21,10 @@ interface HeatmapDay {
  * Heatmap control for habits
  * Accesses entries via computed signal internally for proper reactivity
  */
-export function Heatmap({ 
-  file, 
-  dateIso, 
-  plugin, 
+export function Heatmap({
+  file,
+  dateIso,
+  plugin,
   daysToShow,
   trackerType,
   startTrackingDate,
@@ -57,7 +57,7 @@ export function Heatmap({
     const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
     const today = DateService.now();
     const todayStart = DateService.startOfDay(today);
-    
+
     // Parse start tracking date once outside the loop
     let startDateObj: ReturnType<typeof DateService.parseMultiple> | null = null;
     if (startTrackingDate) {
@@ -72,22 +72,22 @@ export function Heatmap({
         // Ignore parsing errors - startDateObj remains null
       }
     }
-    
+
     const result: HeatmapDay[] = [];
-    
+
     // Go from newest to oldest (will be displayed with flex-direction: row-reverse)
     for (let i = 0; i < daysToShow; i++) {
       const date = endDate.clone().subtract(i, "days");
       const dateStr = DateService.format(date, plugin.settings.dateFormat);
       const dayNum = date.getDate();
-      
+
       const value = entries.value.get(dateStr);
       const hasValue = isTrackerValueTrue(value);
       const isStartDay = dateStr === startTrackingDate;
-      
+
       let isBeforeStart = false;
       let isAfterToday = false;
-      
+
       // Check if date is after today
       if (DateService.isAfter(date, todayStart)) {
         isAfterToday = true;
@@ -97,7 +97,7 @@ export function Heatmap({
           isBeforeStart = true;
         }
       }
-      
+
       result.push({
         dateStr,
         dayNum,
@@ -107,7 +107,7 @@ export function Heatmap({
         isAfterToday,
       });
     }
-    
+
     return result;
   }, [dateIso, daysToShow, entriesHash, plugin.settings.dateFormat, startTrackingDate]);
 
@@ -115,22 +115,22 @@ export function Heatmap({
   const handleContainerClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
     if (!target.classList.contains(CSS_CLASSES.HEATMAP_DAY)) return;
-    
+
     const dateStr = target.dataset.dateStr;
     if (!dateStr) return;
-    
+
     // Find the day data
     const day = days.find(d => d.dateStr === dateStr);
     if (!day) return;
-    
+
     // Don't allow clicking on future days or days before tracking start
     if (day.isAfterToday || day.isBeforeStart) {
       return;
     }
-    
+
     const isChecked = day.hasValue;
     const newValue = isChecked ? 0 : 1;
-    
+
     void (async () => {
       try {
         await plugin.writeLogLine(file, day.dateStr, String(newValue));
@@ -155,7 +155,7 @@ export function Heatmap({
     if (e.touches.length === 1 && touchStartRef.current.x !== 0) {
       const deltaX = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
       const deltaY = Math.abs(e.touches[0].clientY - touchStartRef.current.y);
-      
+
       // Block propagation only for horizontal scrolling
       if (deltaX > deltaY * 1.5 && deltaX > 10) {
         touchStartRef.current.isScrolling = true;
@@ -175,9 +175,9 @@ export function Heatmap({
 
   // Build class names for a day
   const getDayClassName = useCallback((day: HeatmapDay): string => {
-    const classes = [CSS_CLASSES.HEATMAP_DAY, trackerType];
-    if (day.hasValue) classes.push("has-value");
-    if (day.isStartDay) classes.push("start-day");
+    const classes: string[] = [CSS_CLASSES.HEATMAP_DAY, trackerType];
+    if (day.hasValue) classes.push(CSS_CLASSES.HEATMAP_DAY_HAS_VALUE);
+    if (day.isStartDay) classes.push(CSS_CLASSES.HEATMAP_DAY_START);
     if (day.isBeforeStart) classes.push("before-start");
     if (day.isAfterToday) classes.push("after-today");
     return classes.join(" ");
