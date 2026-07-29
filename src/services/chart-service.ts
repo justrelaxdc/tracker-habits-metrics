@@ -211,6 +211,7 @@ export class ChartService {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         plugins: {
           legend: {
             display: false
