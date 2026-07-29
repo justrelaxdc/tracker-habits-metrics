@@ -36,15 +36,22 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
   const progressBarRef = useRef<HTMLDivElement>(null);
   const hasMoved = useRef(false);
 
+  // Touch tracking for mobile
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const isScrolling = useRef<boolean>(false);
+  const isTouching = useRef<boolean>(false);
+
   // Update value when entries or dateIso change
   useEffect(() => {
     setValue(currentValue);
   }, [currentValue]);
 
-  // Calculate value from click position
+  // Calculate value from position
   const calculateValue = useCallback((clientX: number): number => {
-    if (!progressBarRef.current) return minValue;
+    if (!progressBarRef.current || typeof clientX !== "number" || isNaN(clientX)) return minValue;
     const rect = progressBarRef.current.getBoundingClientRect();
+    if (rect.width <= 0) return minValue;
     const clickX = clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, clickX / rect.width));
     const rawValue = minValue + (maxValue - minValue) * percentage;
@@ -63,7 +70,7 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
 
   // Handle mouse down
   const handleMouseDown = useCallback((e: MouseEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || isTouching.current) return;
     setIsDragging(true);
     hasMoved.current = false;
     const newValue = calculateValue(e.clientX);
@@ -91,21 +98,73 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
 
   // Handle click (save immediately if no drag)
   const handleClick = useCallback((e: MouseEvent) => {
+    if (isTouching.current) return;
     if (hasMoved.current) {
       hasMoved.current = false;
-      return;
-    }
-    const target = e.target as HTMLElement;
-    if (target.classList.contains(CSS_CLASSES.PROGRESS_BAR_PROGRESS) ||
-        target.classList.contains(CSS_CLASSES.PROGRESS_BAR_VALUE) ||
-        target.classList.contains(CSS_CLASSES.PROGRESS_BAR_LABEL_LEFT) ||
-        target.classList.contains(CSS_CLASSES.PROGRESS_BAR_LABEL_RIGHT)) {
       return;
     }
     const newValue = calculateValue(e.clientX);
     setValue(newValue);
     void writeValue(newValue);
   }, [calculateValue, writeValue]);
+
+  // Mobile Touch Handlers
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    isTouching.current = true;
+    startX.current = touch.clientX;
+    startY.current = touch.clientY;
+    isScrolling.current = false;
+    hasMoved.current = false;
+    // DO NOT change value on touchStart to prevent twitching when user scrolls
+  }, []);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch || startX.current === null || startY.current === null) return;
+
+    if (isScrolling.current) return;
+    
+    const deltaX = Math.abs(touch.clientX - startX.current);
+    const deltaY = Math.abs(touch.clientY - startY.current);
+
+    // If vertical movement is greater than horizontal threshold, user is scrolling page
+    if (deltaY > 8 && deltaY > deltaX) {
+      isScrolling.current = true;
+      setValue(currentValue); // Keep initial saved value unchanged while scrolling
+      return;
+    }
+
+    // User is dragging horizontally across the progress bar
+    if (deltaX > 8) {
+      hasMoved.current = true;
+      const newValue = calculateValue(touch.clientX);
+      setValue(newValue);
+    }
+  }, [calculateValue, currentValue]);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    const touch = e.changedTouches[0];
+    
+    if (isScrolling.current) {
+      setValue(currentValue);
+      isScrolling.current = false;
+      window.setTimeout(() => { isTouching.current = false; }, 300);
+      return;
+    }
+
+    if (!touch) {
+      window.setTimeout(() => { isTouching.current = false; }, 300);
+      return;
+    }
+
+    const finalValue = calculateValue(touch.clientX);
+    setValue(finalValue);
+    void writeValue(finalValue);
+
+    window.setTimeout(() => { isTouching.current = false; }, 300);
+  }, [currentValue, calculateValue, writeValue]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -147,7 +206,6 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const percentage = ((value - minValue) / (maxValue - minValue)) * 100;
-  const progressFillRef = useRef<HTMLDivElement>(null);
 
   // Set cursor style for progress bar
   useEffect(() => {
@@ -157,15 +215,6 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
       });
     }
   }, [isDragging]);
-
-  // Set width style for progress fill
-  useEffect(() => {
-    if (progressFillRef.current) {
-      setCssProps(progressFillRef.current, {
-        width: `${percentage}%`,
-      });
-    }
-  }, [percentage]);
 
   return (
     <div class={CSS_CLASSES.PROGRESS_BAR_WRAPPER} data-internal-value={value}>
@@ -180,12 +229,15 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
         aria-valuenow={value}
         onClick={handleClick}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
       >
         <div
-          ref={progressFillRef}
           class={CSS_CLASSES.PROGRESS_BAR_PROGRESS}
+          style={{ width: `${percentage}%` }}
           role="slider"
           tabIndex={0}
           aria-valuemin={minValue}
@@ -199,4 +251,5 @@ export function ScaleControl({ file, dateIso, plugin, fileOptions }: ScaleContro
     </div>
   );
 }
+
 

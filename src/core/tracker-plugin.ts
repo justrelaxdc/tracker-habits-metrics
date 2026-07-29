@@ -461,8 +461,8 @@ export default class TrackerPlugin extends Plugin {
       folderPath, newOrder, normalizePath
     );
 
-    this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
+    this.refreshBlocksForFolder(folderPath);
   }
 
   async moveTrackerDown(file: TFile): Promise<void> {
@@ -489,8 +489,8 @@ export default class TrackerPlugin extends Plugin {
       folderPath, newOrder, normalizePath
     );
 
-    this.domReorderManager.swapTrackerElementsInDOM(folderPath, sortedTrackers);
     this.folderTreeService.invalidate(folderPath);
+    this.refreshBlocksForFolder(folderPath);
   }
 
   async moveFolderUp(folderPath: string): Promise<void> {
@@ -527,8 +527,8 @@ export default class TrackerPlugin extends Plugin {
       parentFolderPath || '', newOrder, normalizePath
     );
 
-    this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || '');
+    this.refreshBlocksForFolder(parentFolderPath || '');
   }
 
   async moveFolderDown(folderPath: string): Promise<void> {
@@ -565,7 +565,7 @@ export default class TrackerPlugin extends Plugin {
       parentFolderPath || '', newOrder, normalizePath
     );
 
-    this.domReorderManager.reorderFolderElementsInDOM(parentFolderPath || '', sortedFolders);
     this.folderTreeService.invalidate(parentFolderPath || '');
+    this.refreshBlocksForFolder(parentFolderPath || '');
   }
 }

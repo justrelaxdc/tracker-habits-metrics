@@ -99,6 +99,7 @@ export function FolderNode({ node, plugin, dateIso, viewMode, opts }: FolderNode
           {node.files.map((file: TFile) => (
             <ErrorBoundary key={file.path}>
               <TrackerItem
+                key={file.path}
                 file={file}
                 plugin={plugin}
                 dateIso={dateIso}
