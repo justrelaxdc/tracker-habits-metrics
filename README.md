@@ -63,7 +63,7 @@
 
 **Method 1: Command Palette**
 1. Press `Ctrl+P` (or `Cmd+P` on Mac).  
-2. Run **"Create new tracker"**.
+2. Run **"Create new tracker"** (it creates an ordinary .md file).
 3. Enter a name (e.g., "Morning Workout").  
 4. Choose (or auto create) a folder.  
 5. Select the tracker type.  
@@ -128,8 +128,11 @@ Most users can start without changing anything. These options let you fine‑tun
 
 ## 📁 Tracker File Structure
 
-You normally don’t need to edit trackers manually — they are managed automatically.  
-Advanced users can use Dataview to extract data from trackers:
+Each tracker is a standard `.md` note. Tracking configuration and logs are stored in its YAML frontmatter.
+
+> 💡 **Tip:** Since trackers are ordinary Markdown files, you can freely add descriptions, notes, goals, or any additional content in the file body below the frontmatter without interfering with tracking functionality.
+
+Advanced users can also use Dataview to extract data from trackers:
 
 ```markdown
 ---
