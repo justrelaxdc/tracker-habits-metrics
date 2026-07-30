@@ -1,4 +1,4 @@
-import type { Chart, Plugin, ChartConfiguration, ChartData, ChartOptions } from "chart.js";
+import type { Chart, Plugin, ChartConfiguration, ChartData, ChartOptions, TooltipItem } from "chart.js";
 
 /**
  * Theme colors extracted from Obsidian CSS variables
@@ -96,14 +96,7 @@ export interface ChartPointContext {
 /**
  * Chart.js tooltip context
  */
-export interface ChartTooltipContext {
-  parsed: {
-    y: number;
-    x?: number;
-  };
-  dataIndex: number;
-  datasetIndex: number;
-}
+export type ChartTooltipContext = TooltipItem<"line">;
 
 /**
  * Custom Chart.js plugin for tracker visualizations

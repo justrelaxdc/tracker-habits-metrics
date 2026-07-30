@@ -9,7 +9,7 @@ import type {
   ChartPointContext,
   ChartTooltipContext
 } from "../domain/chart-types";
-import type { ChartEvent, ActiveElement } from "chart.js";
+import type { Chart, ChartEvent, ActiveElement } from "chart.js";
 import { CHART_CONFIG, DATE_FORMAT, TrackerType } from "../constants";
 import { getThemeColors, colorToRgba } from "../utils/theme";
 import { parseTrackerValueToNumber } from "../utils/misc";
@@ -58,6 +58,7 @@ export class ChartService {
     let startTrackingIndex: number | null = null;
     let activeDateIndex: number | null = null;
     
+    const todayDate = DateService.startOfDay(DateService.now());
     const startTrackingDateObj = startTrackingDateStr
       ? DateService.parseMultiple(startTrackingDateStr, [settings.dateFormat, DATE_FORMAT.ISO, "YYYY-MM-DD", "DD.MM.YYYY", "MM/DD/YYYY"])
       : null;
@@ -90,6 +91,7 @@ export class ChartService {
       
       // Get value using unified utility
       const val = entries.get(dateStr);
+      const hasEntry = val != null && String(val).trim() !== "";
       const numVal = parseTrackerValueToNumber(val, metricType);
       values.push(numVal);
       maxValue = Math.max(maxValue, numVal);
@@ -98,11 +100,11 @@ export class ChartService {
       let pointColor = colors.accentColor;
       let pointBorder = colors.accentColor;
       
-      const isAfterToday = dateStr > todayStr;
+      const isAfterToday = DateService.isAfter(date, todayDate);
       const hasLimits = minLimit !== null || maxLimit !== null;
       const isTrackingStarted = !startTrackingDateObj || !DateService.isBefore(date, DateService.startOfDay(startTrackingDateObj));
       
-      if (!isAfterToday && isTrackingStarted && hasLimits) {
+      if (!isAfterToday && isTrackingStarted && hasLimits && hasEntry) {
         const isInRange = (minLimit === null || numVal >= minLimit) && 
                          (maxLimit === null || numVal <= maxLimit);
         if (isInRange) {
@@ -232,7 +234,7 @@ export class ChartService {
             displayColors: false,
             callbacks: {
               label: (context: ChartTooltipContext) => {
-                const value = context.parsed.y;
+                const value = context.parsed.y ?? 0;
                 if (unit) {
                   const capitalizedUnit = unit.charAt(0).toUpperCase() + unit.slice(1);
                   return `${capitalizedUnit}: ${value}`;
@@ -244,11 +246,13 @@ export class ChartService {
         },
         scales: {
           x: {
+            border: {
+              display: false,
+            },
             grid: {
               display: true,
               color: colorToRgba(colors.borderColor, 0.3),
               lineWidth: CHART_CONFIG.GRID_LINE_WIDTH,
-              drawBorder: false,
             },
             ticks: {
               color: colors.textFaint,
@@ -262,11 +266,13 @@ export class ChartService {
             }
           },
           y: {
+            border: {
+              display: false,
+            },
             grid: {
               display: true,
               color: colorToRgba(colors.borderColor, 0.3),
               lineWidth: CHART_CONFIG.GRID_LINE_WIDTH,
-              drawBorder: false,
             },
             ticks: {
               color: colors.textFaint,
