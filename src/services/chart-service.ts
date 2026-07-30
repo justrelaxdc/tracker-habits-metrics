@@ -104,7 +104,7 @@ export class ChartService {
       const hasLimits = minLimit !== null || maxLimit !== null;
       const isTrackingStarted = !startTrackingDateObj || !DateService.isBefore(date, DateService.startOfDay(startTrackingDateObj));
       
-      if (!isAfterToday && isTrackingStarted && hasLimits && hasEntry) {
+      if (!isAfterToday && isTrackingStarted && hasLimits) {
         const isInRange = (minLimit === null || numVal >= minLimit) && 
                          (maxLimit === null || numVal <= maxLimit);
         if (isInRange) {
