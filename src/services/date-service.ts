@@ -172,6 +172,15 @@ export class DateService {
   }
 
   /**
+   * Check if two dates are the same day
+   */
+  static isSameDay(date1: DateWrapper | Date, date2: DateWrapper | Date): boolean {
+    const d1 = this.startOfDay(date1);
+    const d2 = this.startOfDay(date2);
+    return d1.format("YYYY-MM-DD") === d2.format("YYYY-MM-DD");
+  }
+
+  /**
    * Start of day
    */
   static startOfDay(date: DateWrapper | Date): DateWrapper {

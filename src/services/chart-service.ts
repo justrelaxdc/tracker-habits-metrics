@@ -58,12 +58,16 @@ export class ChartService {
     let startTrackingIndex: number | null = null;
     let activeDateIndex: number | null = null;
     
+    const startTrackingDateObj = startTrackingDateStr
+      ? DateService.parseMultiple(startTrackingDateStr, [settings.dateFormat, DATE_FORMAT.ISO, "YYYY-MM-DD", "DD.MM.YYYY", "MM/DD/YYYY"])
+      : null;
+
     for (let i = 0; i < daysToShow; i++) {
       const date = startDate.clone().add(i, 'days');
       const dateStr = DateService.format(date, settings.dateFormat);
       
       // Track special indices
-      if (dateStr === startTrackingDateStr) {
+      if (startTrackingDateObj && DateService.isSameDay(date, startTrackingDateObj)) {
         startTrackingIndex = i;
       }
       if (dateStr === activeDateStr) {
@@ -96,8 +100,9 @@ export class ChartService {
       
       const isAfterToday = dateStr > todayStr;
       const hasLimits = minLimit !== null || maxLimit !== null;
+      const isTrackingStarted = !startTrackingDateObj || !DateService.isBefore(date, DateService.startOfDay(startTrackingDateObj));
       
-      if (!isAfterToday && startTrackingIndex !== null && i >= startTrackingIndex && hasLimits) {
+      if (!isAfterToday && isTrackingStarted && hasLimits) {
         const isInRange = (minLimit === null || numVal >= minLimit) && 
                          (maxLimit === null || numVal <= maxLimit);
         if (isInRange) {
