@@ -27,8 +27,7 @@ export class ChartService {
     file: TFile,
     settings: TrackerSettings,
     options: ChartConfigOptions,
-    startTrackingDateStr: string | null,
-    todayStr: string
+    startTrackingDateStr: string | null
   ): PreparedChartData {
     const { dateIso, daysToShow, metricType, minLimit, maxLimit, scaleMinValue, scaleMaxValue } = options;
     
@@ -91,7 +90,6 @@ export class ChartService {
       
       // Get value using unified utility
       const val = entries.get(dateStr);
-      const hasEntry = val != null && String(val).trim() !== "";
       const numVal = parseTrackerValueToNumber(val, metricType);
       values.push(numVal);
       maxValue = Math.max(maxValue, numVal);

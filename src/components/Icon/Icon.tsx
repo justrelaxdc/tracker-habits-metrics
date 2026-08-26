@@ -1,6 +1,6 @@
 import { useComputed } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { setIcon, type IconName } from "obsidian";
+import { setIcon } from "obsidian";
 import { trackerStore } from "../../store";
 import { setCssProps } from "../../utils/theme";
 

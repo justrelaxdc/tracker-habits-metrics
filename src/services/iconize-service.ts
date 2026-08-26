@@ -110,10 +110,8 @@ export class IconizeService {
    * Called when a file or folder is renamed
    * Iconize plugin automatically updates its data with the new path,
    * so we reload data after a short delay to allow the plugin to update
-   * @param _oldPath - Old file/folder path (unused, kept for interface compatibility)
-   * @param _newPath - New file/folder path (unused, kept for interface compatibility)
    */
-  updateIconPath(_oldPath: string, _newPath: string): void {
+  updateIconPath(): void {
     // Iconize plugin updates its data asynchronously after rename
     // Small delay ensures we pick up the updated data
     window.setTimeout(() => {

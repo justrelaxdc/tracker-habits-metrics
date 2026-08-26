@@ -3,7 +3,6 @@ import { useComputed } from "@preact/signals";
 import { Chart, registerables, type ChartDataset } from "chart.js";
 import { CSS_CLASSES, TrackerType } from "../../constants";
 import { chartService } from "../../services/chart-service";
-import { DateService } from "../../services/date-service";
 import { getThemeColors } from "../../utils/theme";
 import type { ChartWrapperProps } from "../types";
 import type { TrackerChartInstance } from "../../domain/chart-types";
@@ -88,7 +87,6 @@ export function ChartWrapper({
     if (!canvasRef.current) return;
 
     const colors = getThemeColors();
-    const todayStr = DateService.format(DateService.now(), plugin.settings.dateFormat);
 
     // Prepare chart data
     const chartData = chartService.prepareChartData(
@@ -105,8 +103,7 @@ export function ChartWrapper({
         scaleMinValue,
         scaleMaxValue,
       },
-      startTrackingDateStr,
-      todayStr
+      startTrackingDateStr
     );
 
     const currentConfig = {

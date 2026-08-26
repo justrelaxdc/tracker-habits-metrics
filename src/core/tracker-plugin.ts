@@ -131,7 +131,7 @@ export default class TrackerPlugin extends Plugin {
     
     // Register global file-menu event handler to add tracker creation option in file explorer
     this.registerEvent(
-      this.app.workspace.on('file-menu', (menu, file, source) => {
+      this.app.workspace.on('file-menu', (menu, file) => {
         if (file instanceof TFolder) {
           menu.addItem((item) => {
             item.setTitle(MODAL_LABELS.CREATE_TRACKER_IN_FOLDER);
@@ -237,7 +237,7 @@ export default class TrackerPlugin extends Plugin {
     this.stateManager.moveTrackerState(oldPath, file.path);
     trackerStore.moveTrackerState(oldPath, file.path);
     // Update icon path in Iconize service to preserve icon after rename
-    this.iconizeService.updateIconPath(oldPath, file.path);
+    this.iconizeService.updateIconPath();
   }
 
   async getStartTrackingDateAsync(entries: Map<string, string | number>, file?: TFile): Promise<string | null> {
