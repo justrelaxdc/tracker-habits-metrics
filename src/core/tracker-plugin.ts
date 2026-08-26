@@ -120,8 +120,8 @@ export default class TrackerPlugin extends Plugin {
     this.iconizeService.startWatching();
     
     this.addSettingTab(new TrackerSettingsTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor("tracker", this.processTrackerBlock.bind(this));
     this.registerMarkdownCodeBlockProcessor("habit", this.processTrackerBlock.bind(this));
+    this.registerMarkdownCodeBlockProcessor("habitify", this.processTrackerBlock.bind(this));
 
     this.addCommand({
       id: "tracker-create",

@@ -71,7 +71,7 @@ export class TrackerSettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Number of days")
-      .setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block")
+      .setDesc("Number of past days displayed for charts and habits. Can be overridden with `days` parameter in habit/habitify block")
       .addText((t) =>
         t
           .setPlaceholder("30")
@@ -165,51 +165,6 @@ export class TrackerSettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
-  }
-
-  /**
-   * Declarative setting definitions for Obsidian 1.13.0+ settings search
-   */
-  getSettingDefinitions() {
-    return [
-      {
-        id: "trackersFolder",
-        name: "Default trackers folder",
-        description: "Can be overridden with `folder` parameter in habit block",
-      },
-      {
-        id: "daysToShow",
-        name: "Number of days",
-        description: "Number of past days displayed for charts and habits. Can be overridden with `days` parameter in tracker/habit block",
-      },
-      {
-        id: "showChartByDefault",
-        name: "Show chart by default",
-        description: "Can be overridden with showChart: `true/false` parameter",
-      },
-      {
-        id: "showStatsByDefault",
-        name: "Show statistics by default",
-        description: "Can be overridden with showStats: `true/false` parameter",
-      },
-      {
-        id: "hideChartOnMobile",
-        name: "Hide chart on mobile",
-      },
-      {
-        id: "hideStatsOnMobile",
-        name: "Hide statistics on mobile",
-      },
-      {
-        id: "hideTrackerTitle",
-        name: "Hide tracker title",
-      },
-      {
-        id: "disableLimitReaction",
-        name: "Disable color reaction to range compliance",
-        description: "Disables color feedback when metric values are within or outside the defined limit range",
-      },
-    ];
   }
 }
 
