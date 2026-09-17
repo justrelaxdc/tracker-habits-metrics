@@ -2,7 +2,7 @@ import { TFile, TFolder, type App } from "obsidian";
 import type { TrackerFileOptions } from "../../domain/types";
 import type { TrackerFileService } from "../../services/tracker-file-service";
 import type { FolderTreeService } from "../../services/folder-tree-service";
-import { MAX_CACHE_SIZE } from "../../constants";
+import { trackerStore } from "../../store";
 
 export interface TrackerState {
   entries: Map<string, string | number>;
@@ -10,14 +10,10 @@ export interface TrackerState {
 }
 
 /**
- * Manages tracker state caching with LRU eviction policy
- * Uses Map insertion order for O(1) LRU eviction - oldest entries are at the front
+ * Coordinates tracker state using trackerStore (@preact/signals)
+ * as the single source of truth (SSOT). Eliminates duplicate cache layers.
  */
 export class StateManager {
-  // Map maintains insertion order - oldest entries are first
-  // When accessing an entry, we delete and re-insert to move it to the end
-  private trackerState: Map<string, TrackerState> = new Map();
-
   constructor(
     private readonly app: App,
     private readonly trackerFileService: TrackerFileService,
@@ -25,55 +21,40 @@ export class StateManager {
   ) {}
 
   /**
-   * Evict least recently used cache entry - O(1) operation
-   * Map maintains insertion order, so first entry is oldest
-   */
-  private evictIfNeeded(): void {
-    if (this.trackerState.size >= MAX_CACHE_SIZE) {
-      // Get first (oldest) entry and remove it
-      const firstKey = this.trackerState.keys().next().value;
-      if (firstKey) {
-        this.trackerState.delete(firstKey);
-      }
-    }
-  }
-
-  /**
-   * Ensure tracker state is loaded for a file
+   * Ensure tracker state is loaded for a file.
+   * Reads from reactive trackerStore or loads directly from disk.
    */
   async ensureTrackerState(file: TFile): Promise<TrackerState> {
-    const existing = this.trackerState.get(file.path);
-    if (existing) {
-      // Move to end (most recently used) by deleting and re-inserting - O(1)
-      this.trackerState.delete(file.path);
-      this.trackerState.set(file.path, existing);
-      return existing;
+    const storeState = trackerStore.getTrackerState(file.path);
+    if (storeState) {
+      return {
+        entries: storeState.entries,
+        fileOpts: storeState.fileOptions,
+      };
     }
-    
-    // Evict LRU entry if cache is full - O(1)
-    this.evictIfNeeded();
-    
-    // Read both entries and fileOpts in a single file read operation
+
     const { entries, fileOpts } = await this.trackerFileService.readTrackerFile(file);
-    const state = { entries, fileOpts };
-    // New entries are added at the end (most recently used)
-    this.trackerState.set(file.path, state);
-    return state;
+    trackerStore.setTrackerState(file.path, {
+      entries,
+      fileOptions: fileOpts,
+      lastUpdated: Date.now(),
+    });
+
+    return { entries, fileOpts };
   }
 
   /**
-   * Clear tracker state for a specific path - O(1)
+   * Clear tracker state for a specific path
    */
   clearTrackerState(path: string): void {
-    this.trackerState.delete(path);
+    trackerStore.clearTrackerState(path);
   }
 
   /**
-   * Clears all backend state (trackerState, FolderTreeService cache)
-   * Use sparingly - prefer selective cache invalidation
+   * Clears all state across store and folder tree
    */
   clearAllCaches(): void {
-    this.trackerState.clear();
+    trackerStore.clear();
     this.folderTreeService.invalidate();
   }
 
@@ -83,7 +64,6 @@ export class StateManager {
   invalidateCacheForFolder(folderPath: string, normalizePath: (p: string) => string): void {
     const normalizedPath = normalizePath(folderPath);
     const folder = this.app.vault.getAbstractFileByPath(normalizedPath);
-    // Use instanceof for type safety instead of duck typing
     if (folder instanceof TFolder) {
       this.clearCacheForFolder(folder);
     }
@@ -91,7 +71,7 @@ export class StateManager {
 
   private clearCacheForFolder(folder: TFolder): void {
     for (const child of folder.children) {
-      if (child instanceof TFile && child.extension === 'md') {
+      if (child instanceof TFile && child.extension === "md") {
         this.clearTrackerState(child.path);
       } else if (child instanceof TFolder) {
         this.clearCacheForFolder(child);
@@ -100,25 +80,15 @@ export class StateManager {
   }
 
   /**
-   * Move tracker state from old path to new path - O(1)
+   * Move tracker state from old path to new path in store
    */
   moveTrackerState(oldPath: string, newPath: string): void {
     if (oldPath === newPath) return;
-    
-    const state = this.trackerState.get(oldPath);
-    
-    if (state) {
-      // Move state to new path (delete old, insert new at end)
-      this.trackerState.delete(oldPath);
-      this.trackerState.set(newPath, state);
-    } else {
-      // Just clean up any stale entries
-      this.trackerState.delete(newPath);
-    }
+    trackerStore.moveTrackerState(oldPath, newPath);
   }
 
   /**
-   * Updates trackerState after renaming multiple files/folders
+   * Updates tracker state after renaming multiple files/folders
    */
   updateTrackerStateAfterRename(newPathsMap: Map<string, string>): void {
     for (const [oldPath, newPath] of newPathsMap.entries()) {
@@ -127,22 +97,22 @@ export class StateManager {
   }
 
   /**
-   * Updates trackerState for all trackers inside renamed folders
+   * Updates tracker state for all trackers inside renamed folders
    */
   updateTrackerStateForRenamedFolders(
     folderPathsMap: Map<string, string>,
     normalizePath: (p: string) => string
   ): void {
     const filePathsMap = new Map<string, string>();
-    
+
     for (const [oldFolderPath, newFolderPath] of folderPathsMap.entries()) {
       const oldFolder = this.app.vault.getAbstractFileByPath(oldFolderPath);
       if (!oldFolder || !(oldFolder instanceof TFolder)) continue;
-      
+
       const getAllFiles = (folder: TFolder): TFile[] => {
         const files: TFile[] = [];
         for (const child of folder.children) {
-          if (child instanceof TFile && child.extension === 'md') {
+          if (child instanceof TFile && child.extension === "md") {
             files.push(child);
           } else if (child instanceof TFolder) {
             files.push(...getAllFiles(child));
@@ -150,22 +120,21 @@ export class StateManager {
         }
         return files;
       };
-      
-      if (!(oldFolder instanceof TFolder)) continue;
+
       const files = getAllFiles(oldFolder);
       const normalizedOldPath = normalizePath(oldFolderPath);
       const normalizedNewPath = normalizePath(newFolderPath);
-      
+
       for (const file of files) {
         const normalizedFilePath = normalizePath(file.path);
-        if (normalizedFilePath.startsWith(normalizedOldPath + '/')) {
+        if (normalizedFilePath.startsWith(normalizedOldPath + "/")) {
           const relativePath = normalizedFilePath.substring(normalizedOldPath.length);
           const newFilePath = normalizedNewPath + relativePath;
           filePathsMap.set(file.path, newFilePath);
         }
       }
     }
-    
+
     this.updateTrackerStateAfterRename(filePathsMap);
   }
 }

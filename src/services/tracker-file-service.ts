@@ -1,186 +1,234 @@
-import { App, TFile } from "obsidian";
+import { App, TFile, parseYaml } from "obsidian";
 import type { TrackerSettings, TrackerFileOptions } from "../domain/types";
 import type { DateWrapper } from "../domain/date-types";
 import { parseMaybeNumber } from "../utils/misc";
-import { ERROR_MESSAGES, MAX_DAYS_BACK, TrackerType, TrackerTypeValue, MAX_FILE_CONTENT_CACHE_SIZE, CACHE_TTL_MS, DATA_PREFIX_LENGTH } from "../constants";
+import { ERROR_MESSAGES, TrackerType, TrackerTypeValue } from "../constants";
 import { DateService } from "./date-service";
-import { getEntryValueByDate, determineStartTrackingDate, isDaySuccessful } from "./entry-utils";
+import { statisticsService } from "./statistics-service";
 import { logError } from "../utils/notifications";
 
 export class TrackerFileService {
-  // LRU cache for file content to avoid redundant reads
-  // Map maintains insertion order - oldest entries are first
-  private fileContentCache: Map<string, { content: string; timestamp: number; fileMtime: number }> = new Map();
-
   constructor(private readonly app: App) {}
 
   /**
-   * Evict least recently used cache entry if cache is full
-   * Map maintains insertion order - oldest entries are first
+   * No-op retained for backward compatibility with external calls.
+   * File content is read directly and fresh via app.vault.read.
    */
-  private evictIfNeeded(): void {
-    if (this.fileContentCache.size >= MAX_FILE_CONTENT_CACHE_SIZE) {
-      // Get first (oldest) entry and remove it
-      const firstKey = this.fileContentCache.keys().next().value;
-      if (firstKey) {
-        this.fileContentCache.delete(firstKey);
-      }
-    }
-  }
-
-  /**
-   * Get cached file content or read from vault
-   * Uses LRU cache with size limit
-   */
-  private async getFileContent(file: TFile): Promise<string> {
-    const cacheKey = file.path;
-    const cached = this.fileContentCache.get(cacheKey);
-    const now = Date.now();
-    const fileMtime = file.stat?.mtime || 0;
-    
-    // Check if cache is valid (not expired and file hasn't been modified)
-    if (cached) {
-      const cacheAge = now - cached.timestamp;
-      // Cache is valid if it's not expired and file mtime matches cached mtime
-      if (cacheAge < CACHE_TTL_MS && cached.fileMtime === fileMtime) {
-        // Move to end (most recently used) by deleting and re-inserting
-        this.fileContentCache.delete(cacheKey);
-        this.fileContentCache.set(cacheKey, cached);
-        return cached.content;
-      }
-      // Cache entry is stale, remove it
-      this.fileContentCache.delete(cacheKey);
-    }
-    
-    // Evict LRU entry if cache is full
-    this.evictIfNeeded();
-    
-    // Read file and cache it
-    const content = await this.app.vault.read(file);
-    // Use current file mtime (should be available after read)
-    const latestMtime = file.stat?.mtime || now;
-    // New entries are added at the end (most recently used)
-    this.fileContentCache.set(cacheKey, {
-      content,
-      timestamp: now,
-      fileMtime: latestMtime
-    });
-    
-    return content;
-  }
-
-  /**
-   * Invalidate cache for a specific file
-   */
-  invalidateFileCache(filePath: string): void {
-    this.fileContentCache.delete(filePath);
+  invalidateFileCache(_filePath: string): void {
+    void _filePath;
+    // Direct vault reads do not require cache invalidation
   }
 
   async ensureFileWithHeading(filePath: string, type: string = "good-habit"): Promise<TFile> {
     const existing = this.app.vault.getAbstractFileByPath(filePath);
     if (existing instanceof TFile) return existing;
     const dir = filePath.split("/").slice(0, -1).join("/");
-    if (dir && !this.app.vault.getAbstractFileByPath(dir)) {
-      await this.app.vault.createFolder(dir);
+    if (dir) {
+      const parts = dir.split("/").filter(Boolean);
+      let currentPath = "";
+      for (const part of parts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        if (!this.app.vault.getAbstractFileByPath(currentPath)) {
+          await this.app.vault.createFolder(currentPath);
+        }
+      }
     }
     const content = `---\ntype: "${type}"\ndata: {}\n---\n`;
     return this.app.vault.create(filePath, content);
   }
 
   /**
-   * Find JSON object bounds in frontmatter after "data:" marker
-   * Returns { start, end } indices or null if not found
+   * Type guard to check if a string is a valid TrackerTypeValue
    */
-  private findJsonBounds(frontmatter: string, dataIndex: number): { start: number; end: number } | null {
-    if (dataIndex === -1) {
+  isValidTrackerType(value: string): value is TrackerTypeValue {
+    return Object.values(TrackerType).includes(value as TrackerTypeValue);
+  }
+
+  /**
+   * Normalize any raw type string into a standard TrackerTypeValue
+   * Case-insensitive, trims whitespace, supports common aliases
+   */
+  normalizeTrackerType(rawType: unknown): TrackerTypeValue {
+    if (!rawType || typeof rawType !== "string") {
+      return TrackerType.GOOD_HABIT;
+    }
+    const cleaned = rawType.trim().toLowerCase();
+    switch (cleaned) {
+      case "scale":
+        return TrackerType.SCALE;
+      case "number":
+        return TrackerType.NUMBER;
+      case "plusminus":
+      case "plus-minus":
+      case "counter":
+      case "count":
+        return TrackerType.PLUSMINUS;
+      case "text":
+      case "string":
+        return TrackerType.TEXT;
+      case "bad-habit":
+      case "bad_habit":
+      case "badhabit":
+        return TrackerType.BAD_HABIT;
+      case "good-habit":
+      case "good_habit":
+      case "goodhabit":
+      case "habit":
+      default:
+        return TrackerType.GOOD_HABIT;
+    }
+  }
+
+  /**
+   * Safely finds the start and end indices of the `data:` section in frontmatter.
+   * Supports both inline flow JSON (`data: {...}`) and multiline YAML block mappings (`data:\n  2026-01-01: 5`).
+   */
+  private findDataSectionBounds(frontmatter: string): { start: number; end: number } | null {
+    const dataMatch = frontmatter.match(/(?:^|\r?\n)([ \t]*data:[ \t]*)/);
+    if (!dataMatch || dataMatch.index === undefined) {
       return null;
     }
-    
-    // Find the start of JSON object after "data:"
-    let jsonStart = dataIndex + DATA_PREFIX_LENGTH;
-    // Skip whitespace
-    while (jsonStart < frontmatter.length && /\s/.test(frontmatter[jsonStart])) {
-      jsonStart++;
-    }
-    
-    if (jsonStart >= frontmatter.length || frontmatter[jsonStart] !== '{') {
-      return null;
-    }
-    
-    // Extract JSON object by finding matching closing brace
-    let braceCount = 0;
-    let inString = false;
-    let escapeNext = false;
-    let jsonEnd = jsonStart;
-    
-    for (let i = jsonStart; i < frontmatter.length; i++) {
-      const char = frontmatter[i];
-      
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-      
-      if (char === '\\') {
-        escapeNext = true;
-        continue;
-      }
-      
-      if (char === '"') {
-        inString = !inString;
-        continue;
-      }
-      
-      if (!inString) {
-        if (char === '{') {
-          braceCount++;
-        } else if (char === '}') {
-          braceCount--;
-          if (braceCount === 0) {
-            jsonEnd = i + 1;
-            break;
+
+    const fullMatch = dataMatch[0];
+    const prefixLen = fullMatch.startsWith("\r\n") ? 2 : fullMatch.startsWith("\n") ? 1 : 0;
+    const sectionStart = dataMatch.index + prefixLen;
+    const afterColon = sectionStart + (fullMatch.length - prefixLen);
+
+    // Look at what's immediately after "data:" on the same line
+    const nextNewlineIndex = frontmatter.indexOf("\n", afterColon);
+    const lineEnd = nextNewlineIndex !== -1 ? nextNewlineIndex : frontmatter.length;
+    const restOfLine = frontmatter.substring(afterColon, lineEnd).trim();
+
+    // Case 1: Inline JSON / flow mapping (starts with '{')
+    if (restOfLine.startsWith("{")) {
+      let braceCount = 0;
+      let inString = false;
+      let escapeNext = false;
+      let jsonEnd = -1;
+
+      const braceStart = frontmatter.indexOf("{", afterColon);
+      for (let i = braceStart; i < frontmatter.length; i++) {
+        const char = frontmatter[i];
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+        if (char === "\\") {
+          escapeNext = true;
+          continue;
+        }
+        if (char === '"') {
+          inString = !inString;
+          continue;
+        }
+        if (!inString) {
+          if (char === "{") braceCount++;
+          else if (char === "}") {
+            braceCount--;
+            if (braceCount === 0) {
+              jsonEnd = i + 1;
+              break;
+            }
           }
         }
       }
+
+      if (jsonEnd !== -1) {
+        let sectionEnd = jsonEnd;
+        if (frontmatter.substring(sectionEnd).startsWith("\r\n")) {
+          sectionEnd += 2;
+        } else if (frontmatter.substring(sectionEnd).startsWith("\n")) {
+          sectionEnd += 1;
+        }
+        return { start: sectionStart, end: sectionEnd };
+      }
     }
-    
-    if (braceCount !== 0) {
-      // Malformed JSON
-      return null;
+
+    // Case 2: Multiline YAML mapping (e.g., Obsidian Properties column format)
+    const lines = frontmatter.substring(sectionStart).split(/\r?\n/);
+    let lineCount = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (i === 0) {
+        lineCount++;
+        continue;
+      }
+
+      const isIndented = /^[ \t]+/.test(line);
+      const isBlank = line.trim().length === 0;
+
+      if (isIndented || isBlank) {
+        lineCount++;
+      } else {
+        // Next unindented key encountered - end of data block
+        break;
+      }
     }
-    
-    return { start: jsonStart, end: jsonEnd };
+
+    let sectionEnd = sectionStart;
+    let currentLine = 0;
+    let pos = sectionStart;
+
+    while (pos < frontmatter.length && currentLine < lineCount) {
+      const nextNl = frontmatter.indexOf("\n", pos);
+      if (nextNl === -1) {
+        sectionEnd = frontmatter.length;
+        break;
+      }
+      sectionEnd = nextNl + 1;
+      pos = nextNl + 1;
+      currentLine++;
+    }
+
+    return { start: sectionStart, end: sectionEnd };
   }
 
+  /**
+   * Normalize date keys from YAML.
+   * If YAML parser converted an unquoted date like `2026-01-01:` into a Date object or stringified Date,
+   * this safely normalizes it back to 'YYYY-MM-DD'.
+   */
+  private normalizeDateKey(key: unknown): string {
+    const str = String(key);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      return str;
+    }
+    const timestamp = Date.parse(str);
+    if (!isNaN(timestamp)) {
+      const d = new Date(timestamp);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+    return str;
+  }
+
+  /**
+   * Parse tracker entries from frontmatter string.
+   * Leverages Obsidian's native parseYaml to effortlessly read both
+   * compact inline JSON (`data: {...}`) and multiline YAML column mapping (`data:\n  2026-01-01: 5`).
+   */
   parseFrontmatterData(frontmatter: string): Record<string, string | number> {
-    // Find data: section in frontmatter
-    const dataIndex = frontmatter.indexOf('data:');
-    const bounds = this.findJsonBounds(frontmatter, dataIndex);
-    
-    if (!bounds) {
-      return {};
-    }
-    
-    const jsonString = frontmatter.substring(bounds.start, bounds.end).trim();
-    if (jsonString === '{}') {
-      return {};
-    }
-    
     try {
-      const parsed: unknown = JSON.parse(jsonString);
-      // Validate that parsed result is an object (not array or null)
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        logError("Tracker: parsed JSON is not an object", new Error("Invalid JSON structure"));
+      const parsed = parseYaml(frontmatter);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         return {};
       }
-      // Convert all values through parseMaybeNumber to maintain type consistency
+      const data = (parsed as Record<string, unknown>).data;
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return {};
+      }
       const result: Record<string, string | number> = {};
-      for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
-        result[key] = parseMaybeNumber(String(value));
+      for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+        if (value !== undefined && value !== null) {
+          result[this.normalizeDateKey(key)] = parseMaybeNumber(String(value));
+        }
       }
       return result;
     } catch (error) {
-      logError("Tracker: error parsing JSON data", error);
+      logError("Tracker: error parsing YAML data", error);
       return {};
     }
   }
@@ -189,78 +237,139 @@ export class TrackerFileService {
     if (Object.keys(data).length === 0) {
       return "data: {}\n";
     }
-    
-    // Sort keys for readability
+
+    // Sort keys chronologically/alphabetically for readability
     const sortedKeys = Object.keys(data).sort();
     const sortedData: Record<string, string | number> = {};
     for (const key of sortedKeys) {
       sortedData[key] = data[key];
     }
-    
-    // Compact JSON format (no spaces)
+
     const jsonString = JSON.stringify(sortedData);
     return `data: ${jsonString}\n`;
   }
 
   /**
-   * Replace data section in frontmatter with new JSON data
-   * Returns updated frontmatter string
+   * Replace data section in frontmatter with new JSON data.
+   * Cleanly replaces either an inline JSON or a multiline YAML block,
+   * completely preventing duplicate `data:` keys or YAML corruption.
    */
   replaceDataInFrontmatter(frontmatter: string, newDataJson: string): string {
-    let newFrontmatter = frontmatter.trim();
-    const dataIndex = newFrontmatter.indexOf('data:');
-    const bounds = this.findJsonBounds(newFrontmatter, dataIndex);
-    
+    let newFrontmatter = frontmatter;
+    const bounds = this.findDataSectionBounds(newFrontmatter);
+    const formattedData = newDataJson.trim() + "\n";
+
     if (bounds) {
-      // Replace the data section
-      const dataJsonTrimmed = newDataJson.trim();
-      newFrontmatter = newFrontmatter.substring(0, dataIndex) + dataJsonTrimmed + newFrontmatter.substring(bounds.end);
+      newFrontmatter = newFrontmatter.substring(0, bounds.start) + formattedData + newFrontmatter.substring(bounds.end);
     } else {
-      // No data: section or malformed, append it
-      newFrontmatter = newFrontmatter + "\n" + newDataJson.trim();
+      newFrontmatter = newFrontmatter.trimEnd() + "\n" + formattedData;
     }
 
     if (!newFrontmatter.endsWith("\n")) {
       newFrontmatter += "\n";
     }
-    
+
     return newFrontmatter;
   }
 
   /**
-   * Read both entries and file options from tracker file in a single read operation
-   * This is more efficient than calling readAllEntries() and getFileTypeFromFrontmatter() separately
+   * Parse file options from frontmatter string using native YAML parsing
+   */
+  parseFileOptions(frontmatter: string): TrackerFileOptions {
+    const fileOpts: TrackerFileOptions = {};
+    try {
+      const parsed = parseYaml(frontmatter);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        fileOpts.mode = TrackerType.GOOD_HABIT;
+        return fileOpts;
+      }
+      const record = parsed as Record<string, unknown>;
+      fileOpts.mode = this.normalizeTrackerType(record.type);
+      if (record.minValue !== undefined) fileOpts.minValue = String(record.minValue);
+      if (record.maxValue !== undefined) fileOpts.maxValue = String(record.maxValue);
+      if (record.step !== undefined) fileOpts.step = String(record.step);
+      if (record.minLimit !== undefined) fileOpts.minLimit = String(record.minLimit);
+      if (record.maxLimit !== undefined) fileOpts.maxLimit = String(record.maxLimit);
+      if (record.unit !== undefined) fileOpts.unit = String(record.unit).trim();
+      if (record.trackingStartDate !== undefined) fileOpts.trackingStartDate = String(record.trackingStartDate).trim();
+    } catch (error) {
+      logError("Tracker: error parsing frontmatter options", error);
+      fileOpts.mode = TrackerType.GOOD_HABIT;
+    }
+    return fileOpts;
+  }
+
+  /**
+   * Read both entries and file options from tracker file in a single, safe vault read.
+   * Automatically strips UTF-8 BOM, handles both YAML & JSON data formats,
+   * and falls back to Obsidian metadataCache if raw regex extraction fails.
    */
   async readTrackerFile(file: TFile): Promise<{
     entries: Map<string, string | number>;
     fileOpts: TrackerFileOptions;
   }> {
     try {
-      const content = await this.getFileContent(file);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-      
-      if (!frontmatterMatch) {
+      const content = await this.app.vault.read(file);
+      const cleanContent = content.replace(/^\uFEFF/, "").trimStart();
+      const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+
+      let frontmatter = frontmatterMatch ? frontmatterMatch[1] : "";
+
+      // Safe fallback to Obsidian's metadataCache if frontmatter regex failed
+      if (!frontmatter) {
+        const fileCache = this.app.metadataCache.getFileCache(file);
+        if (fileCache?.frontmatter) {
+          const fm = fileCache.frontmatter as Record<string, unknown>;
+          const fileOpts: TrackerFileOptions = {
+            mode: this.normalizeTrackerType(fm.type),
+            minValue: fm.minValue !== undefined ? String(fm.minValue) : undefined,
+            maxValue: fm.maxValue !== undefined ? String(fm.maxValue) : undefined,
+            step: fm.step !== undefined ? String(fm.step) : undefined,
+            minLimit: fm.minLimit !== undefined ? String(fm.minLimit) : undefined,
+            maxLimit: fm.maxLimit !== undefined ? String(fm.maxLimit) : undefined,
+            unit: fm.unit !== undefined ? String(fm.unit).trim() : undefined,
+            trackingStartDate: fm.trackingStartDate !== undefined ? String(fm.trackingStartDate).trim() : undefined,
+          };
+          const entries = new Map<string, string | number>();
+          if (fm.data && typeof fm.data === "object" && !Array.isArray(fm.data)) {
+            for (const [k, v] of Object.entries(fm.data as Record<string, unknown>)) {
+              if (v !== undefined && v !== null) {
+                entries.set(this.normalizeDateKey(k), parseMaybeNumber(String(v)));
+              }
+            }
+          }
+          return { entries, fileOpts };
+        }
+
         return {
           entries: new Map(),
-          fileOpts: { mode: TrackerType.GOOD_HABIT }
+          fileOpts: { mode: TrackerType.GOOD_HABIT },
         };
       }
-      
-      const frontmatter = frontmatterMatch[1];
+
       const entriesData = this.parseFrontmatterData(frontmatter);
       const fileOpts = this.parseFileOptions(frontmatter);
-      
+
       const entries = new Map<string, string | number>();
-      Object.entries(entriesData).forEach(([date, value]) => {
+      for (const [date, value] of Object.entries(entriesData)) {
         entries.set(date, value);
-      });
-      
+      }
+
       return { entries, fileOpts };
     } catch (error) {
       logError("Tracker: error reading tracker file", error);
+      // Double check metadataCache before falling back
+      const fileCache = this.app.metadataCache.getFileCache(file);
+      if (fileCache?.frontmatter) {
+        const fm = fileCache.frontmatter as Record<string, unknown>;
+        return {
+          entries: new Map(),
+          fileOpts: { mode: this.normalizeTrackerType(fm.type) },
+        };
+      }
       return {
         entries: new Map(),
-        fileOpts: { mode: TrackerType.GOOD_HABIT }
+        fileOpts: { mode: TrackerType.GOOD_HABIT },
       };
     }
   }
@@ -271,30 +380,26 @@ export class TrackerFileService {
   }
 
   /**
-   * Write entry using state data (avoids re-reading file)
-   * State entries should already be updated before calling this method
+   * Write entry using state data without stale caching layers
    */
   async writeLogLineFromState(
     file: TFile,
     state: { entries: Map<string, string | number> }
   ): Promise<void> {
     try {
-      // Read file only to get body and current frontmatter structure
-      const content = await this.getFileContent(file);
-      // Invalidate cache after write
-      this.invalidateFileCache(file.path);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const content = await this.app.vault.read(file);
+      const cleanContent = content.replace(/^\uFEFF/, "");
+      const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
       if (!frontmatterMatch) {
         throw new Error(ERROR_MESSAGES.NO_FRONTMATTER);
       }
 
       const frontmatter = frontmatterMatch[1];
-      const body = content.slice(frontmatterMatch[0].length);
+      const body = cleanContent.slice(frontmatterMatch[0].length);
 
-      // Use data from state (already updated)
       const dataJson = this.formatDataToJson(Object.fromEntries(state.entries));
-      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson.trim());
+      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson);
 
       const newContent = `---\n${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
@@ -305,25 +410,24 @@ export class TrackerFileService {
     }
   }
 
-  async writeLogLine(file: TFile, dateIso: string, value: string) {
+  async writeLogLine(file: TFile, dateIso: string, value: string): Promise<void> {
     try {
-      const content = await this.getFileContent(file);
-      // Invalidate cache after write
-      this.invalidateFileCache(file.path);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const content = await this.app.vault.read(file);
+      const cleanContent = content.replace(/^\uFEFF/, "");
+      const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
       if (!frontmatterMatch) {
         throw new Error(ERROR_MESSAGES.NO_FRONTMATTER);
       }
 
       const frontmatter = frontmatterMatch[1];
-      const body = content.slice(frontmatterMatch[0].length);
+      const body = cleanContent.slice(frontmatterMatch[0].length);
 
       const data = this.parseFrontmatterData(frontmatter);
       data[dateIso] = parseMaybeNumber(value);
 
       const dataJson = this.formatDataToJson(data);
-      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson.trim());
+      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson);
 
       const newContent = `---\n${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
@@ -334,31 +438,24 @@ export class TrackerFileService {
     }
   }
 
-  /**
-   * Delete entry using state data (avoids re-reading file)
-   * State entries should already be updated (entry deleted) before calling this method
-   */
   async deleteEntryFromState(
     file: TFile,
     state: { entries: Map<string, string | number> }
   ): Promise<void> {
     try {
-      // Read file only to get body and current frontmatter structure
-      const content = await this.getFileContent(file);
-      // Invalidate cache after delete
-      this.invalidateFileCache(file.path);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const content = await this.app.vault.read(file);
+      const cleanContent = content.replace(/^\uFEFF/, "");
+      const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
       if (!frontmatterMatch) {
         throw new Error(ERROR_MESSAGES.NO_FRONTMATTER);
       }
 
       const frontmatter = frontmatterMatch[1];
-      const body = content.slice(frontmatterMatch[0].length);
+      const body = cleanContent.slice(frontmatterMatch[0].length);
 
-      // Use data from state (entry already deleted)
       const dataJson = this.formatDataToJson(Object.fromEntries(state.entries));
-      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson.trim());
+      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson);
 
       const newContent = `---\n${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
@@ -369,30 +466,24 @@ export class TrackerFileService {
     }
   }
 
-  /**
-   * Delete entry for a specific date
-   */
   async deleteEntry(file: TFile, dateIso: string): Promise<void> {
     try {
-      const content = await this.getFileContent(file);
-      // Invalidate cache after delete
-      this.invalidateFileCache(file.path);
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      const content = await this.app.vault.read(file);
+      const cleanContent = content.replace(/^\uFEFF/, "");
+      const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
       if (!frontmatterMatch) {
         throw new Error(ERROR_MESSAGES.NO_FRONTMATTER);
       }
 
       const frontmatter = frontmatterMatch[1];
-      const body = content.slice(frontmatterMatch[0].length);
+      const body = cleanContent.slice(frontmatterMatch[0].length);
 
       const data = this.parseFrontmatterData(frontmatter);
-      
-      // Delete the entry
       delete data[dateIso];
 
       const dataJson = this.formatDataToJson(data);
-      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson.trim());
+      const newFrontmatter = this.replaceDataInFrontmatter(frontmatter, dataJson);
 
       const newContent = `---\n${newFrontmatter}---${body}`;
       await this.app.vault.modify(file, newContent);
@@ -401,50 +492,6 @@ export class TrackerFileService {
       logError("Tracker: delete entry error", error);
       throw new Error(errorMsg);
     }
-  }
-
-  /**
-   * Type guard to check if a string is a valid TrackerTypeValue
-   */
-  private isValidTrackerType(value: string): value is TrackerTypeValue {
-    return Object.values(TrackerType).includes(value as TrackerTypeValue);
-  }
-
-  /**
-   * Parse file options from frontmatter string
-   * Can be used without reading the file if frontmatter is already available
-   */
-  parseFileOptions(frontmatter: string): TrackerFileOptions {
-    const fileOpts: TrackerFileOptions = {};
-    try {
-      const typeMatch = frontmatter.match(/^type:\s*["']?([^"'\s\n]+)["']?/m);
-      const typeValue = typeMatch?.[1]?.trim() ?? '';
-      fileOpts.mode = this.isValidTrackerType(typeValue)
-        ? typeValue
-        : TrackerType.GOOD_HABIT;
-      const minValueMatch = frontmatter.match(/^minValue:\s*([\d.]+)/m);
-      if (minValueMatch) fileOpts.minValue = minValueMatch[1];
-      const maxValueMatch = frontmatter.match(/^maxValue:\s*([\d.]+)/m);
-      if (maxValueMatch) fileOpts.maxValue = maxValueMatch[1];
-      const stepMatch = frontmatter.match(/^step:\s*([\d.]+)/m);
-      if (stepMatch) fileOpts.step = stepMatch[1];
-      const minLimitMatch = frontmatter.match(/^minLimit:\s*([\d.]+)/m);
-      if (minLimitMatch) fileOpts.minLimit = minLimitMatch[1];
-      const maxLimitMatch = frontmatter.match(/^maxLimit:\s*([\d.]+)/m);
-      if (maxLimitMatch) fileOpts.maxLimit = maxLimitMatch[1];
-      const unitMatch = frontmatter.match(/^unit:\s*["']?([^"'\n]+)["']?/m);
-      if (unitMatch && unitMatch[1]) {
-        fileOpts.unit = unitMatch[1].trim();
-      }
-      const trackingStartDateMatch = frontmatter.match(/^trackingStartDate:\s*["']?([^"'\s\n]+)["']?/m);
-      if (trackingStartDateMatch && trackingStartDateMatch[1]) {
-        fileOpts.trackingStartDate = trackingStartDateMatch[1].trim();
-      }
-    } catch (error) {
-      logError("Tracker: error parsing frontmatter options", error);
-      fileOpts.mode = TrackerType.GOOD_HABIT;
-    }
-    return fileOpts;
   }
 
   async getFileTypeFromFrontmatter(file: TFile): Promise<TrackerFileOptions> {
@@ -453,16 +500,13 @@ export class TrackerFileService {
   }
 
   getStartTrackingDate(
-    entries: Map<string, string | number>,
+    _entries: Map<string, string | number>,
     settings: TrackerSettings,
     fileOpts?: TrackerFileOptions
   ): string | null {
-    // Priority 1: Date from frontmatter
     if (fileOpts?.trackingStartDate) {
       return fileOpts.trackingStartDate;
     }
-    
-    // Fallback: current date
     return DateService.format(DateService.now(), settings.dateFormat);
   }
 
@@ -474,47 +518,14 @@ export class TrackerFileService {
     file?: TFile,
     startTrackingDateStr?: string | null
   ): number {
-    let streak = 0;
-    let currentDate = endDate instanceof Date ? DateService.fromDate(endDate) : DateService.fromDate(new Date(endDate));
-    currentDate = DateService.startOfDay(currentDate);
-    const metricType = (trackerType || "good-habit").toLowerCase();
-    const isBadHabit = metricType === "bad-habit";
-
-    // Determine start tracking date using shared utility
-    const startTrackingDate = determineStartTrackingDate(
-      startTrackingDateStr,
-      file,
+    return statisticsService.calculateStreaks(
       entries,
       settings,
-      currentDate
-    );
-
-    if (!startTrackingDate || !startTrackingDate.isValid()) {
-      return 0;
-    }
-
-    let daysChecked = 0;
-
-    while (daysChecked < MAX_DAYS_BACK) {
-      if (DateService.isBefore(currentDate, startTrackingDate)) {
-        break;
-      }
-
-      // Use shared utility for getting entry value
-      const val = getEntryValueByDate(entries, currentDate, settings);
-      const isSuccess = isDaySuccessful(val, isBadHabit);
-
-      if (isSuccess) {
-        streak++;
-      } else {
-        break;
-      }
-
-      currentDate = currentDate.subtract(1, "days");
-      daysChecked++;
-    }
-
-    return streak;
+      endDate,
+      trackerType || "good-habit",
+      file,
+      startTrackingDateStr
+    ).current;
   }
 
   calculateBestStreak(
@@ -524,47 +535,13 @@ export class TrackerFileService {
     file?: TFile,
     startTrackingDateStr?: string | null
   ): number {
-    const metricType = (trackerType || "good-habit").toLowerCase();
-    const isBadHabit = metricType === "bad-habit";
-    
-    if (entries.size === 0) return 0;
-    
-    const today = DateService.now();
-    let currentDate = DateService.startOfDay(today);
-    
-    // Determine start tracking date using shared utility
-    const startTrackingDate = determineStartTrackingDate(
-      startTrackingDateStr,
-      file,
+    return statisticsService.calculateStreaks(
       entries,
       settings,
-      currentDate
-    );
-
-    if (!startTrackingDate || !startTrackingDate.isValid()) {
-      return 0;
-    }
-    
-    let bestStreak = 0;
-    let currentStreak = 0;
-    let daysChecked = 0;
-    
-    while (!DateService.isBefore(currentDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
-      // Use shared utility for getting entry value
-      const val = getEntryValueByDate(entries, currentDate, settings);
-      const isSuccess = isDaySuccessful(val, isBadHabit);
-      
-      if (isSuccess) {
-        currentStreak++;
-        bestStreak = Math.max(bestStreak, currentStreak);
-      } else {
-        currentStreak = 0;
-      }
-
-      currentDate = currentDate.subtract(1, "days");
-      daysChecked++;
-    }
-    
-    return bestStreak;
+      DateService.now(),
+      trackerType || "good-habit",
+      file,
+      startTrackingDateStr
+    ).best;
   }
 }

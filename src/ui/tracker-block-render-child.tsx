@@ -72,6 +72,8 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         />,
         this.containerEl
       );
+
+      this.restoreScrollPosition();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       this.containerEl.empty();
@@ -139,9 +141,50 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     return this.opts;
   }
 
-  onload() {}
+  private static noteScrollPositions: Map<string, number> = new Map();
+
+  onload() {
+    window.requestAnimationFrame(() => {
+      this.attachScrollListener();
+      this.restoreScrollPosition();
+    });
+  }
+
+  private attachScrollListener(): void {
+    const scroller = this.containerEl.closest(".cm-scroller, .markdown-preview-view") as HTMLElement | null;
+    if (scroller && this.ctx.sourcePath) {
+      this.registerDomEvent(scroller, "scroll", () => {
+        if (this.ctx.sourcePath && scroller.scrollTop > 0) {
+          TrackerBlockRenderChild.noteScrollPositions.set(this.ctx.sourcePath, scroller.scrollTop);
+        }
+      });
+    }
+  }
+
+  private restoreScrollPosition(): void {
+    if (!this.ctx.sourcePath) return;
+    const saved = TrackerBlockRenderChild.noteScrollPositions.get(this.ctx.sourcePath);
+    if (saved === undefined || saved <= 0) return;
+
+    const restore = () => {
+      const scroller = this.containerEl.closest(".cm-scroller, .markdown-preview-view") as HTMLElement | null;
+      if (scroller && Math.abs(scroller.scrollTop - saved) > 5) {
+        scroller.scrollTop = saved;
+      }
+    };
+
+    window.requestAnimationFrame(() => {
+      restore();
+      window.setTimeout(restore, 50);
+      window.setTimeout(restore, 150);
+    });
+  }
 
   onunload() {
+    const scroller = this.containerEl.closest(".cm-scroller, .markdown-preview-view") as HTMLElement | null;
+    if (scroller && this.ctx.sourcePath && scroller.scrollTop > 0) {
+      TrackerBlockRenderChild.noteScrollPositions.set(this.ctx.sourcePath, scroller.scrollTop);
+    }
     // Unmount Preact component
     render(null, this.containerEl);
     this.plugin.removeActiveBlock(this);

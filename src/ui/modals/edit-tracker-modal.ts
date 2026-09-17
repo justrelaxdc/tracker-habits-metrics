@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { TFile } from "obsidian";
-import { Modal, Notice, Setting } from "obsidian";
+import { Modal, Notice, Setting, parseYaml, stringifyYaml } from "obsidian";
 import type TrackerPlugin from "../../core/tracker-plugin";
 import { MODAL_LABELS, ERROR_MESSAGES, SUCCESS_MESSAGES, TRACKER_TYPE_LABELS, PLACEHOLDERS, DEFAULTS } from "../../constants";
 import { DateService } from "../../services/date-service";
@@ -129,7 +129,7 @@ export class EditTrackerModal extends Modal {
         try {
           // Load data from file
           const content = await this.app.vault.read(this.file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
           
           let existingData: Record<string, string | number> = {};
           if (frontmatterMatch) {
@@ -408,9 +408,10 @@ export class EditTrackerModal extends Modal {
 
         try {
           const content = await this.app.vault.read(this.file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const cleanContent = content.replace(/^\uFEFF/, "").trimStart();
+          const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
-          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
+          const body = frontmatterMatch ? cleanContent.slice(frontmatterMatch[0].length).trim() : cleanContent.trim();
 
           let existingData: Record<string, string | number> = {};
           if (frontmatterMatch) {
@@ -446,7 +447,35 @@ export class EditTrackerModal extends Modal {
             }
           }
 
-          let newFrontmatter = `type: "${type}"\n`;
+          let customPropsYaml = "";
+          if (frontmatterMatch) {
+            try {
+              const parsedFm = parseYaml(frontmatterMatch[1]);
+              if (parsedFm && typeof parsedFm === "object" && !Array.isArray(parsedFm)) {
+                const trackerKeys = new Set([
+                  "type", "trackingStartDate", "minValue", "maxValue",
+                  "step", "minLimit", "maxLimit", "unit", "data"
+                ]);
+                const customProps: Record<string, unknown> = {};
+                for (const [k, v] of Object.entries(parsedFm as Record<string, unknown>)) {
+                  if (!trackerKeys.has(k)) {
+                    customProps[k] = v;
+                  }
+                }
+                if (Object.keys(customProps).length > 0) {
+                  const serialized = stringifyYaml(customProps).trim();
+                  if (serialized) {
+                    customPropsYaml = serialized + "\n";
+                  }
+                }
+              }
+            } catch (yamlErr) {
+              logError("Tracker: error preserving custom frontmatter props", yamlErr);
+            }
+          }
+
+          let newFrontmatter = customPropsYaml;
+          newFrontmatter += `type: "${type}"\n`;
           newFrontmatter += `trackingStartDate: "${startDate}"\n`;
           if (type === "scale") {
             newFrontmatter += `minValue: ${parseFloat(minValue) || 0}\n`;

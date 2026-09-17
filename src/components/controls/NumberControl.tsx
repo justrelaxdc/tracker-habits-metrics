@@ -107,13 +107,15 @@ export function NumberControl({ file, dateIso, plugin }: NumberControlProps) {
   // Handle enter key - immediate write
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      void writeValue(inputValue, true);
+      const val = inputRef.current ? inputRef.current.value : inputValue;
+      void writeValue(val, true);
     }
   }, [inputValue, writeValue]);
 
   // Handle blur - immediate write
   const handleBlur = useCallback(() => {
-    void writeValue(inputValue, true);
+    const val = inputRef.current ? inputRef.current.value : inputValue;
+    void writeValue(val, true);
   }, [inputValue, writeValue]);
 
   return (

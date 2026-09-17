@@ -10,7 +10,16 @@ export class FolderTreeService {
   private pendingCleanup: Set<string> = new Set();
   private cleanupDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private onSettingsChange?: () => Promise<void>;
+
   constructor(private readonly app: App) {}
+
+  /**
+   * Set callback for persisting settings changes
+   */
+  setOnSettingsChange(callback: () => Promise<void>): void {
+    this.onSettingsChange = callback;
+  }
 
   /**
    * Updates settings for sorting
@@ -56,6 +65,8 @@ export class FolderTreeService {
       return;
     }
 
+    let hasChanges = false;
+
     for (const folderPath of this.pendingCleanup) {
       const sortOrder = this.customSortOrder[folderPath];
       if (!sortOrder) continue;
@@ -65,6 +76,7 @@ export class FolderTreeService {
       if (!folder || !(folder instanceof TFolder)) {
         // Folder no longer exists - remove the entire sort order
         delete this.customSortOrder[folderPath];
+        hasChanges = true;
         continue;
       }
       
@@ -79,7 +91,8 @@ export class FolderTreeService {
       
       // Filter out non-existent items
       const cleanedOrder = sortOrder.filter(name => existingNames.has(name));
-        if (cleanedOrder.length !== sortOrder.length) {
+      if (cleanedOrder.length !== sortOrder.length) {
+        hasChanges = true;
         if (cleanedOrder.length === 0) {
           delete this.customSortOrder[folderPath];
         } else {
@@ -90,8 +103,9 @@ export class FolderTreeService {
     
     this.pendingCleanup.clear();
     
-    // Note: We don't save here because the plugin handles saving
-    // The customSortOrder reference is shared with settings
+    if (hasChanges && this.onSettingsChange) {
+      void this.onSettingsChange();
+    }
   }
 
   private cacheKey(folderPath: string, maxDepth: number): string {

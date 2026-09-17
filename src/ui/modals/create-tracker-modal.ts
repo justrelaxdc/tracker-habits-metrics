@@ -274,7 +274,8 @@ export class CreateTrackerModal extends Modal {
           const file = await this.plugin.ensureFileWithHeading(filePath, type);
 
           const content = await this.app.vault.read(file);
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+          const cleanContent = content.replace(/^\uFEFF/, "").trimStart();
+          const frontmatterMatch = cleanContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
           let newFrontmatter = `type: "${type}"\n`;
           newFrontmatter += `trackingStartDate: "${startDate}"\n`;
@@ -297,7 +298,7 @@ export class CreateTrackerModal extends Modal {
           }
           newFrontmatter += `data: {}\n`;
 
-          const body = frontmatterMatch ? content.slice(frontmatterMatch[0].length).trim() : content.trim();
+          const body = frontmatterMatch ? cleanContent.slice(frontmatterMatch[0].length).trim() : cleanContent.trim();
           const newContent = `---\n${newFrontmatter}---${body ? `\n\n${body}` : ""}`;
 
           await this.app.vault.modify(file, newContent);

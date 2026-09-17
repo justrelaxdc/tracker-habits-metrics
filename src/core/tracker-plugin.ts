@@ -21,7 +21,6 @@ import { logError } from "../utils/notifications";
 // Managers
 import { StateManager } from "./managers/state-manager";
 import { SortOrderManager } from "./managers/sort-order-manager";
-import { DomReorderManager } from "./managers/dom-reorder";
 import { BlockManager } from "./managers/block-manager";
 import { WriteQueueManager } from "./managers/write-queue-manager";
 
@@ -53,12 +52,19 @@ export default class TrackerPlugin extends Plugin {
   // Managers
   private stateManager!: StateManager;
   private sortOrderManager!: SortOrderManager;
-  private domReorderManager!: DomReorderManager;
   private blockManager!: BlockManager;
   private writeQueueManager!: WriteQueueManager;
   
   // UI
   private refreshBlocksDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private justWrittenPaths: Set<string> = new Set();
+
+  markJustWritten(filePath: string): void {
+    this.justWrittenPaths.add(filePath);
+    window.setTimeout(() => {
+      this.justWrittenPaths.delete(filePath);
+    }, 1000);
+  }
 
   /**
    * Get active blocks (for external access)
@@ -80,6 +86,7 @@ export default class TrackerPlugin extends Plugin {
     // Initialize services
     this.folderTreeService = new FolderTreeService(this.app);
     this.folderTreeService.updateSettings(this.settings);
+    this.folderTreeService.setOnSettingsChange(() => this.saveSettings());
     this.trackerFileService = new TrackerFileService(this.app);
     this.trackerOrderService = new TrackerOrderService(this.app);
     this.iconizeService = new IconizeService(this.app);
@@ -98,12 +105,6 @@ export default class TrackerPlugin extends Plugin {
     
     this.blockManager = new BlockManager(
       () => this.app.workspace
-    );
-    
-    this.domReorderManager = new DomReorderManager(
-      () => this.blockManager.activeBlocks,
-      normalizePath,
-      (t, b) => this.blockManager.isFolderRelevant(t, b)
     );
     
     this.writeQueueManager = new WriteQueueManager();
@@ -143,12 +144,56 @@ export default class TrackerPlugin extends Plugin {
         }
       })
     );
-    
-    // Note: Vault event subscriptions for rename/delete removed.
-    // Sort order cleanup is now handled lazily in FolderTreeService.
+
+    // Register metadataCache event for dynamic reactive updates on external changes or sync
+    this.registerEvent(
+      this.app.metadataCache.on('changed', (file) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          if (this.justWrittenPaths.has(file.path)) {
+            return;
+          }
+          if (trackerStore.hasTrackerState(file.path) || this.blockManager.activeBlocks.size > 0) {
+            void this.refreshTrackersForFile(file);
+          }
+        }
+      })
+    );
+
+    // Register vault event for file creation
+    this.registerEvent(
+      this.app.vault.on('create', (file) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          this.folderTreeService.invalidate();
+          this.refreshAllBlocks();
+        }
+      })
+    );
+
+    // Register vault event for file deletion
+    this.registerEvent(
+      this.app.vault.on('delete', (file) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          void this.onTrackerDeleted(file.path);
+          this.folderTreeService.invalidate();
+          this.refreshAllBlocks();
+        }
+      })
+    );
+
+    // Register vault event for file rename
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        if (file instanceof TFile && file.extension === 'md') {
+          this.handleTrackerRenamed(oldPath, file);
+          this.folderTreeService.invalidate();
+          this.refreshAllBlocks();
+        }
+      })
+    );
   }
 
   onunload() {
+    this.justWrittenPaths.clear();
     this.blockManager.clearAllBlocks();
     this.iconizeService.stopWatching();
     this.writeQueueManager.clear();
@@ -336,6 +381,7 @@ export default class TrackerPlugin extends Plugin {
         
         try {
           // Use writeLogLineFromState to avoid re-reading the file
+          this.markJustWritten(file.path);
           await this.trackerFileService.writeLogLineFromState(file, state);
         } catch (error) {
           // Revert optimistic update on error
@@ -375,6 +421,7 @@ export default class TrackerPlugin extends Plugin {
         
         try {
           // Use deleteEntryFromState to avoid re-reading the file
+          this.markJustWritten(file.path);
           await this.trackerFileService.deleteEntryFromState(file, state);
         } catch (error) {
           // Revert optimistic update on error

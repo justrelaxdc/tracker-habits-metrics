@@ -59,12 +59,20 @@ class TrackerStore {
   }
 
   /**
+   * Check if tracker state exists for a file
+   */
+  hasTrackerState(filePath: string): boolean {
+    return this.trackerStates.value.has(filePath);
+  }
+
+  /**
    * Set tracker state for a file
    */
   setTrackerState(filePath: string, state: TrackerFileState): void {
     const newMap = new Map(this.trackerStates.value);
     newMap.set(filePath, state);
     this.trackerStates.value = newMap;
+    this.incrementEntriesVersion(filePath);
   }
 
   /**

@@ -24,7 +24,8 @@ import { ChartWrapper } from "../Chart/ChartWrapper";
  */
 export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerItemProps) {
   const { onDateChange } = useTrackerContext();
-  const isLoading = useSignal(true);
+  const existingInitialState = trackerStore.getTrackerState(file.path);
+  const isLoading = useSignal(!existingInitialState);
 
   // Get tracker state from the store (reactive)
   // Access per-file version to trigger recomputation only when this tracker's entries change
@@ -49,7 +50,9 @@ export function TrackerItem({ file, plugin, dateIso, viewMode, opts }: TrackerIt
         // Check if already loaded in store
         const existingState = trackerStore.getTrackerState(file.path);
         if (existingState) {
-          isLoading.value = false;
+          if (isLoading.value) {
+            isLoading.value = false;
+          }
           return;
         }
 

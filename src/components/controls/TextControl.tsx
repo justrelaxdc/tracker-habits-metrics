@@ -27,6 +27,7 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
   }, [entries.value, dateIso]);
 
   const [inputValue, setInputValue] = useState(currentValue);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update input when entries or dateIso change
@@ -94,12 +95,14 @@ export function TextControl({ file, dateIso, plugin }: TextControlProps) {
 
   // Handle blur - immediate write
   const handleBlur = useCallback(() => {
-    void writeValue(inputValue, true);
+    const val = textareaRef.current ? textareaRef.current.value : inputValue;
+    void writeValue(val, true);
   }, [inputValue, writeValue]);
 
   return (
     <div class={CSS_CLASSES.ROW}>
       <textarea
+        ref={textareaRef}
         class={CSS_CLASSES.TEXT_INPUT}
         placeholder={PLACEHOLDERS.TEXT_INPUT}
         value={inputValue}

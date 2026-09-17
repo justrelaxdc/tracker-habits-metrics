@@ -2,9 +2,9 @@ import { App } from "obsidian";
 import { trackerStore } from "../store";
 import type { IconizeData } from "../store";
 
-// Polling interval for checking icon data changes (0.5 seconds)
+// Polling interval for checking icon data changes (3 seconds)
 // We use this method until Iconize plugin implements API for reactive updates
-const ICONIZE_POLL_INTERVAL_MS = 500;
+const ICONIZE_POLL_INTERVAL_MS = 3000;
 
 /**
  * Service for integration with Iconize plugin
@@ -14,6 +14,7 @@ const ICONIZE_POLL_INTERVAL_MS = 500;
 export class IconizeService {
   private watchInterval: ReturnType<typeof setInterval> | null = null;
   private lastDataHash: string = "";
+  private lastDataRef: IconizeData | null = null;
   
   // Callback to check if there are active tracker blocks
   private hasActiveBlocks: (() => boolean) | null = null;
@@ -37,6 +38,8 @@ export class IconizeService {
       const iconizePlugin = this.getIconizePlugin();
       
       if (!iconizePlugin || !iconizePlugin.data) {
+        this.lastDataRef = null;
+        this.lastDataHash = "";
         trackerStore.setIconizeData(null);
         return;
       }
@@ -45,13 +48,16 @@ export class IconizeService {
       // Create a new object to ensure signal detects the change
       const iconData: IconizeData = { ...iconizePlugin.data };
       
-      // Update hash for change detection
+      // Update reference and hash for change detection
+      this.lastDataRef = iconizePlugin.data;
       this.lastDataHash = this.hashData(iconizePlugin.data);
       
       // Update global store for reactive updates (pass new object reference)
       trackerStore.setIconizeData(iconData);
     } catch {
       // Silently fail if Iconize is not installed or data is unavailable
+      this.lastDataRef = null;
+      this.lastDataHash = "";
       trackerStore.setIconizeData(null);
     }
   }
@@ -81,14 +87,21 @@ export class IconizeService {
         if (!iconizePlugin || !iconizePlugin.data) {
           return;
         }
+
+        // Fast reference check: if the data object reference is identical, skip hashing
+        const currentData = iconizePlugin.data;
+        if (currentData === this.lastDataRef) {
+          return;
+        }
         
-        // Create hash of current data
-        const currentDataHash = this.hashData(iconizePlugin.data);
-        
-        // If data changed, reload
+        // Reference changed: compute hash to verify actual content changes
+        const currentDataHash = this.hashData(currentData);
         if (currentDataHash !== this.lastDataHash) {
           this.lastDataHash = currentDataHash;
+          this.lastDataRef = currentData;
           this.loadIconizeData();
+        } else {
+          this.lastDataRef = currentData;
         }
       } catch {
         // Silently ignore errors

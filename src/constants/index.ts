@@ -9,7 +9,6 @@ export const SCROLL_RESTORE_DELAY_MS = 50;
 export const DEBOUNCE_DELAY_MS = 300;
 
 // String constants
-export const DATA_PREFIX_LENGTH = 5; // "data:".length
 export const ARCHIVE_FOLDER_NAME = "archive";
 
 // Timeout and delay constants

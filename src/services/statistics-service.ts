@@ -226,12 +226,13 @@ export class StatisticsService {
       daysChecked++;
     }
 
-    // Calculate best streak
+    // Calculate best streak across all-time history (from today backwards to startTrackingDate)
     let bestStreak = 0;
     let bestCurrentStreak = 0;
     daysChecked = 0;
     
-    let bestCheckDate = currentDate.clone();
+    const today = DateService.startOfDay(DateService.now());
+    let bestCheckDate = today.clone();
     
     while (!DateService.isBefore(bestCheckDate, startTrackingDate) && daysChecked < MAX_DAYS_BACK) {
       const val = getEntryValueByDate(entries, bestCheckDate, settings);
