@@ -58,7 +58,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
         initialDate = this.cachedExtractedDate;
       }
 
-      const dateIso = DateService.resolveDateIso(initialDate, this.plugin.settings.dateFormat);
+      const dateIso = DateService.resolveDateIso(initialDate, "YYYY-MM-DD");
 
       // Render Preact component - keep stable tree, use events for targeted updates
       render(
@@ -141,7 +141,18 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     return this.opts;
   }
 
+  private static readonly MAX_SCROLL_HISTORY = 50;
   private static noteScrollPositions: Map<string, number> = new Map();
+
+  private static recordScrollPosition(path: string, top: number): void {
+    if (this.noteScrollPositions.has(path)) {
+      this.noteScrollPositions.delete(path);
+    } else if (this.noteScrollPositions.size >= this.MAX_SCROLL_HISTORY) {
+      const oldestKey = this.noteScrollPositions.keys().next().value;
+      if (oldestKey) this.noteScrollPositions.delete(oldestKey);
+    }
+    this.noteScrollPositions.set(path, top);
+  }
 
   onload() {
     window.requestAnimationFrame(() => {
@@ -155,7 +166,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
     if (scroller && this.ctx.sourcePath) {
       this.registerDomEvent(scroller, "scroll", () => {
         if (this.ctx.sourcePath && scroller.scrollTop > 0) {
-          TrackerBlockRenderChild.noteScrollPositions.set(this.ctx.sourcePath, scroller.scrollTop);
+          TrackerBlockRenderChild.recordScrollPosition(this.ctx.sourcePath, scroller.scrollTop);
         }
       });
     }
@@ -183,7 +194,7 @@ export class TrackerBlockRenderChild extends MarkdownRenderChild {
   onunload() {
     const scroller = this.containerEl.closest(".cm-scroller, .markdown-preview-view") as HTMLElement | null;
     if (scroller && this.ctx.sourcePath && scroller.scrollTop > 0) {
-      TrackerBlockRenderChild.noteScrollPositions.set(this.ctx.sourcePath, scroller.scrollTop);
+      TrackerBlockRenderChild.recordScrollPosition(this.ctx.sourcePath, scroller.scrollTop);
     }
     // Unmount Preact component
     render(null, this.containerEl);

@@ -159,6 +159,10 @@ export class TrackerFileService {
       const isBlank = line.trim().length === 0;
 
       if (isIndented || isBlank) {
+        if (isBlank) {
+          const remaining = lines.slice(i + 1);
+          if (!remaining.some((l) => /^[ \t]+/.test(l))) break;
+        }
         lineCount++;
       } else {
         // Next unindented key encountered - end of data block
@@ -233,20 +237,51 @@ export class TrackerFileService {
     }
   }
 
-  formatDataToJson(data: Record<string, string | number>): string {
-    if (Object.keys(data).length === 0) {
+  /**
+   * Format tracker entries into native Obsidian YAML mapping (column format).
+   * Generates clean indented lines (`  YYYY-MM-DD: value`) sorted chronologically,
+   * safely quoting text strings to avoid invalid YAML syntax.
+   */
+  formatDataToYaml(data: Record<string, string | number>): string {
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
       return "data: {}\n";
     }
 
     // Sort keys chronologically/alphabetically for readability
-    const sortedKeys = Object.keys(data).sort();
-    const sortedData: Record<string, string | number> = {};
+    const sortedKeys = keys.sort();
+    const lines: string[] = ["data:"];
+
     for (const key of sortedKeys) {
-      sortedData[key] = data[key];
+      const normalizedKey = this.normalizeDateKey(key);
+      if (!normalizedKey) continue;
+
+      const rawVal = data[key];
+      let formattedVal: string;
+
+      if (typeof rawVal === "number") {
+        formattedVal = String(rawVal);
+      } else if (typeof rawVal === "string") {
+        const trimmed = rawVal.trim();
+        // If it's a numeric string, write as number
+        if (trimmed !== "" && !isNaN(Number(trimmed))) {
+          formattedVal = trimmed;
+        } else {
+          // Safely JSON-stringify strings to escape quotes, colons, special YAML characters
+          formattedVal = JSON.stringify(rawVal);
+        }
+      } else {
+        formattedVal = String(rawVal);
+      }
+
+      lines.push(`  ${normalizedKey}: ${formattedVal}`);
     }
 
-    const jsonString = JSON.stringify(sortedData);
-    return `data: ${jsonString}\n`;
+    return lines.join("\n") + "\n";
+  }
+
+  formatDataToJson(data: Record<string, string | number>): string {
+    return this.formatDataToYaml(data);
   }
 
   /**

@@ -536,8 +536,6 @@ export class EditTrackerModal extends Modal {
 
             new Notice(`${SUCCESS_MESSAGES.TRACKER_UPDATED}: ${name}`);
             
-            // Invalidate cache for file so new frontmatter data is read
-            this.plugin.invalidateCacheForFile(updatedFile);
             
             // Update tracker visualizations with new file
             // If file was renamed, update dataset.filePath for all trackers

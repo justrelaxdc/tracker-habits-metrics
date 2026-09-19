@@ -57,13 +57,20 @@ export default class TrackerPlugin extends Plugin {
   
   // UI
   private refreshBlocksDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private justWrittenPaths: Set<string> = new Set();
+  private justWrittenPaths: Map<string, number> = new Map();
 
   markJustWritten(filePath: string): void {
-    this.justWrittenPaths.add(filePath);
-    window.setTimeout(() => {
+    this.justWrittenPaths.set(filePath, Date.now() + 2000);
+  }
+
+  isJustWritten(filePath: string): boolean {
+    const expiresAt = this.justWrittenPaths.get(filePath);
+    if (!expiresAt) return false;
+    if (Date.now() > expiresAt) {
       this.justWrittenPaths.delete(filePath);
-    }, 1000);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -149,10 +156,12 @@ export default class TrackerPlugin extends Plugin {
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
         if (file instanceof TFile && file.extension === 'md') {
-          if (this.justWrittenPaths.has(file.path)) {
+          if (this.isJustWritten(file.path)) {
             return;
           }
-          if (trackerStore.hasTrackerState(file.path) || this.blockManager.activeBlocks.size > 0) {
+          const hasState = trackerStore.hasTrackerState(file.path);
+          const isTracker = hasState || Boolean(this.app.metadataCache.getFileCache(file)?.frontmatter?.type);
+          if (isTracker) {
             void this.refreshTrackersForFile(file);
           }
         }
@@ -241,11 +250,8 @@ export default class TrackerPlugin extends Plugin {
    * Uses signals to trigger reactive updates
    */
   async refreshTrackersForFile(file: TFile): Promise<void> {
-    // Invalidate caches
-    this.invalidateCacheForFile(file);
-    
-    // Reload data and update store (signals will trigger re-renders)
-    // Use readTrackerFile for efficient single-file read
+    // Reload data and update store atomically (signals will trigger smooth in-place re-renders)
+    // Read tracker file first without clearing store beforehand to eliminate UI flickering
     const { entries: entriesData, fileOpts } = await this.trackerFileService.readTrackerFile(file);
     
     trackerStore.setTrackerState(file.path, {
@@ -362,8 +368,12 @@ export default class TrackerPlugin extends Plugin {
     return this.trackerFileService.parseFrontmatterData(frontmatter);
   }
 
+  formatDataToYaml(data: Record<string, string | number>): string {
+    return this.trackerFileService.formatDataToYaml(data);
+  }
+
   formatDataToJson(data: Record<string, string | number>): string {
-    return this.trackerFileService.formatDataToJson(data);
+    return this.trackerFileService.formatDataToYaml(data);
   }
 
   async writeLogLine(file: TFile, dateIso: string, value: string) {

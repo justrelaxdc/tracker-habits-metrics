@@ -25,19 +25,19 @@ export function TrackerBlock({
   const isUpdating = useSignal(false);
   const dateIso = useSignal(initialDateIso);
 
-  // Handle date change - updates local signal only
+  // Handle date change - updates local signal only (always ISO YYYY-MM-DD)
   const handleDateChange = useCallback((newDate: string) => {
-    const newDateIso = DateService.resolveDateIso(newDate, plugin.settings.dateFormat);
+    const newDateIso = DateService.resolveDateIso(newDate, "YYYY-MM-DD");
     dateIso.value = newDateIso;
-  }, [plugin.settings.dateFormat, dateIso]);
+  }, [dateIso]);
 
   // Handle date navigation
   const handleNavigate = useCallback((days: number) => {
-    const currentDateObj = DateService.parse(dateIso.value, plugin.settings.dateFormat);
+    const currentDateObj = DateService.parse(dateIso.value, "YYYY-MM-DD");
     const newDate = currentDateObj.clone().add(days, "days");
-    const newDateStr = DateService.format(newDate, plugin.settings.dateFormat);
+    const newDateStr = DateService.format(newDate, "YYYY-MM-DD");
     dateIso.value = newDateStr;
-  }, [plugin.settings.dateFormat, dateIso]);
+  }, [dateIso]);
 
   // Context value - only contains onDateChange callback
   // Other values (plugin, dateIso, viewMode, opts) are passed as props

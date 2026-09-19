@@ -20,8 +20,11 @@ export class WriteQueueManager {
     const filePath = file.path;
     const previousPromise = this.writeQueues.get(filePath) || Promise.resolve();
 
+    // Catch any error from previous write so it doesn't break subsequent queued writes
+    const safePreviousPromise = previousPromise.catch(() => {});
+
     // Create new promise that chains after previous one
-    const newPromise = previousPromise
+    const newPromise = safePreviousPromise
       .then(async () => {
         try {
           return await operation();

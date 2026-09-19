@@ -42,19 +42,19 @@ export function Heatmap({
   // Create a hash of entries for the date range to detect actual changes
   // Use useMemo to track dateIso prop changes
   const entriesHash = useMemo(() => {
-    const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
+    const endDate = DateService.parse(dateIso, "YYYY-MM-DD");
     const dateStrs: string[] = [];
     for (let i = 0; i < daysToShow; i++) {
       const date = endDate.clone().subtract(i, "days");
-      const dateStr = DateService.format(date, plugin.settings.dateFormat);
+      const dateStr = DateService.format(date, "YYYY-MM-DD");
       dateStrs.push(dateStr);
     }
     // Create hash from relevant entries only
     return dateStrs.map(d => `${d}:${entries.value.get(d) ?? ''}`).join('|');
-  }, [dateIso, daysToShow, entries.value, plugin.settings.dateFormat]);
+  }, [dateIso, daysToShow, entries.value]);
 
   const days = useMemo<HeatmapDay[]>(() => {
-    const endDate = DateService.parse(dateIso, plugin.settings.dateFormat);
+    const endDate = DateService.parse(dateIso, "YYYY-MM-DD");
     const today = DateService.now();
     const todayStart = DateService.startOfDay(today);
 
@@ -63,8 +63,8 @@ export function Heatmap({
     if (startTrackingDate) {
       try {
         startDateObj = DateService.parseMultiple(startTrackingDate, [
-          plugin.settings.dateFormat,
           "YYYY-MM-DD",
+          plugin.settings.dateFormat,
           "DD.MM.YYYY",
           "MM/DD/YYYY",
         ]);
@@ -78,7 +78,7 @@ export function Heatmap({
     // Go from newest to oldest (will be displayed with flex-direction: row-reverse)
     for (let i = 0; i < daysToShow; i++) {
       const date = endDate.clone().subtract(i, "days");
-      const dateStr = DateService.format(date, plugin.settings.dateFormat);
+      const dateStr = DateService.format(date, "YYYY-MM-DD");
       const dayNum = date.getDate();
 
       const value = entries.value.get(dateStr);
